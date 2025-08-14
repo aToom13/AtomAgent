@@ -100,6 +100,27 @@ python app.py
 
 ## Proje ile ilgili görseller:
 
+<div align="center">
+  <img src="images/1.png" alt="Proje Ekran Görüntüsü">
+  <p>Sohbet Menüsü</p>
+</div>
+
+<div align="center">
+  <img src="images/2.png" alt="Proje Ekran Görüntüsü">
+  <p>Agent Menüsü</p>
+</div>
+
+
+<div align="center">
+  <img src="images/3.png" alt="Proje Ekran Görüntüsü">
+  <p>Proje Menüsü</p>
+</div>
+
+
+<div align="center">
+  <img src="images/4.png" alt="Proje Ekran Görüntüsü">
+  <p>Ayarlar Menüsü</p>
+</div>
 
 ## 🔧 Geliştirme
 
