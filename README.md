@@ -7,7 +7,7 @@ AtomAgent, kullanıcıların doğal dil ile yazılım geliştirme süreçlerini 
 - **Akıllı İstek Sınıflandırması**: Basit soruları doğrudan yanıtlar, karmaşık projeleri çok-ajanlı takıma iletir
 - **8 Uzman Ajan**: Her ajan farklı uzmanlık alanında ve farklı AI modellerle çalışır
 - **Gerçek Zamanlı Streaming**: Token-by-token canlı yanıt akışı
-- **Modern Arayüz**: Manus AI benzeri karanlık tema ve smooth animasyonlar
+- **Modern Arayüz**: Gelişmiş bir tasarım, karanlık tema ve smooth animasyonlar
 - **Model Yönetimi**: Her ajana farklı LLM modeli atayabilme
 - **Proje Takibi**: Gerçek zamanlı proje durumu ve ilerleme gösterimi
 - **Sandbox Ortamları**: Her ajanın kendine ait çalışma dizini
