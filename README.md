@@ -16,14 +16,14 @@ AtomAgent, kullanıcıların doğal dil ile yazılım geliştirme süreçlerini 
 
 | Ajan | Uzmanlık Alanı | Varsayılan Model |
 |------|---------------|------------------|
-| Chat Agent | Ana sohbet ve istek analizi | LLaMA 3.1 70B |
-| Task Manager | Görev yönetimi ve koordinasyon | Claude 3 Sonnet |
-| Coder | Kod yazma ve geliştirme | Qwen Coder Plus |
-| DB Manager | Veritabanı yönetimi | GPT-4 Turbo |
-| Browser Agent | Web araştırma | Gemini Pro 1.5 |
-| File Reader | Dosya analizi | DeepSeek R1 |
-| Tester | Test ve kalite kontrolü | Claude 3 Sonnet |
-| Coordinator | Proje finalizasyonu | GPT-4 Turbo |
+| Chat Agent | Ana sohbet ve istek analizi | |
+| Task Manager | Görev yönetimi ve koordinasyon | |
+| Coder | Kod yazma ve geliştirme | |
+| DB Manager | Veritabanı yönetimi | |
+| Browser Agent | Web araştırma | |
+| File Reader | Dosya analizi | |
+| Tester | Test ve kalite kontrolü | |
+| Coordinator | Proje finalizasyonu | |
 
 ## 📋 Gereksinimler
 
@@ -70,6 +70,11 @@ pip install -r requirements.txt
 python server.py
 ```
 
+#### Alternatif olarak frontend ve backend aynı anda başlatın
+```bash
+python app.py
+```
+
 ### 3. API Anahtarı Yapılandırması
 
 1. [OpenRouter.ai](https://openrouter.ai/) hesabı oluşturun
@@ -92,9 +97,11 @@ python server.py
 
 **Örnek**: "Python Flask backend ile e-ticaret sitesi istiyorum. PostgreSQL veritabanı, ödeme sistemi ve admin paneli olsun."
 
+
+## Proje ile ilgili görseller:
+
+
 ## 🔧 Geliştirme
-
-
 
 ### Yeni Ajan Ekleme
 
@@ -117,22 +124,23 @@ python server.py
 ## 🐛 Sorun Giderme
 
 ### Backend Bağlantı Sorunu
-1. Python sunucusunun çalıştığını kontrol edin: `http://localhost:5000`
+1. Python sunucusunun çalıştığını kontrol edin: `http://localhost:5001`
 2. CORS ayarlarını kontrol edin
 3. Firewall ayarlarını kontrol edin
 
-### API Anahtarı Sorunları
-1. OpenRouter hesabınızda kredi olduğunu kontrol edin
-2. API anahtarının doğru girildiğini kontrol edin
-3. Model limitlerinizi kontrol edin
-
-### Performans Sorunları
-1. Streaming yanıtları kapatmayı deneyin
-2. Token limitlerini düşürün
-3. Daha hızlı modeller seçin
-
 ## 📈 Gelecek Özellikler
 
+
+- [X] OpenRooter iletişim sağlanması
+- [X] Backend kurulumu
+- [X] Frontend kurulumu
+- [X] Backend - Frontend entegrasyonu
+- [X] Websoket bağlantısı
+- [ ] Agent ların sistem promptlarını yapılandırma
+- [ ] Artifacts paneli
+- [ ] API keylerini saklama
+- [ ] Sohbet çıktı optimizasyonu
+- [ ] MCP server desteği
 - [ ] Dosya yükleme ve analiz
 - [ ] Git entegrasyonu
 - [ ] Docker containerization
@@ -142,22 +150,6 @@ python server.py
 - [ ] API rate limiting
 - [ ] Kullanıcı yetkilendirmesi
 
-## 🤝 Katkıda Bulunma
 
-1. Fork yapın
-2. Feature branch oluşturun: `git checkout -b feature/AmazingFeature`
-3. Değişiklikleri commit edin: `git commit -m 'Add AmazingFeature'`
-4. Branch'i push edin: `git push origin feature/AmazingFeature`
-5. Pull Request açın
-
-## 📄 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakın.
-
-## 🆘 Destek
-
-Sorunlar için GitHub Issues kullanın veya [iletişim] bölümünden ulaşın.
-
----
-
-**AtomAgent** ile yazılım geliştirme süreçlerinizi hızlandırın ve AI'ın gücünü deneyimleyin! 🚀
+## Projenin şu anki durumu:
+  ### Proje şu an 2. versiyonunda olup daha geliştirme aşamasındadır. Arayüz üzerinden API a bağlanarak modellere veri gönderimi ve alımı sağlanabilmektedir. Bir sonraki versiyonda API keylerini, model seçimlerini ve sistem promptlarını kaydetme özellikleri eklemek hedeflenmektedir. Şu an API ile modellerden alınan cevapları web konsolu aracılığıyla görebilmekteyiz fakat arayüzde çıktı almakta problemler yaşanmakta. En kısa sürede bu sorunlar çözülüp v3 paylaşılacaktır.
