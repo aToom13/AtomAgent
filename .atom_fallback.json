@@ -1,0 +1,38 @@
+{
+  "supervisor": {
+    "fallbacks": [
+      {
+        "provider": "openrouter",
+        "model": "x-ai/grok-4.1-fast:free"
+      },
+      {
+        "provider": "cerebras",
+        "model": "zai-glm-4.6"
+      }
+    ]
+  },
+  "coder": {
+    "fallbacks": [
+      {
+        "provider": "openrouter",
+        "model": "moonshotai/kimi-k2:free"
+      },
+      {
+        "provider": "cerebras",
+        "model": "zai-glm-4.6"
+      }
+    ]
+  },
+  "researcher": {
+    "fallbacks": [
+      {
+        "provider": "openrouter",
+        "model": "z-ai/glm-4.5-air:free"
+      },
+      {
+        "provider": "cerebras",
+        "model": "zai-glm-4.6"
+      }
+    ]
+  }
+}

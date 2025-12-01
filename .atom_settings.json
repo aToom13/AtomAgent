@@ -1,0 +1,19 @@
+{
+  "models": {
+    "supervisor": {
+      "provider": "ollama",
+      "model": "glm-4.6:cloud",
+      "temperature": 0.1
+    },
+    "coder": {
+      "provider": "ollama",
+      "model": "kimi-k2-thinking:cloud",
+      "temperature": 0.0
+    },
+    "researcher": {
+      "provider": "ollama",
+      "model": "deepseek-v3.1:671b-cloud",
+      "temperature": 0.0
+    }
+  }
+}
