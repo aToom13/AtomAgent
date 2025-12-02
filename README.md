@@ -70,6 +70,29 @@ Agent kendi yeteneklerini genişletebilir:
 - Anlamsal kod araması
 - ChromaDB + Ollama embeddings
 
+### 🧪 Auto-Test Generation
+- Modül analizi ile otomatik test oluşturma
+- Coverage analizi ve raporlama
+- pytest entegrasyonu
+
+### 🧠 Persistent Learning Memory
+- Projeler arası öğrenme
+- Kullanıcı tercihlerini hatırlama
+- Başarılı/başarısız pattern'leri kaydetme
+- Hatalardan öğrenme ve çözüm önerisi
+
+### 📈 Self-Improvement
+- Performans takibi ve raporlama
+- Başarı oranı analizi
+- İyileştirme önerileri
+
+### 🖼️ Multi-Modal Destek
+- Görüntü analizi (Vision API)
+- Ekran görüntüsü analizi
+- Diyagram ve kod screenshot analizi
+- Ses transkripti (Whisper)
+- Text-to-Speech
+
 ### 📊 Diğer Özellikler
 - Git entegrasyonu (init, status, add, commit, log, diff, branch, stash)
 - Test runner (pytest)

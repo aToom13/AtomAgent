@@ -108,11 +108,13 @@ class FallbackSelectorModal(ModalScreen):
             for role in model_manager.ROLES:
                 config = model_manager.get_config(role)
                 fallbacks = model_manager.get_fallbacks(role)
-                
                 role_display = {
                     "supervisor": "🎯 Supervisor",
                     "coder": "💻 Coder",
-                    "researcher": "🔍 Researcher"
+                    "researcher": "🔍 Researcher",
+                    "vision": "👁️ Vision",
+                    "audio": "🎤 Audio",
+                    "tts": "🗣️ TTS"
                 }
                 
                 with Vertical(classes="role-section"):

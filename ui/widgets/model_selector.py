@@ -165,7 +165,10 @@ class ModelSelectorModal(ModalScreen):
                 role_display = {
                     "supervisor": "🎯 Supervisor",
                     "coder": "💻 Coder", 
-                    "researcher": "🔍 Researcher"
+                    "researcher": "🔍 Researcher",
+                    "vision": "👁️ Vision",
+                    "audio": "🎤 Audio",
+                    "tts": "🗣️ TTS"
                 }
                 
                 with Vertical(classes="role-section"):

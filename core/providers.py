@@ -374,13 +374,16 @@ class AgentModelConfig:
 class ModelManager:
     """Manages model configurations with fallback support"""
     
-    ROLES = ["supervisor", "coder", "researcher"]
+    ROLES = ["supervisor", "coder", "researcher", "vision", "audio", "tts"]
     
     def __init__(self):
         self.configs: Dict[str, AgentModelConfig] = {
             "supervisor": AgentModelConfig("ollama", "llama3.2", 0.1),
             "coder": AgentModelConfig("ollama", "llama3.2", 0.0),
             "researcher": AgentModelConfig("ollama", "llama3.2", 0.0),
+            "vision": AgentModelConfig("openai", "gpt-4o", 0.2),
+            "audio": AgentModelConfig("openai", "whisper-1", 0.0),
+            "tts": AgentModelConfig("openai", "tts-1", 0.0),
         }
         self._llm_cache: Dict[str, BaseChatModel] = {}
         self._current_provider: Dict[str, int] = {}  # Track which provider is active (0 = primary)

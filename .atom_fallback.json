@@ -70,5 +70,33 @@
         "model": "gemini-2.0-flash-lite"
       }
     ]
+  },
+  "vision": {
+    "fallbacks": [
+      {
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-20241022"
+      },
+      {
+        "provider": "google",
+        "model": "gemini-1.5-pro"
+      }
+    ]
+  },
+  "audio": {
+    "fallbacks": [
+      {
+        "provider": "ollama",
+        "model": "base"
+      }
+    ]
+  },
+  "tts": {
+    "fallbacks": [
+      {
+        "provider": "google",
+        "model": "tr"
+      }
+    ]
   }
 }

@@ -13,12 +13,18 @@ class ModelConfig:
     coder: str = "kimi-k2-thinking:cloud"
     researcher: str = "deepseek-v3.1:671b-cloud"
     general: str = "glm-4.6:cloud"
+    vision: str = "gpt-4o"
+    audio: str = "whisper-1"
+    tts: str = "tts-1"
     
     # Temperature ayarları
     supervisor_temp: float = 0.0
     coder_temp: float = 0.0
     researcher_temp: float = 0.0
     general_temp: float = 0.7
+    vision_temp: float = 0.2
+    audio_temp: float = 0.0
+    tts_temp: float = 0.0
 
 @dataclass
 class ExecutionConfig:

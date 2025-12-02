@@ -17,8 +17,18 @@ from tools.basic import run_neofetch, get_current_time
 from tools.todo_tools import update_todo_list, mark_todo_done, get_current_todo, get_next_todo_step
 from tools.rag import refresh_memory, search_codebase
 from tools.git_tools import git_init, git_status, git_add, git_commit, git_log, git_diff
-from tools.test_tools import run_tests, run_single_test, create_test_file, list_tests
-from tools.memory import save_context, get_context_info, get_memory_stats, clear_memory, get_persistent_context
+from tools.test_tools import (
+    run_tests, run_single_test, create_test_file, list_tests,
+    auto_generate_tests, analyze_test_coverage
+)
+from tools.memory import (
+    save_context, get_context_info, get_memory_stats, clear_memory, get_persistent_context,
+    # Learning Memory
+    learn_user_preference, recall_preference, learn_from_task, get_past_approaches,
+    learn_from_error, suggest_solution, get_learning_summary,
+    # Performance Tracking
+    record_task_result, get_performance_report, get_improvement_tips
+)
 from tools.quality import self_evaluate, analyze_error
 from tools.sandbox import (
     sandbox_start, sandbox_stop, sandbox_status,
@@ -31,6 +41,11 @@ from tools.tool_factory import (
 from tools.session_tools import (
     list_recent_sessions, search_conversations,
     get_session_summary, get_session_stats
+)
+from tools.multimodal import (
+    analyze_image, analyze_screenshot, describe_code_screenshot,
+    extract_text_from_image, analyze_diagram,
+    transcribe_audio, text_to_speech
 )
 
 logger = get_logger()
@@ -69,11 +84,25 @@ _tools = [
     run_single_test,
     create_test_file,
     list_tests,
+    auto_generate_tests,
+    analyze_test_coverage,
     # Memory - uzun görevlerde context koruma
     save_context,
     get_context_info,
     get_memory_stats,
     clear_memory,
+    # Learning Memory - projeler arası öğrenme
+    learn_user_preference,
+    recall_preference,
+    learn_from_task,
+    get_past_approaches,
+    learn_from_error,
+    suggest_solution,
+    get_learning_summary,
+    # Performance Tracking - self-improvement
+    record_task_result,
+    get_performance_report,
+    get_improvement_tips,
     # Quality - self-evaluation ve hata analizi
     self_evaluate,
     analyze_error,
@@ -95,6 +124,14 @@ _tools = [
     search_conversations,
     get_session_summary,
     get_session_stats,
+    # Multi-Modal - görüntü ve ses
+    analyze_image,
+    analyze_screenshot,
+    describe_code_screenshot,
+    extract_text_from_image,
+    analyze_diagram,
+    transcribe_audio,
+    text_to_speech,
     # Yardımcı
     get_current_time,
     run_neofetch,

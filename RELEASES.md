@@ -1,11 +1,53 @@
 # AtomAgent Release Notes
 
+## v4.3.0 - Learning, Multi-Modal & Auto-Test 🧠🖼️
+
+**Release Date:** December 2025
+
+### ✨ Yeni Özellikler
+
+#### 🧠 Persistent Learning Memory
+Agent artık projeler arası öğrenebiliyor:
+- `learn_user_preference` - Kullanıcı tercihlerini öğren
+- `recall_preference` - Tercihleri hatırla
+- `learn_from_task` - Görev sonuçlarından öğren
+- `get_past_approaches` - Geçmiş yaklaşımları getir
+- `learn_from_error` - Hatalardan öğren
+- `suggest_solution` - Benzer hatalar için çözüm öner
+
+#### 📈 Self-Improvement & Performance Tracking
+- `record_task_result` - Görev sonuçlarını kaydet
+- `get_performance_report` - Detaylı performans raporu
+- `get_improvement_tips` - İyileştirme önerileri
+- Başarı oranı takibi
+- Problemli tool'ları tespit
+
+#### 🧪 Auto-Test Generation
+- `auto_generate_tests` - Modül için otomatik test oluştur
+- `analyze_test_coverage` - Detaylı coverage analizi
+- AST tabanlı fonksiyon/sınıf analizi
+- Akıllı test case üretimi
+
+#### 🖼️ Multi-Modal Destek
+Vision (Görüntü Analizi):
+- `analyze_image` - Görüntü analizi
+- `analyze_screenshot` - Ekran görüntüsü al ve analiz et
+- `describe_code_screenshot` - Kod ekran görüntüsü analizi
+- `extract_text_from_image` - OCR
+- `analyze_diagram` - Teknik diyagram analizi
+
+Audio (Ses İşleme):
+- `transcribe_audio` - Ses → Metin (Whisper)
+- `text_to_speech` - Metin → Ses (TTS)
+
+---
+
 ## v4.2.0 - Session Tools & Stability 🔧
 
 **Release Date:** December 2025
 
 ### Yenilikler
-- Session tools agent'a eklendi (list_recent_sessions, search_conversations, get_session_summary, get_session_stats)
+- Session tools agent'a eklendi
 - Agent artık geçmiş konuşmaları arayabilir ve özetleyebilir
 
 ### Düzeltmeler
@@ -49,7 +91,7 @@ Agent kendi yeteneklerini genişletebilir:
 
 ---
 
-## v4.0.0 - Multi-Provider & Fallback 🔄
+## v2.1.0 - Multi-Provider & Fallback 🔄
 
 **Release Date:** December 2025
 
@@ -81,7 +123,7 @@ Agent kendi yeteneklerini genişletebilir:
 
 ---
 
-## v3.0.0 - RAG & Quality Tools 🧠
+## v2.1.0 - RAG & Quality Tools 🧠
 
 ### Özellikler
 - RAG sistemi (ChromaDB + Ollama embeddings)
@@ -93,7 +135,7 @@ Agent kendi yeteneklerini genişletebilir:
 
 ---
 
-## v2.0.0 - Complete CLI Rewrite 🚀
+## v2.1.0 - Complete CLI Rewrite 🚀
 
 **Release Date:** December 2025
 

@@ -69,4 +69,6 @@ write_file: Yeni dosya oluştur veya mevcut dosyayı tamamen değiştir
 read_file: Dosya içeriğini oku, değişiklik yapmadan önce mutlaka kullan
 list_files: Dizindeki dosyaları listele, proje yapısını anlamak için kullan
 run_terminal_command: Komut çalıştır, test et, paket kur
+run_terminal_command: Komut çalıştır, test et, paket kur
 search_codebase: Mevcut kodda arama yap, ilgili dosyaları bul
+describe_code_screenshot: Kod içeren ekran görüntülerini analiz et, hata ve çözüm önerisi al
