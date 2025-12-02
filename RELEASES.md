@@ -1,196 +1,165 @@
 # AtomAgent Release Notes
 
-## v2.0.0 - Complete CLI Rewrite 🚀
+## v4.2.0 - Session Tools & Stability 🔧
 
-**Release Date:** December 2024
+**Release Date:** December 2025
 
-Bu sürüm, AtomAgent'ın tamamen sıfırdan yeniden yazılmış, CLI odaklı versiyonudur. Daha stabil, modüler ve genişletilebilir bir mimari ile geliştirilmiştir.
+### Yenilikler
+- Session tools agent'a eklendi (list_recent_sessions, search_conversations, get_session_summary, get_session_stats)
+- Agent artık geçmiş konuşmaları arayabilir ve özetleyebilir
+
+### Düzeltmeler
+- Kullanılmayan dosyalar temizlendi (dev_mode.py, ide_styles.py)
 
 ---
 
+## v4.1.0 - Tool Factory & Sandbox 🐳
+
+**Release Date:** December 2025
+
 ### ✨ Öne Çıkan Özellikler
 
-#### 🤖 Çoklu AI Provider Desteği
-AtomAgent artık 10 farklı AI sağlayıcısını destekliyor:
-- **OpenAI** (GPT-4, GPT-4o)
-- **Anthropic** (Claude 3.5 Sonnet)
-- **Google** (Gemini 1.5)
-- **OpenRouter** (100+ model erişimi)
-- **Cerebras** (Ultra-hızlı inference)
-- **xAI** (Grok)
-- **Groq** (Düşük latency)
-- **Together AI**
-- **HuggingFace**
-- **Ollama** (Yerel modeller)
+#### 🔧 Tool Factory
+Agent kendi yeteneklerini genişletebilir:
+- `create_tool` - Runtime'da yeni Python tool oluşturma
+- Host veya Sandbox modunda çalıştırma seçeneği
+- Kalıcı tool registry (.custom_tools/)
+- `list_custom_tools`, `delete_tool`, `test_tool` araçları
+
+#### 🐳 Docker Sandbox
+İzole çalışma ortamı:
+- Ubuntu 22.04 container
+- Selenium, Playwright, Chromium kurulu
+- Sudo yetkili, kısıtlamasız komut çalıştırma
+- `/home/agent/shared` klasörü host ile senkron
+- `sandbox_start`, `sandbox_stop`, `sandbox_shell`, `sandbox_upload`, `sandbox_download`
+
+#### 💾 Session Management
+- SQLite tabanlı kalıcı konuşma geçmişi
+- Session sidebar (Ctrl+B ile aç/kapat)
+- Session arama ve filtreleme
+- JSON export/import
+- Otomatik başlık oluşturma
+
+#### 🧠 Memory Sistemi
+- Uzun görevlerde context koruma
+- `save_context`, `get_context_info` araçları
+- Otomatik conversation summarization
+- Task tracking
+
+---
+
+## v4.0.0 - Multi-Provider & Fallback 🔄
+
+**Release Date:** December 2025
+
+### ✨ Öne Çıkan Özellikler
+
+#### 🤖 10 AI Provider Desteği
+- Ollama (yerel)
+- OpenAI
+- Anthropic (Claude)
+- Google (Gemini)
+- OpenRouter
+- Groq
+- Together AI
+- Cerebras
+- xAI (Grok)
+- HuggingFace
 
 #### 🔄 Akıllı API Key Rotasyonu
 - Birden fazla API key desteği (virgülle ayrılmış)
 - Rate limit durumunda otomatik key rotasyonu
-- Fallback provider sistemi - bir provider başarısız olursa otomatik geçiş
+- Provider fallback sistemi
 
-#### 🧠 Multi-Agent Mimarisi
-Üç özelleşmiş agent ile görev dağılımı:
-- **Supervisor**: Ana orkestratör, görevleri yönetir ve koordine eder
-- **Coder**: Kod yazma, dosya işlemleri, test ve lint
-- **Researcher**: Web araştırması, dokümantasyon tarama, RAG sorguları
+#### 🎨 Textual UI
+- Modern terminal arayüzü (Gruvbox tema)
+- Tabbed interface (Dashboard, Editor, Sandbox, Tools, Debug)
+- Session sidebar
+- Kod highlighting
+- Debug paneli
 
 ---
 
-### 🛠️ Araç Sistemi (Tools)
+## v3.0.0 - RAG & Quality Tools 🧠
 
-#### Dosya İşlemleri (`tools/files.py`)
-- `write_file` - Dosya oluşturma/güncelleme
-- `read_file` - Dosya okuma
-- `list_files` - Dizin listeleme
-- `scan_workspace` - Workspace tarama (ağaç görünümü)
-- `create_directory` - Klasör oluşturma
-- `delete_file` / `delete_directory` - Silme işlemleri
+### Özellikler
+- RAG sistemi (ChromaDB + Ollama embeddings)
+- `search_codebase` - Anlamsal kod araması
+- `refresh_memory` - Kod tabanı indeksleme
+- `lint_and_fix` - Ruff ile otomatik formatlama
+- `check_syntax` - Python syntax kontrolü
+- `self_evaluate`, `analyze_error` - Otonom hata kurtarma
 
-#### Terminal Yürütme (`tools/execution.py`)
-- Güvenli komut çalıştırma sistemi
-- İzin verilen komutlar whitelist'i
+---
+
+## v2.0.0 - Complete CLI Rewrite 🚀
+
+**Release Date:** December 2025
+
+Bu sürüm, AtomAgent'ın tamamen sıfırdan yeniden yazılmış versiyonudur.
+
+### 🛠️ Araç Sistemi
+
+#### Dosya İşlemleri
+- `write_file`, `read_file`, `list_files`, `scan_workspace`
+- `create_directory`, `delete_file`, `delete_directory`
+
+#### Terminal Yürütme
+- Güvenli komut çalıştırma (whitelist sistemi)
 - Tehlikeli pattern engelleme
 - Timeout koruması
-- Runtime'da izin ekleme desteği
 
-#### Git Entegrasyonu (`tools/git_tools.py`)
+#### Git Entegrasyonu
 - `git_init`, `git_status`, `git_add`, `git_commit`
-- `git_log`, `git_diff`, `git_branch`
-- `git_stash`, `git_reset`
-- Türkçe durum mesajları
+- `git_log`, `git_diff`, `git_branch`, `git_stash`, `git_reset`
 
-#### Web Araçları (`tools/web.py`)
-- `web_search` - DuckDuckGo ile web araması
-- `quick_answer` - Hızlı cevap API'si
+#### Web Araçları
+- `web_search` - DuckDuckGo araması
+- `quick_answer` - Hızlı cevap
 - `visit_webpage` - Sayfa içeriği çıkarma
-- `search_docs` - Dokümantasyon araması (Python, MDN, npm, GitHub)
-- Güvenilir kaynak önceliklendirme
-- Spam site filtreleme
+- `search_docs` - Dokümantasyon araması
 
-#### RAG Sistemi (`tools/rag.py`)
-- `refresh_memory` - Kod tabanını vektör veritabanına indeksleme
-- `search_codebase` - Anlamsal kod araması
-- ChromaDB + Ollama embeddings (nomic-embed-text)
-- Desteklenen formatlar: `.py`, `.js`, `.ts`, `.md`, `.json`, `.yaml`, `.html`, `.css`
+#### Test Araçları
+- `run_tests`, `run_single_test`
+- `create_test_file`, `list_tests`
+- `test_coverage`
 
-#### Test Araçları (`tools/test_tools.py`)
-- `run_tests` - pytest ile test çalıştırma
-- `run_single_test` - Tekil test çalıştırma
-- `create_test_file` - Test şablonu oluşturma
-- `list_tests` - Mevcut testleri listeleme
-- `test_coverage` - Coverage raporu
+#### Todo Yönetimi
+- `create_plan`, `update_todo_list`
+- `mark_todo_done`, `get_next_todo_step`
 
-#### Kalite Kontrol (`tools/quality.py`)
-- `lint_and_fix` - Ruff ile otomatik formatlama ve lint
-- `check_syntax` - Python syntax kontrolü
-- PEP-8 uyumlu kod formatlama
-
-#### Todo Yönetimi (`tools/todo_tools.py`)
-- `create_plan` - Görev planı oluşturma
-- `update_todo_list` - Todo güncelleme
-- `mark_todo_done` - Adım tamamlama
-- `get_next_todo_step` - Sıradaki adımı gösterme
-- Markdown checkbox formatı
-
----
-
-### ⚙️ Teknik Detaylar
-
-#### Mimari
-```
-AtomAgent/
-├── main.py              # Giriş noktası
-├── config.py            # Merkezi konfigürasyon
-├── core/
-│   ├── agent.py         # Ana agent orchestrator
-│   └── providers.py     # LLM provider yönetimi
-├── tools/               # Modüler araç sistemi
-├── prompts/             # JSON tabanlı prompt'lar
-├── ui/                  # Gradio arayüzü
-└── utils/               # Logger ve yardımcılar
-```
-
-#### Kullanılan Teknolojiler
-- **LangChain** - LLM framework
-- **LangGraph** - Agent orchestration
-- **Gradio** - Web UI
-- **ChromaDB** - Vektör veritabanı
-- **Ruff** - Python linter/formatter
-- **DuckDuckGo Search** - Web araması
-- **BeautifulSoup** - HTML parsing
-
-#### Konfigürasyon Sistemi (`config.py`)
-- Dataclass tabanlı tip güvenli konfigürasyon
-- Model, execution, workspace, memory ve UI ayarları
-- Merkezi yönetim
-
-#### Prompt Yönetimi
-- JSON dosyalarında saklanan prompt'lar
-- Versiyon takibi
-- Kolay güncelleme ve özelleştirme
-
----
-
-### 🔒 Güvenlik Özellikleri
-
-- Workspace sandbox - dosya işlemleri sadece belirlenen dizinde
+### 🔒 Güvenlik
+- Workspace sandbox
 - Komut whitelist sistemi
-- Tehlikeli pattern engelleme (`rm -rf /`, `sudo`, vb.)
-- API key'lerin `.env` dosyasında güvenli saklanması
 - Path traversal koruması
+- API key'lerin .env'de güvenli saklanması
 
 ---
 
-### 📋 Gereksinimler
+## Gereksinimler
 
 ```
 langchain>=0.3.0
 langgraph>=0.2.0
-langchain-ollama
-langchain-openai
-langchain-anthropic
-langchain-google-genai
-langchain-groq
-langchain-chroma
-gradio>=4.0.0
-duckduckgo-search
-beautifulsoup4
-requests
-python-dotenv
-ruff
-pytest
+langchain-ollama>=0.2.0
+langchain-openai>=0.2.0
+langchain-anthropic>=0.3.0
+langchain-google-genai>=2.0.0
+langchain-groq>=0.2.0
+langchain-huggingface>=0.1.0
+langchain-chroma>=0.1.0
+chromadb>=0.5.0
+textual>=0.89.0
+rich>=13.0.0
+duckduckgo-search>=6.0.0
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+ruff>=0.8.0
+pydantic>=2.0.0
 ```
 
 ---
 
-### 🚀 Hızlı Başlangıç
-
-1. Repoyu klonlayın
-2. `.env.example` dosyasını `.env` olarak kopyalayın
-3. API key'lerinizi ekleyin
-4. `pip install -r requirements.txt`
-5. `python main.py`
-
----
-
-### 🔮 Gelecek Planları
-
-- [ ] Daha fazla provider desteği
-- [ ] Plugin sistemi
-- [ ] Proje şablonları
-- [ ] Gelişmiş memory yönetimi
-- [ ] Multi-modal destek (görsel analiz)
-
----
-
-### 📝 Notlar
-
-- Ollama kurulu ise yerel modeller ücretsiz kullanılabilir
-- OpenRouter ile 100+ modele tek API key ile erişim
-- Rate limit durumunda otomatik fallback çalışır
-- Workspace dışına dosya erişimi engellenir
-
----
-
-**Full Changelog**: İlk major release - Complete rewrite from scratch
-
+**Repository**: https://github.com/aToom13/AtomAgent

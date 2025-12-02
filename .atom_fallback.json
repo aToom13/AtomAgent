@@ -7,7 +7,19 @@
       },
       {
         "provider": "cerebras",
-        "model": "zai-glm-4.6"
+        "model": "gpt-oss-120b"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b"
+      },
+      {
+        "provider": "huggingface",
+        "model": "meta-llama/Llama-3.3-70B-Instruct"
+      },
+      {
+        "provider": "google",
+        "model": "gemini-2.0-flash-lite"
       }
     ]
   },
@@ -15,11 +27,23 @@
     "fallbacks": [
       {
         "provider": "openrouter",
-        "model": "moonshotai/kimi-k2:free"
+        "model": "x-ai/grok-4.1-fast:free"
       },
       {
         "provider": "cerebras",
         "model": "zai-glm-4.6"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b"
+      },
+      {
+        "provider": "huggingface",
+        "model": "moonshotai/Kimi-K2-Thinking"
+      },
+      {
+        "provider": "google",
+        "model": "gemini-2.0-flash-lite"
       }
     ]
   },
@@ -27,11 +51,23 @@
     "fallbacks": [
       {
         "provider": "openrouter",
-        "model": "z-ai/glm-4.5-air:free"
+        "model": "x-ai/grok-4.1-fast:free"
       },
       {
         "provider": "cerebras",
-        "model": "zai-glm-4.6"
+        "model": "gpt-oss-120b"
+      },
+      {
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b"
+      },
+      {
+        "provider": "huggingface",
+        "model": "zai-org/GLM-4.6"
+      },
+      {
+        "provider": "google",
+        "model": "gemini-2.0-flash-lite"
       }
     ]
   }

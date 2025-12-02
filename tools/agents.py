@@ -10,7 +10,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
-from core.providers import model_manager, create_llm, is_rate_limit_error, handle_rate_limit, rotate_api_key
+from core.providers import model_manager, create_llm, is_rate_limit_error, is_fallback_needed, handle_rate_limit, rotate_api_key
 from prompts import load_prompt
 from utils.logger import get_logger
 from tools.files import (
@@ -183,7 +183,7 @@ def call_coder(task: str) -> str:
     """
     logger.info(f"Coder: {task[:50]}...")
     
-    max_attempts = 3
+    max_attempts = 10  # Tüm fallback'leri deneyebilmek için
     last_error = None
     
     for attempt in range(max_attempts):
@@ -207,22 +207,18 @@ def call_coder(task: str) -> str:
                 time.sleep(3)
                 continue
             
-            # Rate limit kontrolü
-            if is_rate_limit_error(e):
+            # Fallback gerekip gerekmediğini kontrol et
+            if is_fallback_needed(e):
                 config = model_manager.get_config("coder")
-                if config and handle_rate_limit(config.provider):
-                    # Key rotasyonu başarılı, cache'i temizle ve tekrar dene
+                provider = config.provider if config else "unknown"
+                logger.info(f"Coder: Fallback needed for {provider}")
+                
+                # Fallback'e geç
+                if model_manager.switch_to_fallback("coder"):
                     clear_agent_cache()
-                    logger.info(f"Coder: API key rotated, retrying...")
+                    logger.info(f"Coder: Switched to fallback provider")
                     time.sleep(0.5)
                     continue
-                else:
-                    # Fallback provider'a geç
-                    if model_manager.switch_to_fallback("coder"):
-                        clear_agent_cache()
-                        logger.info(f"Coder: Switched to fallback provider")
-                        time.sleep(0.5)
-                        continue
             
             if attempt < max_attempts - 1:
                 time.sleep(1)
@@ -245,7 +241,7 @@ def call_researcher(query: str) -> str:
     """
     logger.info(f"Researcher: {query[:50]}...")
     
-    max_attempts = 3
+    max_attempts = 10  # Tüm fallback'leri deneyebilmek için
     queries_to_try = [query, f"{query} tutorial", f"{query} example"]
     
     last_error = None
@@ -279,22 +275,18 @@ def call_researcher(query: str) -> str:
                 time.sleep(3)
                 continue
             
-            # Rate limit kontrolü
-            if is_rate_limit_error(e):
+            # Fallback gerekip gerekmediğini kontrol et
+            if is_fallback_needed(e):
                 config = model_manager.get_config("researcher")
-                if config and handle_rate_limit(config.provider):
-                    # Key rotasyonu başarılı, cache'i temizle ve tekrar dene
+                provider = config.provider if config else "unknown"
+                logger.info(f"Researcher: Fallback needed for {provider}")
+                
+                # Fallback'e geç
+                if model_manager.switch_to_fallback("researcher"):
                     clear_agent_cache()
-                    logger.info(f"Researcher: API key rotated, retrying...")
+                    logger.info(f"Researcher: Switched to fallback provider")
                     time.sleep(0.5)
                     continue
-                else:
-                    # Fallback provider'a geç
-                    if model_manager.switch_to_fallback("researcher"):
-                        clear_agent_cache()
-                        logger.info(f"Researcher: Switched to fallback provider")
-                        time.sleep(0.5)
-                        continue
             
             if i < max_attempts - 1:
                 time.sleep(1)

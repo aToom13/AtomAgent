@@ -1,6 +1,7 @@
 """
-Quality Control Module - Linter & Auto-Fix
+Quality Control Module - Linter, Auto-Fix & Self-Evaluation
 Uses ruff for formatting and linting Python code
+Includes self-evaluation for autonomous error recovery
 """
 import os
 import subprocess
@@ -12,6 +13,26 @@ from utils.logger import get_logger
 logger = get_logger()
 
 WORKSPACE_DIR = config.workspace.base_dir
+
+# Self-evaluation için hata pattern'leri
+ERROR_PATTERNS = {
+    "syntax": ["SyntaxError", "IndentationError", "TabError"],
+    "import": ["ImportError", "ModuleNotFoundError", "No module named"],
+    "type": ["TypeError", "AttributeError", "NameError"],
+    "value": ["ValueError", "KeyError", "IndexError"],
+    "runtime": ["RuntimeError", "RecursionError", "MemoryError"],
+    "file": ["FileNotFoundError", "PermissionError", "IsADirectoryError"],
+}
+
+# Otomatik düzeltme önerileri
+AUTO_FIX_SUGGESTIONS = {
+    "syntax": "Kod syntax'ını kontrol et, parantez ve girintileri düzelt",
+    "import": "Eksik modülü pip install ile kur veya import yolunu düzelt",
+    "type": "Değişken tiplerini kontrol et, None kontrolü ekle",
+    "value": "Giriş değerlerini validate et, default değerler ekle",
+    "runtime": "Recursion limit veya memory kullanımını kontrol et",
+    "file": "Dosya yolunu kontrol et, dosyanın var olduğundan emin ol",
+}
 
 
 def _get_safe_path(filename: str) -> str:
@@ -175,3 +196,219 @@ def check_syntax(filename: str) -> str:
         return error_msg
     except Exception as e:
         return f"Error: {e}"
+
+
+
+@tool
+def self_evaluate(task: str, result: str, error: str = "") -> str:
+    """
+    Yapılan işin kalitesini değerlendirir ve hata varsa düzeltme önerir.
+    Otonom çalışma için kritik - agent kendi çıktısını değerlendirebilir.
+    
+    Args:
+        task: Yapılması istenen görev
+        result: Görevin sonucu veya çıktısı
+        error: Varsa hata mesajı
+    
+    Returns:
+        Değerlendirme ve varsa düzeltme önerisi
+    """
+    logger.info(f"Self-evaluating task: {task[:50]}...")
+    
+    evaluation = {
+        "success": True,
+        "error_type": None,
+        "suggestion": None,
+        "confidence": "high"
+    }
+    
+    # Hata varsa analiz et
+    if error:
+        evaluation["success"] = False
+        
+        # Hata tipini belirle
+        for error_type, patterns in ERROR_PATTERNS.items():
+            if any(pattern.lower() in error.lower() for pattern in patterns):
+                evaluation["error_type"] = error_type
+                evaluation["suggestion"] = AUTO_FIX_SUGGESTIONS.get(error_type)
+                break
+        
+        if not evaluation["error_type"]:
+            evaluation["error_type"] = "unknown"
+            evaluation["suggestion"] = "Hata mesajını dikkatlice oku ve manuel düzelt"
+    
+    # Sonucu değerlendir
+    result_lower = result.lower() if result else ""
+    
+    # Başarısızlık göstergeleri
+    failure_indicators = [
+        "error", "failed", "hata", "başarısız", "exception",
+        "traceback", "cannot", "unable", "not found"
+    ]
+    
+    if any(indicator in result_lower for indicator in failure_indicators):
+        evaluation["success"] = False
+        evaluation["confidence"] = "medium"
+        
+        if not evaluation["suggestion"]:
+            evaluation["suggestion"] = "Sonuçta hata göstergesi var, çıktıyı kontrol et"
+    
+    # Başarı göstergeleri
+    success_indicators = [
+        "success", "completed", "done", "tamamlandı", "başarılı",
+        "created", "written", "saved", "✓", "✅"
+    ]
+    
+    if any(indicator in result_lower for indicator in success_indicators):
+        evaluation["confidence"] = "high"
+    
+    # Sonuç oluştur
+    if evaluation["success"]:
+        return f"✅ Değerlendirme: Görev başarılı görünüyor (güven: {evaluation['confidence']})"
+    else:
+        response = f"⚠️ Değerlendirme: Sorun tespit edildi\n"
+        response += f"Hata tipi: {evaluation['error_type']}\n"
+        if evaluation["suggestion"]:
+            response += f"Öneri: {evaluation['suggestion']}"
+        return response
+
+
+@tool
+def analyze_error(error_message: str) -> str:
+    """
+    Hata mesajını analiz eder ve düzeltme stratejisi önerir.
+    Otonom hata kurtarma için kullanılır.
+    
+    Args:
+        error_message: Analiz edilecek hata mesajı
+    
+    Returns:
+        Hata analizi ve düzeltme stratejisi
+    """
+    logger.info(f"Analyzing error: {error_message[:100]}...")
+    
+    error_lower = error_message.lower()
+    
+    analysis = {
+        "type": "unknown",
+        "severity": "medium",
+        "recoverable": True,
+        "strategy": []
+    }
+    
+    # Hata tipini belirle
+    for error_type, patterns in ERROR_PATTERNS.items():
+        if any(pattern.lower() in error_lower for pattern in patterns):
+            analysis["type"] = error_type
+            break
+    
+    # Severity belirle
+    critical_patterns = ["memory", "recursion", "permission", "fatal"]
+    if any(p in error_lower for p in critical_patterns):
+        analysis["severity"] = "high"
+        analysis["recoverable"] = False
+    
+    # Strateji öner
+    if analysis["type"] == "syntax":
+        analysis["strategy"] = [
+            "1. Hatalı satırı bul (hata mesajındaki satır numarası)",
+            "2. Parantez, tırnak ve girintileri kontrol et",
+            "3. lint_and_fix tool'unu çalıştır",
+            "4. Düzeltilmiş kodu tekrar yaz"
+        ]
+    elif analysis["type"] == "import":
+        analysis["strategy"] = [
+            "1. Modül adını kontrol et (yazım hatası olabilir)",
+            "2. pip install ile modülü kur",
+            "3. Import yolunun doğru olduğundan emin ol",
+            "4. Virtual environment aktif mi kontrol et"
+        ]
+    elif analysis["type"] == "type":
+        analysis["strategy"] = [
+            "1. Değişkenin tipini kontrol et",
+            "2. None kontrolü ekle (if x is not None)",
+            "3. Tip dönüşümü gerekebilir (str(), int(), etc.)",
+            "4. Attribute'un var olduğundan emin ol"
+        ]
+    elif analysis["type"] == "value":
+        analysis["strategy"] = [
+            "1. Giriş değerlerini validate et",
+            "2. Default değerler ekle",
+            "3. Try-except ile hata yakala",
+            "4. Boundary check ekle"
+        ]
+    elif analysis["type"] == "file":
+        analysis["strategy"] = [
+            "1. Dosya yolunu kontrol et",
+            "2. Dosyanın var olduğundan emin ol",
+            "3. Dizin izinlerini kontrol et",
+            "4. Gerekirse dizini oluştur"
+        ]
+    else:
+        analysis["strategy"] = [
+            "1. Hata mesajını dikkatlice oku",
+            "2. Stack trace'i takip et",
+            "3. İlgili kodu incele",
+            "4. Farklı bir yaklaşım dene"
+        ]
+    
+    # Sonuç oluştur
+    result = f"🔍 Hata Analizi\n"
+    result += f"Tip: {analysis['type']}\n"
+    result += f"Ciddiyet: {analysis['severity']}\n"
+    result += f"Kurtarılabilir: {'Evet' if analysis['recoverable'] else 'Hayır'}\n\n"
+    result += "📋 Düzeltme Stratejisi:\n"
+    result += "\n".join(analysis["strategy"])
+    
+    return result
+
+
+def evaluate_code_quality(code: str) -> dict:
+    """
+    Kod kalitesini değerlendirir (internal function).
+    
+    Args:
+        code: Değerlendirilecek kod
+    
+    Returns:
+        Kalite metrikleri
+    """
+    lines = code.split("\n")
+    
+    metrics = {
+        "total_lines": len(lines),
+        "code_lines": 0,
+        "comment_lines": 0,
+        "blank_lines": 0,
+        "has_docstring": False,
+        "has_type_hints": False,
+        "complexity_estimate": "low"
+    }
+    
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            metrics["blank_lines"] += 1
+        elif stripped.startswith("#"):
+            metrics["comment_lines"] += 1
+        else:
+            metrics["code_lines"] += 1
+    
+    # Docstring kontrolü
+    if '"""' in code or "'''" in code:
+        metrics["has_docstring"] = True
+    
+    # Type hint kontrolü
+    if "->" in code or ": str" in code or ": int" in code:
+        metrics["has_type_hints"] = True
+    
+    # Complexity tahmini
+    complexity_indicators = ["if ", "for ", "while ", "try:", "except:", "with "]
+    complexity_count = sum(code.count(ind) for ind in complexity_indicators)
+    
+    if complexity_count > 10:
+        metrics["complexity_estimate"] = "high"
+    elif complexity_count > 5:
+        metrics["complexity_estimate"] = "medium"
+    
+    return metrics

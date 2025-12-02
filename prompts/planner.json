@@ -1,6 +1,6 @@
 {
   "name": "Planner",
-  "description": "Planlayıcı - görevler için detaylı plan oluşturur",
-  "version": "4.1",
-  "system_prompt": "Sen proje planlayicisisin. Markdown formatinda plan olustur."
+  "description": "Planlayıcı - görevler için detaylı ve uygulanabilir planlar oluşturur",
+  "version": "5.0",
+  "prompt_file": "planner.txt"
 }

@@ -14,9 +14,38 @@ APP_CSS = """
         height: 100%;
     }
 
+    /* === LEFT SIDEBAR (Sessions + Workspace) === */
+    #left-sidebar {
+        width: 28;
+        height: 100%;
+        background: #1d2021;
+        border-right: solid #3c3836;
+    }
+    
+    #left-tabs {
+        height: 100%;
+    }
+    
+    #session-sidebar {
+        width: 100%;
+        height: 100%;
+        background: #1d2021;
+        padding: 0;
+        margin: 0;
+        border: none;
+    }
+    
+    #session-sidebar #sidebar-header {
+        display: none;
+    }
+    
+    #session-sidebar #sidebar-footer {
+        display: none;
+    }
+
     /* === LEFT PANEL - CHAT === */
     #left-panel {
-        width: 60%;
+        width: 1fr;
         height: 100%;
         background: #1d2021;
         border-right: solid #3c3836;
@@ -117,7 +146,7 @@ APP_CSS = """
 
     /* === RIGHT PANEL - DASHBOARD === */
     #right-panel {
-        width: 40%;
+        width: 45;
         height: 100%;
         background: #282828;
     }
@@ -221,6 +250,19 @@ APP_CSS = """
     #workspace-container {
         height: 100%;
         background: #282828;
+        overflow-y: auto;
+    }
+
+    .tree-label {
+        height: 2;
+        background: #3c3836;
+        padding: 0 1;
+        text-style: bold;
+        margin-top: 1;
+    }
+    
+    .tree-label:first-child {
+        margin-top: 0;
     }
 
     #workspace-header {
@@ -235,7 +277,13 @@ APP_CSS = """
     DirectoryTree {
         background: #282828;
         color: #ebdbb2;
-        padding: 1;
+        padding: 0 1;
+        height: auto;
+        max-height: 50%;
+    }
+    
+    #sandbox-tree {
+        border-top: solid #504945;
     }
 
     DirectoryTree > .directory-tree--folder {
@@ -338,5 +386,81 @@ APP_CSS = """
 
     VerticalScroll > .scrollbar--bar:hover {
         background: #928374;
+    }
+
+    /* === DEBUG PANEL === */
+    #debug-container {
+        height: 100%;
+        background: #1d2021;
+        padding: 1;
+    }
+
+    #agent-state {
+        height: auto;
+        background: #282828;
+        border: solid #3c3836;
+        padding: 1;
+        margin-bottom: 1;
+    }
+
+    #task-progress {
+        height: auto;
+        background: #282828;
+        border: solid #3c3836;
+        padding: 1;
+        margin-bottom: 1;
+    }
+
+    #tool-activity {
+        height: auto;
+        max-height: 10;
+        background: #282828;
+        border: solid #3c3836;
+        padding: 1;
+        margin-bottom: 1;
+    }
+
+    #debug-log {
+        height: 1fr;
+        background: #1d2021;
+        border: solid #3c3836;
+        padding: 1;
+    }
+
+    RichLog {
+        background: #1d2021;
+        color: #ebdbb2;
+        scrollbar-background: #3c3836;
+        scrollbar-color: #665c54;
+    }
+
+    /* === CODE HIGHLIGHTING === */
+    .code-block {
+        background: #1d2021;
+        border: solid #504945;
+        padding: 1;
+        margin: 1 0;
+    }
+
+    .code-keyword {
+        color: #fb4934;
+        text-style: bold;
+    }
+
+    .code-string {
+        color: #b8bb26;
+    }
+
+    .code-comment {
+        color: #928374;
+        text-style: italic;
+    }
+
+    .code-number {
+        color: #d3869b;
+    }
+
+    .code-function {
+        color: #8ec07c;
     }
 """

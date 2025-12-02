@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  agent-sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: atomagent-sandbox
+    hostname: agent-pc
+    volumes:
+      # Shared folder - dosya transferi için
+      - ./shared:/home/agent/shared
+    environment:
+      - USER=agent
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

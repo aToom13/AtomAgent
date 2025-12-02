@@ -17,11 +17,19 @@ from core.agent import get_agent_executor, get_thread_config
 from core.providers import model_manager, get_api_key_info, get_all_api_keys
 from config import config
 from utils.logger import get_logger
-from tools.todo_tools import get_todo_content
+# from tools.todo_tools import get_todo_content  # Todo kaldırıldı
 from tools.execution import add_allowed_command, execute_command_direct
 from ui.styles import APP_CSS
 from ui.handlers import ToolOutputHandler, FileHandler, ChatHandler
-from ui.widgets import ModelSelectorModal, apply_saved_settings, FallbackSelectorModal
+from ui.widgets import (
+    ModelSelectorModal, apply_saved_settings, FallbackSelectorModal,
+    TaskProgressWidget, ToolActivityWidget, DebugLogWidget, 
+    AgentStateWidget, MemoryUsageWidget,
+    SessionBrowserModal, SessionInfoWidget, RenameSessionModal,
+    SessionSidebar, SandboxPanel, ToolFactoryPanel
+)
+from core.session_manager import session_manager, Session
+from tools.tool_factory import register_tool_callback
 
 logger = get_logger()
 WORKSPACE_DIR = config.workspace.base_dir
@@ -42,6 +50,10 @@ class AtomAgentApp(App):
         Binding("ctrl+r", "refresh_workspace", "Refresh"),
         Binding("ctrl+shift+c", "copy_last", "Copy Last"),
         Binding("ctrl+y", "copy_last", "Copy"),
+        Binding("ctrl+d", "toggle_debug", "Debug"),
+        Binding("ctrl+h", "show_history", "History"),
+        Binding("ctrl+n", "new_session", "New Session"),
+        Binding("ctrl+b", "toggle_sidebar", "Sidebar"),
     ]
 
     def __init__(self):
@@ -52,45 +64,151 @@ class AtomAgentApp(App):
         
         self.agent_executor, _, self.system_prompt = get_agent_executor()
         self.loading_widgets = {}
-        self.thread_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.message_history = []
         self.pending_command = None
         self.quit_requested = False
         self._last_ai_response = ""  # Son AI yanıtını sakla
+        
+        # Session management
+        self.current_session: Session = None
+        self._init_session()
 
         # Handlers
         self.tool_handler = ToolOutputHandler(self)
         self.file_handler = FileHandler(self)
         self.chat_handler = ChatHandler(self)
+        
+        # Debug mode
+        self.debug_mode = False
+        self.debug_log = None
+        self.agent_state = None
+        self.progress_tracker = None
+        self.tool_activity = None
+        
+        # Sidebar reference
+        self.session_sidebar = None
+        
+        # Tool Factory callback - yeni tool oluşturulduğunda agent'ı güncelle
+        register_tool_callback(self._on_custom_tool_created)
 
         logger.info("AtomAgent started")
+    
+    def _on_custom_tool_created(self, tool_name: str, tool_instance):
+        """Custom tool oluşturulduğunda çağrılır"""
+        # Agent'ı yeniden oluştur (yeni tool'u dahil etmek için)
+        self.agent_executor, _, self.system_prompt = get_agent_executor()
+        logger.info(f"Agent updated with new tool: {tool_name}")
+        
+        # Tool Factory panelini güncelle
+        try:
+            panel = self.query_one("#tool-factory-panel", ToolFactoryPanel)
+            panel.refresh_tools()
+        except:
+            pass
+        
+        self.notify(f"🔧 Yeni tool eklendi: {tool_name}", severity="information", timeout=3)
+    
+    def _init_session(self):
+        """Yeni session başlat veya mevcut session'ı yükle"""
+        self.current_session = session_manager.create_session()
+        self.thread_id = self.current_session.id
+        logger.info(f"Session initialized: {self.thread_id}")
+    
+    def _save_message_to_session(self, role: str, content: str, metadata: dict = None):
+        """Mesajı session'a kaydet"""
+        if self.current_session:
+            session_manager.add_message(
+                self.current_session.id,
+                role=role,
+                content=content,
+                metadata=metadata
+            )
+            # Session'ı güncelle
+            self.current_session = session_manager.get_session(self.current_session.id)
+    
+    def _load_session(self, session: Session):
+        """Mevcut bir session'ı yükle"""
+        self.current_session = session
+        self.thread_id = session.id
+        self.message_history.clear()
+        
+        # Chat'i temizle
+        chat = self.query_one("#chat-scroll")
+        chat.remove_children()
+        
+        # Mesajları yükle
+        messages = session_manager.get_messages(session.id)
+        
+        for msg in messages:
+            if msg.role == "human":
+                user_text = self.chat_handler.create_user_message(msg.content)
+                chat.mount(Static(user_text, classes="user-msg"))
+                self.message_history.append(HumanMessage(content=msg.content))
+            elif msg.role == "ai":
+                ai_text = self.chat_handler.format_ai_response(msg.content)
+                chat.mount(Static(ai_text, classes="ai-msg"))
+            elif msg.role == "system":
+                chat.mount(Static(f"[dim]{msg.content}[/dim]", classes="system-msg"))
+        
+        chat.scroll_end()
+        self._add_system_message(f"📂 Session yüklendi: {session.title[:40]}")
+        self._update_session_info()
+        logger.info(f"Session loaded: {session.id}")
+    
+    def _update_session_info(self):
+        """Dashboard'da session bilgisini güncelle"""
+        dashboard = self.query_one("#dashboard-view")
+        
+        # Eski session kartını kaldır
+        for card in list(self.query(".session-info-card")):
+            card.remove()
+        
+        if self.current_session:
+            try:
+                dt = datetime.fromisoformat(self.current_session.created_at)
+                date_str = dt.strftime("%d %b %H:%M")
+            except:
+                date_str = "?"
+            
+            session_info = f"""[bold magenta]📝 Aktif Session[/bold magenta]
+[cyan]{self.current_session.title[:35]}[/cyan]
+[dim]ID: {self.current_session.id}[/dim]
+[dim]Mesaj: {self.current_session.message_count} • {date_str}[/dim]
+
+[dim]:history veya Ctrl+H ile geçmişe göz atın[/dim]"""
+            
+            dashboard.mount(Static(session_info, classes="tool-card session-info-card"))
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="main-container"):
-            # Left Panel - Chat
+            # Left Side - Session Sidebar + Workspace (Tabbed)
+            with Vertical(id="left-sidebar"):
+                with TabbedContent(id="left-tabs"):
+                    with TabPane("💬 Sohbetler", id="tab-sessions"):
+                        yield SessionSidebar(id="session-sidebar")
+                    
+                    with TabPane("📁 Dosyalar", id="tab-workspace"):
+                        with Vertical(id="workspace-container"):
+                            yield Label("[cyan]📂 Workspace[/cyan]", classes="tree-label")
+                            yield DirectoryTree(WORKSPACE_DIR, id="workspace-tree")
+                            yield Label("[yellow]🐳 Sandbox[/yellow]", classes="tree-label")
+                            yield DirectoryTree("docker/shared", id="sandbox-tree")
+            
+            # Center Panel - Chat
             with Vertical(id="left-panel"):
                 yield Label("🤖 ATOMAGENT", id="chat-header")
                 yield VerticalScroll(id="chat-scroll")
-                # Status/Permission bar - dinamik olarak değişir
+                # Status/Permission bar
                 with Vertical(id="status-container"):
                     yield Static("[dim]Ready[/dim]", id="status-bar")
                 with Container(id="input-container"):
                     yield Input(placeholder="Mesajınızı yazın...", id="user-input")
 
-            # Right Panel - Dashboard
+            # Right Panel - Dashboard & Tools
             with Vertical(id="right-panel"):
-                with TabbedContent():
-                    with TabPane("� Darshboard", id="tab-dashboard"):
+                with TabbedContent(id="right-tabs"):
+                    with TabPane("📊 Dashboard", id="tab-dashboard"):
                         yield VerticalScroll(id="dashboard-view")
-
-                    with TabPane("📁 Workspace", id="tab-workspace"):
-                        with Vertical(id="workspace-container"):
-                            yield Label("WORKSPACE", id="workspace-header")
-                            yield DirectoryTree(WORKSPACE_DIR, id="workspace-tree")
-
-                    with TabPane("✅ Todo", id="tab-todo"):
-                        with VerticalScroll(id="todo-scroll"):
-                            yield Markdown("*Görev yok*", id="todo-area")
 
                     with TabPane("📝 Editor", id="tab-editor"):
                         with Vertical(id="editor-container"):
@@ -101,14 +219,70 @@ class AtomAgentApp(App):
                                 id="code-editor",
                                 theme="monokai"
                             )
+                    
+                    with TabPane("🖥️ Sandbox", id="tab-sandbox"):
+                        yield SandboxPanel(id="sandbox-panel")
+                    
+                    with TabPane("🔧 Tools", id="tab-tools"):
+                        yield ToolFactoryPanel(id="tool-factory-panel")
+                    
+                    with TabPane("🔍 Debug", id="tab-debug"):
+                        with Vertical(id="debug-container"):
+                            yield AgentStateWidget(id="agent-state")
+                            yield TaskProgressWidget(id="task-progress")
+                            yield ToolActivityWidget(id="tool-activity")
+                            yield DebugLogWidget(id="debug-log")
 
         yield Footer()
 
     def on_mount(self) -> None:
         self.query_one("#user-input").focus()
         self._add_system_message("AtomAgent hazır! 🚀")
-        self._refresh_todo()
         self._show_model_info()
+        self._update_session_info()
+        
+        # Sidebar referansı ve aktif session ayarla
+        try:
+            self.session_sidebar = self.query_one("#session-sidebar", SessionSidebar)
+            if self.current_session:
+                self.session_sidebar.set_active_session(self.current_session.id)
+        except:
+            pass
+        
+        # Debug widget'larını referansla
+        try:
+            self.debug_log = self.query_one("#debug-log", DebugLogWidget)
+            self.agent_state = self.query_one("#agent-state", AgentStateWidget)
+            self.progress_tracker = self.query_one("#task-progress", TaskProgressWidget)
+            self.tool_activity = self.query_one("#tool-activity", ToolActivityWidget)
+            self._log_debug("info", "AtomAgent başlatıldı")
+            # Model bilgilerini güncelle
+            if self.agent_state:
+                self.agent_state.update_models()
+        except:
+            pass
+    
+    def _log_debug(self, level: str, message: str):
+        """Debug log ekle"""
+        if self.debug_log:
+            if level == "info":
+                self.debug_log.log_info(message)
+            elif level == "success":
+                self.debug_log.log_success(message)
+            elif level == "warning":
+                self.debug_log.log_warning(message)
+            elif level == "error":
+                self.debug_log.log_error(message)
+    
+    def action_toggle_debug(self) -> None:
+        """Debug panelini aç/kapat"""
+        self.debug_mode = not self.debug_mode
+        if self.debug_mode:
+            self.query_one("#right-tabs", TabbedContent).active = "tab-debug"
+            self.notify("Debug modu açık", severity="information", timeout=2)
+        else:
+            self.query_one("#right-tabs", TabbedContent).active = "tab-dashboard"
+            self.notify("Debug modu kapalı", severity="information", timeout=2)
     
     def _show_model_info(self):
         """Dashboard'da aktif model ve API key bilgisini göster"""
@@ -118,15 +292,22 @@ class AtomAgentApp(App):
         for card in list(self.query(".model-info-card")):
             card.remove()
         
-        # Model bilgisi kartı
-        supervisor = model_manager.get_config("supervisor")
-        coder = model_manager.get_config("coder")
-        researcher = model_manager.get_config("researcher")
+        # Gerçek kullanılan modelleri al (fallback dahil)
+        sup_provider, sup_model = model_manager.get_current_provider_info("supervisor")
+        cod_provider, cod_model = model_manager.get_current_provider_info("coder")
+        res_provider, res_model = model_manager.get_current_provider_info("researcher")
+        
+        # Model adlarını kısalt
+        def shorten(model):
+            if not model:
+                return "?"
+            short = model.split("/")[-1] if "/" in model else model
+            return short[:30] + "..." if len(short) > 30 else short
         
         model_info = f"""[bold cyan]🤖 Aktif Modeller[/bold cyan]
-[green]Supervisor:[/green] {supervisor.provider}/{supervisor.model}
-[green]Coder:[/green] {coder.provider}/{coder.model}
-[green]Researcher:[/green] {researcher.provider}/{researcher.model}
+[green]Supervisor:[/green] {sup_provider}/{shorten(sup_model)}
+[green]Coder:[/green] {cod_provider}/{shorten(cod_model)}
+[green]Researcher:[/green] {res_provider}/{shorten(res_model)}
 
 [dim]Model değiştirmek için :model yazın[/dim]"""
         
@@ -134,6 +315,10 @@ class AtomAgentApp(App):
         
         # API Key durumu kartı
         self._show_api_key_status(dashboard)
+        
+        # Debug panelini de güncelle
+        if self.agent_state:
+            self.agent_state.update_models()
     
     def _show_api_key_status(self, dashboard=None):
         """API key durumunu göster"""
@@ -232,11 +417,6 @@ class AtomAgentApp(App):
             status_container.remove_children()
             status_container.mount(Static(f"[{color}]{text}[/{color}]", id="status-bar"))
 
-    def _refresh_todo(self):
-        content = get_todo_content()
-        if content:
-            self.query_one("#todo-area", Markdown).update(content)
-
     # === PERMISSION DIALOG ===
 
     async def _show_permission_dialog(self, base_cmd: str, full_command: str):
@@ -305,16 +485,70 @@ class AtomAgentApp(App):
     # === APP ACTIONS ===
 
     def action_clear_chat(self) -> None:
+        """Chat'i temizle ve yeni session başlat"""
         chat = self.query_one("#chat-scroll")
         chat.remove_children()
-        self._add_system_message("Chat temizlendi")
+        self._add_system_message("Chat temizlendi - Yeni session başlatıldı")
         self.message_history.clear()
-        self.thread_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        # Yeni session oluştur
+        self._init_session()
+        self._update_session_info()
+        
+        # Sidebar'ı güncelle (refresh=True ile tek seferde)
+        if self.session_sidebar:
+            self.session_sidebar.set_active_session(self.current_session.id, refresh=True)
+        
         logger.info(f"New session: {self.thread_id}")
+    
+    def action_new_session(self) -> None:
+        """Yeni session başlat (Ctrl+N)"""
+        self.action_clear_chat()
+    
+    def action_show_history(self) -> None:
+        """Session geçmişini göster (Ctrl+H)"""
+        self.push_screen(SessionBrowserModal(), callback=self._on_session_selected)
+    
+    def _on_session_selected(self, session: Session):
+        """Session seçildiğinde çağrılır"""
+        if session:
+            self._load_session(session)
+            # Sidebar'ı güncelle (refresh=True ile veritabanından yeniden yükle)
+            if self.session_sidebar:
+                self.session_sidebar.set_active_session(session.id, refresh=True)
+    
+    def on_session_sidebar_session_selected(self, event: SessionSidebar.SessionSelected) -> None:
+        """Sidebar'dan session seçildiğinde"""
+        event.stop()
+        self._load_session(event.session)
+        if self.session_sidebar:
+            # Sidebar'dan seçildiğinde sadece active class güncelle, refresh gerekmez
+            self.session_sidebar.set_active_session(event.session.id, refresh=False)
+    
+    def on_session_sidebar_new_session_requested(self, event: SessionSidebar.NewSessionRequested) -> None:
+        """Sidebar'dan yeni session istendiğinde"""
+        event.stop()
+        self.action_new_session()
+    
+    def on_session_sidebar_session_deleted(self, event: SessionSidebar.SessionDeleted) -> None:
+        """Sidebar'dan session silindiğinde"""
+        event.stop()
+        # Sidebar zaten güncellendi, sadece log
+        logger.info(f"Session deleted: {event.session_id}")
+    
+    def action_toggle_sidebar(self) -> None:
+        """Sidebar'ı aç/kapat (Ctrl+B)"""
+        if self.session_sidebar:
+            if self.session_sidebar.display:
+                self.session_sidebar.display = False
+                self.notify("Sidebar gizlendi", severity="information", timeout=1)
+            else:
+                self.session_sidebar.display = True
+                self.session_sidebar.refresh_sessions()
+                self.notify("Sidebar gösterildi", severity="information", timeout=1)
 
     def action_refresh_workspace(self) -> None:
         self.query_one("#workspace-tree", DirectoryTree).reload()
-        self._refresh_todo()
     
     def action_copy_last(self) -> None:
         """Son AI mesajını panoya kopyala"""
@@ -368,8 +602,67 @@ class AtomAgentApp(App):
             self._show_api_key_status()
             return
         
+        if user_input.lower() == ":reset" or user_input.lower() == ":resetall":
+            from core.providers import reset_api_key_index
+            from tools.agents import clear_agent_cache
+            # Tüm index'leri sıfırla
+            reset_api_key_index()
+            # Model manager'ı sıfırla (primary'ye dön)
+            model_manager.reset_to_primary()
+            model_manager.clear_cache()
+            clear_agent_cache()
+            # Agent'ı yeniden oluştur
+            self.agent_executor, _, self.system_prompt = get_agent_executor()
+            self._add_system_message("Tüm provider'lar sıfırlandı, primary modellere dönüldü")
+            self._show_model_info()
+            return
+        
         if user_input.lower() == ":copy":
             self._copy_to_clipboard(self._last_ai_response)
+            return
+        
+        if user_input.lower() == ":memory":
+            self._show_memory_status()
+            return
+        
+        if user_input.lower() == ":clear" or user_input.lower() == ":clearmemory":
+            from tools.memory import clear_memory
+            clear_memory.invoke({})
+            self._add_system_message("Hafıza temizlendi")
+            return
+        
+        if user_input.lower() == ":debug":
+            self.action_toggle_debug()
+            return
+        
+        if user_input.lower() == ":tools" or user_input.lower() == ":toolfactory":
+            self.query_one("#right-tabs", TabbedContent).active = "tab-tools"
+            return
+        
+        if user_input.lower() == ":sandbox":
+            self.query_one("#right-tabs", TabbedContent).active = "tab-sandbox"
+            return
+        
+        # Session komutları
+        if user_input.lower() == ":history" or user_input.lower() == ":sessions":
+            self.action_show_history()
+            return
+        
+        if user_input.lower() == ":new" or user_input.lower() == ":newsession":
+            self.action_new_session()
+            return
+        
+        if user_input.lower().startswith(":rename "):
+            new_title = user_input[8:].strip()
+            if new_title and self.current_session:
+                session_manager.update_session(self.current_session.id, title=new_title)
+                self.current_session = session_manager.get_session(self.current_session.id)
+                self._update_session_info()
+                self._add_system_message(f"Session yeniden adlandırıldı: {new_title}")
+            return
+        
+        if user_input.lower() == ":export":
+            self._export_current_session()
             return
 
         chat = self.query_one("#chat-scroll")
@@ -378,6 +671,19 @@ class AtomAgentApp(App):
         chat.scroll_end()
 
         self.message_history.append(HumanMessage(content=user_input))
+        
+        # Mesajı session'a kaydet
+        self._save_message_to_session("human", user_input)
+        
+        # İlk mesajsa otomatik başlık oluştur
+        if self.current_session and self.current_session.message_count == 1:
+            session_manager.auto_title(self.current_session.id)
+            self.current_session = session_manager.get_session(self.current_session.id)
+            self._update_session_info()
+            # Sidebar'ı güncelle (yeni başlık için)
+            if self.session_sidebar:
+                self.session_sidebar.refresh_sessions()
+        
         self.run_worker(self._run_agent(user_input), exclusive=True)
     
     def _show_help(self):
@@ -387,20 +693,73 @@ class AtomAgentApp(App):
   :fallback  - Yedek provider ayarları
   :keys      - API key durumu detayı
   :resetkeys - API key indekslerini sıfırla
+  :reset     - Tüm provider'ları sıfırla (primary'ye dön)
   :copy      - Son AI yanıtını kopyala
+  :memory    - Hafıza durumunu göster
+  :clear     - Hafızayı temizle
+  :tools     - Tool Factory panelini aç
+  :sandbox   - Sandbox panelini aç
   :help      - Bu yardım mesajı
+  
+[bold magenta]Session Komutları:[/bold magenta]
+  :history   - Konuşma geçmişi (Ctrl+H)
+  :new       - Yeni session başlat (Ctrl+N)
+  :rename X  - Session'ı yeniden adlandır
+  :export    - Aktif session'ı JSON olarak export et
   
 [bold cyan]Kısayollar:[/bold cyan]
   Ctrl+C       - Çıkış (2 kez bas)
   Ctrl+S       - Dosya kaydet
-  Ctrl+L       - Chat temizle
+  Ctrl+L       - Chat temizle / Yeni session
   Ctrl+R       - Workspace yenile
   Ctrl+Y       - Son yanıtı kopyala
-  Ctrl+Shift+C - Son yanıtı kopyala
-  F5           - Dosya çalıştır"""
+  Ctrl+D       - Debug paneli aç/kapat
+  Ctrl+H       - Konuşma geçmişi (modal)
+  Ctrl+N       - Yeni session
+  Ctrl+B       - Sidebar aç/kapat
+  F5           - Dosya çalıştır
+  
+[bold cyan]Özellikler:[/bold cyan]
+  • Session Management - Konuşmalar otomatik kaydedilir
+  • Kod highlighting - Chat'te kod blokları renkli
+  • Debug paneli - Agent aktivitelerini izle
+  • Memory sistemi - Uzun görevlerde context koruma
+  • Tool Factory - Agent kendi tool'larını oluşturabilir
+  • Sandbox - İzole Docker ortamında kod çalıştırma"""
         
         chat = self.query_one("#chat-scroll")
         chat.mount(Static(help_text, classes="system-msg"))
+    
+    def _export_current_session(self):
+        """Aktif session'ı export et"""
+        if not self.current_session:
+            self._add_system_message("Aktif session yok")
+            return
+        
+        import json
+        import os
+        
+        data = session_manager.export_session(self.current_session.id)
+        if data:
+            filename = f"session_export_{self.current_session.id}.json"
+            filepath = os.path.join(config.workspace.base_dir, filename)
+            
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            self._add_system_message(f"✓ Export edildi: {filename}")
+            self.notify(f"Export: {filename}", severity="information")
+        else:
+            self._add_system_message("Export başarısız")
+            self.notify("Export başarısız", severity="error")
+    
+    def _show_memory_status(self):
+        """Hafıza durumunu göster"""
+        from tools.memory import get_memory_stats
+        
+        stats = get_memory_stats.invoke({})
+        chat = self.query_one("#chat-scroll")
+        chat.mount(Static(stats, classes="system-msg"))
     
     def _show_api_keys_detail(self):
         """Detaylı API key bilgisini göster"""
@@ -430,25 +789,39 @@ class AtomAgentApp(App):
         chat.mount(Static("\n".join(lines), classes="system-msg"))
 
     async def _run_agent(self, user_input: str, retry_count: int = 0):
-        from core.providers import is_rate_limit_error, handle_rate_limit
+        from core.providers import is_rate_limit_error, is_fallback_needed, handle_rate_limit
         from tools.agents import clear_agent_cache
+        from tools.memory import get_persistent_context
         
         chat = self.query_one("#chat-scroll")
         dashboard = self.query_one("#dashboard-view")
-        self.query_one(TabbedContent).active = "tab-dashboard"
+        self.query_one("#right-tabs", TabbedContent).active = "tab-dashboard"
 
         ai_response = Static(self.chat_handler.create_thinking_message(), classes="ai-msg")
         await chat.mount(ai_response)
 
         final_text = ""
-        max_retries = 3
+        max_retries = 10  # Tüm fallback'leri deneyebilmek için
 
         try:
-            messages = [SystemMessage(content=self.system_prompt)] + self.message_history
+            # Kalıcı hafızadaki bilgileri system prompt'a ekle
+            system_prompt_with_memory = self.system_prompt
+            persistent_ctx = get_persistent_context()
+            if persistent_ctx:
+                system_prompt_with_memory = self.system_prompt + "\n\n" + persistent_ctx
+            
+            messages = [SystemMessage(content=system_prompt_with_memory)] + self.message_history
             thread_config = get_thread_config(self.thread_id)
             thread_config["recursion_limit"] = 100  # Sınırsız gibi - karmaşık görevler için
 
             self._update_status("⚙️ Çalışıyor...", "yellow")
+            
+            # Debug: Agent durumunu güncelle
+            if self.agent_state:
+                self.agent_state.set_thinking(user_input[:50])
+            if self.progress_tracker:
+                self.progress_tracker.start_task(user_input[:50])
+            self._log_debug("info", f"Görev başladı: {user_input[:50]}...")
 
             async for event in self.agent_executor.astream_events(
                 {"messages": messages},
@@ -465,20 +838,47 @@ class AtomAgentApp(App):
                         )
 
                 elif kind == "on_tool_start":
+                    tool_name = event['name']
                     await self.chat_handler.handle_tool_start(
-                        event['name'], event['run_id'],
+                        tool_name, event['run_id'],
                         dashboard, self.loading_widgets, self.tool_handler
                     )
+                    # Debug: Tool başladı
+                    if self.tool_activity:
+                        self.tool_activity.add_activity(tool_name, "running")
+                    if self.agent_state:
+                        self.agent_state.set_working(tool_name)
+                        self.agent_state.increment_tools()
+                    if self.progress_tracker:
+                        self.progress_tracker.increment_step(f"Tool: {tool_name}")
+                    self._log_debug("info", f"Tool başladı: {tool_name}")
 
                 elif kind == "on_tool_end":
+                    tool_name = event['name']
                     output = str(event['data'].get('output', ''))
                     await self.chat_handler.handle_tool_end(
-                        event['name'], event['run_id'], output,
+                        tool_name, event['run_id'], output,
                         dashboard, self.loading_widgets, self.tool_handler
                     )
+                    # Debug: Tool bitti
+                    if self.tool_activity:
+                        status = "error" if "error" in output.lower() or "hata" in output.lower() else "success"
+                        self.tool_activity.update_activity(tool_name, status)
+                    self._log_debug("success" if "error" not in output.lower() else "warning", f"Tool bitti: {tool_name}")
 
             self.chat_handler.finalize_response(final_text, ai_response)
             self._last_ai_response = final_text  # Son yanıtı sakla
+            
+            # AI yanıtını session'a kaydet
+            self._save_message_to_session("ai", final_text)
+            self._update_session_info()
+            
+            # Debug: Görev tamamlandı
+            if self.agent_state:
+                self.agent_state.set_idle()
+            if self.progress_tracker:
+                self.progress_tracker.complete_task("Tamamlandı")
+            self._log_debug("success", "Görev tamamlandı")
 
         except Exception as e:
             error_str = str(e).lower()
@@ -496,60 +896,84 @@ class AtomAgentApp(App):
                 return
             
             logger.error(f"Error: {e}", exc_info=True)
+            self._log_debug("error", f"Hata yakalandı: {str(e)[:100]}")
             
-            # Rate limit kontrolü - otomatik key rotasyonu
-            if is_rate_limit_error(e) and retry_count < max_retries:
+            # Fallback gerekip gerekmediğini kontrol et
+            needs_fallback = is_fallback_needed(e)
+            
+            self._log_debug("info", f"Fallback needed: {needs_fallback}, Retry: {retry_count}/{max_retries}")
+            
+            # Fallback gerektiren hata kontrolü
+            if needs_fallback and retry_count < max_retries:
                 supervisor_config = model_manager.get_config("supervisor")
+                provider = supervisor_config.provider if supervisor_config else "unknown"
                 
-                # Önce aynı provider'ın diğer key'lerini dene
-                if supervisor_config and handle_rate_limit(supervisor_config.provider):
+                self._log_debug("warning", f"Rate limit/connection error for {provider}, trying fallback...")
+                
+                # Ollama veya API key olmayan provider için direkt fallback'e geç
+                if provider == "ollama" or not handle_rate_limit(provider):
+                    # Fallback provider'a geç
+                    if model_manager.switch_to_fallback("supervisor"):
+                        # Coder ve researcher için de fallback'e geç
+                        model_manager.switch_to_fallback("coder")
+                        model_manager.switch_to_fallback("researcher")
+                        
+                        self.notify("🔄 Yedek provider'a geçildi", severity="warning", timeout=3)
+                        self._show_api_key_status()
+                        self._show_model_info()
+                        self._log_debug("info", "Fallback provider'a geçildi")
+                        
+                        # Debug panelinde model bilgilerini güncelle
+                        if self.agent_state:
+                            self.agent_state.update_models()
+                        
+                        # Cache temizle
+                        model_manager.clear_cache()
+                        clear_agent_cache()
+                        self.agent_executor, _, self.system_prompt = get_agent_executor()
+                        
+                        await ai_response.remove()
+                        self.run_worker(self._run_agent(user_input, retry_count + 1), exclusive=True)
+                        return
+                    else:
+                        # Tüm fallback'ler tükendi
+                        self._log_debug("error", "Tüm fallback'ler tükendi")
+                        self.notify("❌ Tüm API limitleri doldu!", severity="error", timeout=10)
+                        await dashboard.mount(Static(
+                            "[red]❌ Tüm API limitleri doldu![/red]\n"
+                            "[yellow]Öneriler:[/yellow]\n"
+                            "• Biraz bekleyin (saatlik limitler sıfırlanır)\n"
+                            "• :model ile farklı bir provider seçin\n"
+                            "• .env'ye yeni API key'ler ekleyin",
+                            classes="error-msg"
+                        ))
+                        ai_response.update(Text(f"[{self.chat_handler.get_timestamp()}] Agent: API limiti doldu", style="italic red"))
+                        self._update_status("API Limit", "red")
+                        return
+                else:
+                    # API key rotasyonu başarılı
                     self.notify(f"🔄 API key değiştirildi ({retry_count + 1}/{max_retries})", severity="warning", timeout=2)
                     self._show_api_key_status()
                     
-                    # Agent'ı yeniden oluştur (cache temizle ama index'i koru)
-                    model_manager.clear_cache()
-                    clear_agent_cache()
-                    self.agent_executor, _, self.system_prompt = get_agent_executor()
-                    
-                    # Mesajı kaldır ve tekrar dene
-                    await ai_response.remove()
-                    self.run_worker(self._run_agent(user_input, retry_count + 1), exclusive=True)
-                    return
-                
-                # Key'ler bittiyse fallback provider'a geç
-                elif model_manager.switch_to_fallback("supervisor"):
-                    self.notify("🔄 Yedek provider'a geçildi", severity="warning", timeout=2)
-                    self._show_api_key_status()
-                    self._show_model_info()
-                    
-                    # Cache temizle - get_llm artık doğru fallback'i kullanacak
                     model_manager.clear_cache()
                     clear_agent_cache()
                     self.agent_executor, _, self.system_prompt = get_agent_executor()
                     
                     await ai_response.remove()
                     self.run_worker(self._run_agent(user_input, retry_count + 1), exclusive=True)
-                    return
-                
-                # Tüm provider'lar tükendi
-                else:
-                    self.notify("❌ Tüm API limitleri doldu!", severity="error", timeout=10)
-                    await dashboard.mount(Static(
-                        "[red]❌ Tüm API limitleri doldu![/red]\n"
-                        "[yellow]Öneriler:[/yellow]\n"
-                        "• Biraz bekleyin (saatlik limitler sıfırlanır)\n"
-                        "• :model ile farklı bir provider seçin\n"
-                        "• .env'ye yeni API key'ler ekleyin",
-                        classes="error-msg"
-                    ))
-                    ai_response.update(Text(f"[{self.chat_handler.get_timestamp()}] Agent: API limiti doldu", style="italic red"))
-                    self._update_status("API Limit", "red")
                     return
             
             # Hata mesajını göster
             await dashboard.mount(Static(self.chat_handler.create_error_message(e), classes="error-msg"))
             ai_response.update(Text(f"[{self.chat_handler.get_timestamp()}] Agent: Hata oluştu", style="italic red"))
             self._update_status("Error", "red")
+            
+            # Debug: Hata
+            if self.agent_state:
+                self.agent_state.set_error(str(e)[:50])
+            if self.progress_tracker:
+                self.progress_tracker.fail_task(str(e)[:50])
+            self._log_debug("error", f"Hata: {str(e)[:100]}")
 
 
 def main():

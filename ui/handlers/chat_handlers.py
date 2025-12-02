@@ -1,5 +1,6 @@
 """
 Chat Handlers - Agent ile iletişim ve mesaj yönetimi
+Kod highlighting ve gelişmiş mesaj formatlaması destekler
 """
 from datetime import datetime
 from rich.text import Text
@@ -7,6 +8,8 @@ from textual.widgets import Static, TabbedContent
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from utils.logger import get_logger
+from ui.widgets.code_highlighter import parse_message_with_code, simple_highlight, detect_language
+import re
 
 logger = get_logger()
 
@@ -51,18 +54,63 @@ class ChatHandler:
     
     async def process_stream_chunk(self, chunk_content: str, final_text: str, 
                                     ai_response: Static, chat) -> str:
-        """Stream chunk'ını işle"""
+        """Stream chunk'ını işle - kod highlighting ile"""
         # JSON içeriği filtrele
         if '{"' not in chunk_content and '"}' not in chunk_content:
             final_text += chunk_content
             
             text = Text()
             text.append(f"[{self.get_timestamp()}] Agent: ", style="bold cyan")
-            text.append(final_text)
+            
+            # Kod bloğu varsa highlight et
+            if "```" in final_text:
+                highlighted = self._highlight_message(final_text)
+                text.append_text(highlighted)
+            else:
+                text.append(final_text)
+            
             ai_response.update(text)
             chat.scroll_end()
         
         return final_text
+    
+    def _highlight_message(self, message: str) -> Text:
+        """Mesajdaki kod bloklarını renklendir"""
+        result = Text()
+        
+        # Kod bloğu pattern'i
+        code_block_pattern = r"```(\w*)\n?(.*?)```"
+        
+        last_end = 0
+        for match in re.finditer(code_block_pattern, message, re.DOTALL):
+            # Kod bloğundan önceki text
+            if match.start() > last_end:
+                result.append(message[last_end:match.start()])
+            
+            # Kod bloğu
+            language = match.group(1) or ""
+            code = match.group(2).strip()
+            
+            # Dil algıla
+            if not language:
+                language = detect_language(code)
+            
+            # Kod bloğunu ekle
+            result.append(f"\n```{language}\n", style="dim cyan")
+            
+            # Syntax highlighting
+            highlighted = simple_highlight(code, language)
+            result.append_text(highlighted)
+            
+            result.append("\n```\n", style="dim cyan")
+            
+            last_end = match.end()
+        
+        # Kalan text
+        if last_end < len(message):
+            result.append(message[last_end:])
+        
+        return result
     
     async def handle_tool_start(self, tool_name: str, run_id: str, 
                                  dashboard, loading_widgets: dict,
@@ -99,18 +147,36 @@ class ChatHandler:
         # Tool çıktısını işle
         await tool_handler.handle(tool_name, output, dashboard)
         
-        # Todo'yu güncelle
-        self.app._refresh_todo()
-        
         return False
     
     def finalize_response(self, final_text: str, ai_response: Static) -> None:
-        """Yanıtı sonlandır"""
+        """Yanıtı sonlandır - kod highlighting ile"""
         if not final_text:
             final_text = "✓ Tamamlandı"
         
         text = Text()
         text.append(f"[{self.get_timestamp()}] Agent: ", style="bold cyan")
-        text.append(final_text)
+        
+        # Kod bloğu varsa highlight et
+        if "```" in final_text:
+            highlighted = self._highlight_message(final_text)
+            text.append_text(highlighted)
+        else:
+            text.append(final_text)
+        
         ai_response.update(text)
         self.app._update_status("Ready", "dim")
+    
+    def format_ai_response(self, content: str) -> Text:
+        """AI yanıtını formatla (session yüklerken kullanılır)"""
+        text = Text()
+        text.append(f"Agent: ", style="bold cyan")
+        
+        # Kod bloğu varsa highlight et
+        if "```" in content:
+            highlighted = self._highlight_message(content)
+            text.append_text(highlighted)
+        else:
+            text.append(content)
+        
+        return text

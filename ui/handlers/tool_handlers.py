@@ -102,8 +102,6 @@ class ToolOutputHandler:
         await dashboard.mount(Static(text, classes="tool-card"))
     
     async def _handle_create_plan(self, output: str, short_output: str, dashboard):
-        self.app._refresh_todo()
-        self.app.query_one(TabbedContent).active = "tab-todo"
         await dashboard.mount(Static(Text("✓ Plan oluşturuldu", style="yellow"), classes="tool-card"))
     
     async def _handle_write_file(self, output: str, short_output: str, dashboard):
@@ -119,10 +117,11 @@ class ToolOutputHandler:
         await dashboard.mount(Static(Text("✓ create_directory", style="green"), classes="tool-card"))
     
     async def _handle_update_todo_list(self, output: str, short_output: str, dashboard):
-        self.app._refresh_todo()
+        text = Text()
+        text.append("📋 Todo güncellendi", style="yellow")
+        await dashboard.mount(Static(text, classes="tool-card"))
     
     async def _handle_mark_todo_done(self, output: str, short_output: str, dashboard):
-        self.app._refresh_todo()
         text = Text()
         text.append("✅ ", style="green")
         text.append(short_output)
@@ -135,8 +134,10 @@ class ToolOutputHandler:
         await dashboard.mount(Static(text, classes="tool-card"))
     
     async def _handle_get_current_todo(self, output: str, short_output: str, dashboard):
-        self.app._refresh_todo()
-        self.app.query_one(TabbedContent).active = "tab-todo"
+        text = Text()
+        text.append("📋 ", style="yellow")
+        text.append(short_output)
+        await dashboard.mount(Static(text, classes="tool-card"))
     
     async def _handle_run_terminal_command(self, output: str, short_output: str, dashboard):
         # Permission mesajı kontrolü (sub-agent'tan gelebilir)

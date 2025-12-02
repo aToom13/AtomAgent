@@ -64,6 +64,22 @@ workspaces/
 
 # Atom specific
 atom_agent.log
+.atom_checkpoints/
+.atom_fallback.json
+.atom_settings.json
+
+# Workspace data (user-specific)
+atom_workspace/.rag_db/
+atom_workspace/.memory/
+atom_workspace/.custom_tools/
+atom_workspace/todo.md
+
+# Docker shared (runtime files)
+docker/shared/*
+!docker/shared/.gitkeep
 
 # Models cache
 config/models_cache.json
+
+# Bosta (unused files)
+bosta/

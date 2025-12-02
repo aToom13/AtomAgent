@@ -29,7 +29,7 @@ class ExecutionConfig:
         "python", "python3", "node", "npm", "pip", "git", 
         "ls", "cat", "head", "tail", "wc", "grep", "find",
         "mkdir", "touch", "echo", "curl", "wget", "ollama",
-         "cd", "ls", "mv",  "cp", "npm", "npx"
+         "cd", "ls", "mv",  "cp", "npm", "npx", "playwright"
     ])
     blocked_patterns: list = field(default_factory=lambda: [
         "rm -rf /", "sudo", "chmod 777", ":(){ :|:& };:",

@@ -193,8 +193,63 @@ def is_rate_limit_error(error: Exception) -> bool:
         "credit",
         "insufficient_quota",
         "billing",
+        # Ollama cloud specific
+        "limit exceeded",
+        "weekly limit",
+        "daily limit",
+        "monthly limit",
+        "usage limit",
+        "exceeded",
+        "exhausted",
+        "no capacity",
+        "overloaded",
+        "503",
+        "502",
+        "service unavailable",
     ]
     return any(indicator in error_str for indicator in rate_limit_indicators)
+
+
+def is_fallback_needed(error: Exception) -> bool:
+    """
+    Check if error requires fallback to another provider.
+    Includes rate limits, API errors, model errors, etc.
+    """
+    error_str = str(error).lower()
+    
+    # Rate limit hatası
+    if is_rate_limit_error(error):
+        return True
+    
+    # API ve model hataları - fallback gerektirir
+    fallback_indicators = [
+        # HTTP hataları
+        "400", "401", "403", "404", "500", "502", "503", "504",
+        # Model hataları
+        "invalid model",
+        "model not found",
+        "unexpected model",
+        "unknown model",
+        "invalid argument",
+        "bad request",
+        # API hataları
+        "api error",
+        "api_error",
+        "authentication",
+        "unauthorized",
+        "forbidden",
+        "not found",
+        # Bağlantı hataları
+        "connection",
+        "timeout",
+        "timed out",
+        "network",
+        "unreachable",
+        # Genel hatalar
+        "failed",
+        "error",
+    ]
+    return any(indicator in error_str for indicator in fallback_indicators)
 
 
 def handle_rate_limit(provider: str) -> bool:
@@ -491,10 +546,15 @@ class ModelManager:
         for fb in config.fallbacks:
             providers.append((fb.provider, fb.model))
         
+        logger.info(f"Attempting fallback for {role}, current index: {current_idx}, total providers: {len(providers)}")
+        
         # Try next provider
         for i in range(current_idx + 1, len(providers)):
             provider, model = providers[i]
+            logger.info(f"Trying fallback {i}: {provider}/{model}")
+            
             if not check_api_key(provider):
+                logger.warning(f"Skipping {provider} - no API key")
                 continue
             
             llm = create_llm(provider, model, config.temperature)
@@ -508,6 +568,25 @@ class ModelManager:
                 
                 logger.warning(f"Switched {role} to fallback: {provider}/{model}")
                 return True
+            else:
+                logger.warning(f"Failed to create LLM for {provider}/{model}")
+        
+        # Wrap around - try from beginning if we haven't
+        if current_idx > 0:
+            for i in range(0, current_idx):
+                provider, model = providers[i]
+                if not check_api_key(provider):
+                    continue
+                
+                llm = create_llm(provider, model, config.temperature)
+                if llm:
+                    if role in self._llm_cache:
+                        del self._llm_cache[role]
+                    
+                    self._llm_cache[role] = llm
+                    self._current_provider[role] = i
+                    logger.warning(f"Wrapped around to {provider}/{model} for {role}")
+                    return True
         
         logger.error(f"No more fallbacks available for {role}")
         return False

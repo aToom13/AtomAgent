@@ -21,7 +21,7 @@ class FallbackSelectorModal(ModalScreen):
     #fallback-dialog {
         width: 95;
         height: auto;
-        max-height: 50;
+        max-height: 70;
         background: #282828;
         border: solid #d79921;
         padding: 1 2;
@@ -95,7 +95,7 @@ class FallbackSelectorModal(ModalScreen):
     }
     """
     
-    MAX_FALLBACKS = 3  # Maximum fallback providers per role
+    MAX_FALLBACKS = 6  # Maximum fallback providers per role
     
     def compose(self) -> ComposeResult:
         with Vertical(id="fallback-dialog"):
