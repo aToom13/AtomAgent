@@ -145,7 +145,7 @@ AtomAgent/
 │   ├── docker-compose.yml
 │   └── shared/             # Host-container senkron klasör
 └── utils/
-    └── logger.py           # Loglama sistemi
+    └── logger.py           # Loglama sistem
 ```
 
 ## Gereksinimler
