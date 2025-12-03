@@ -1128,6 +1128,11 @@ class AtomAgentApp(App):
 
         except Exception as e:
             error_str = str(e).lower()
+            error_repr = repr(e).lower()
+            error_type = type(e).__name__
+            
+            logger.error(f"Error caught: {error_type}: {e}")
+            self._log_debug("error", f"Hata: {error_type}: {str(e)[:100]}")
             
             # Recursion limit hatası - artık 100 olduğu için nadiren olacak
             if "recursion limit" in error_str or "recursion_limit" in error_str:
@@ -1141,12 +1146,10 @@ class AtomAgentApp(App):
                 self._update_status("Done", "yellow")
                 return
             
-            logger.error(f"Error: {e}", exc_info=True)
-            self._log_debug("error", f"Hata yakalandı: {str(e)[:100]}")
-            
             # Fallback gerekip gerekmediğini kontrol et
             needs_fallback = is_fallback_needed(e)
             
+            logger.info(f"Fallback check: needs_fallback={needs_fallback}, retry={retry_count}/{max_retries}, error_type={error_type}")
             self._log_debug("info", f"Fallback needed: {needs_fallback}, Retry: {retry_count}/{max_retries}")
             
             # Fallback gerektiren hata kontrolü

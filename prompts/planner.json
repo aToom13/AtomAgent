@@ -1,6 +1,0 @@
-{
-  "name": "Planner",
-  "description": "Planlayıcı - görevler için detaylı ve uygulanabilir planlar oluşturur",
-  "version": "5.0",
-  "prompt_file": "planner.txt"
-}

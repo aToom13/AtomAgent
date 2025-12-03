@@ -175,7 +175,9 @@ def get_api_key_info(provider: str) -> dict:
 
 def is_rate_limit_error(error: Exception) -> bool:
     """Check if error is a rate limit error"""
-    error_str = str(error).lower()
+    # Hata mesajını ve repr'ını birleştir
+    error_str = f"{str(error)} {repr(error)}".lower()
+    
     rate_limit_indicators = [
         "rate limit",
         "rate_limit",
@@ -193,6 +195,10 @@ def is_rate_limit_error(error: Exception) -> bool:
         "credit",
         "insufficient_quota",
         "billing",
+        # Payment errors
+        "402",
+        "payment required",
+        "payment_required",
         # Ollama cloud specific
         "limit exceeded",
         "weekly limit",
@@ -215,7 +221,11 @@ def is_fallback_needed(error: Exception) -> bool:
     Check if error requires fallback to another provider.
     Includes rate limits, API errors, model errors, etc.
     """
-    error_str = str(error).lower()
+    # Hata mesajını ve repr'ını birleştir (daha fazla bilgi için)
+    error_str = f"{str(error)} {repr(error)}".lower()
+    
+    # Exception tipini de kontrol et
+    error_type = type(error).__name__.lower()
     
     # Rate limit hatası
     if is_rate_limit_error(error):
@@ -224,7 +234,14 @@ def is_fallback_needed(error: Exception) -> bool:
     # API ve model hataları - fallback gerektirir
     fallback_indicators = [
         # HTTP hataları
-        "400", "401", "403", "404", "500", "502", "503", "504",
+        "400", "401", "402", "403", "404", "500", "502", "503", "504",
+        # Payment/Billing hataları
+        "payment required",
+        "payment_required",
+        "billing",
+        "subscription",
+        "credits",
+        "insufficient",
         # Model hataları
         "invalid model",
         "model not found",
@@ -245,11 +262,22 @@ def is_fallback_needed(error: Exception) -> bool:
         "timed out",
         "network",
         "unreachable",
+        # aiohttp hataları
+        "clientresponseerror",
+        "clienterror",
         # Genel hatalar
         "failed",
         "error",
     ]
-    return any(indicator in error_str for indicator in fallback_indicators)
+    
+    # Error string veya type'da indicator var mı?
+    if any(indicator in error_str for indicator in fallback_indicators):
+        return True
+    
+    if any(indicator in error_type for indicator in fallback_indicators):
+        return True
+    
+    return False
 
 
 def handle_rate_limit(provider: str) -> bool:

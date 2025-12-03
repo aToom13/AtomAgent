@@ -1,6 +1,0 @@
-{
-  "name": "Coder",
-  "description": "Yazılım mühendisi agent - kod yazar, düzenler, test eder",
-  "version": "5.0",
-  "prompt_file": "coder.txt"
-}

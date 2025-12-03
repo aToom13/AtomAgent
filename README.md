@@ -176,3 +176,94 @@ AtomAgent/
 - Python 3.10+
 - Docker (sandbox için opsiyonel)
 - Ollama (yerel model için opsiyonel)
+
+## Changelog
+
+### v4.3 (Aralık 2024)
+
+#### Yeni Özellikler
+
+**1. Gelişmiş Prompt Engineering**
+- Chain of Thought (CoT) yaklaşımı eklendi
+- Hata kurtarma stratejileri prompt'a entegre edildi
+- Öğrenme ve performans takibi talimatları eklendi
+
+**2. Streaming & Async Desteği**
+- `utils/streaming.py`: Async streaming response desteği
+- Daha iyi UX için token-by-token streaming
+- Paralel görev çalıştırma desteği
+
+**3. Context Window Yönetimi**
+- `utils/context_manager.py`: Akıllı context sıkıştırma
+- Model bazlı token limitleri
+- Otomatik mesaj özetleme
+- Tool output truncation
+
+**4. Gelişmiş Retry Mekanizması**
+- `utils/retry.py`: Exponential backoff ile retry
+- Tenacity entegrasyonu (opsiyonel)
+- Rate limit ve server error handling
+- RetryContext context manager
+
+**5. Response Caching**
+- `utils/cache.py`: LLM response caching
+- Embedding cache (maliyet azaltma)
+- TTL ve LRU eviction
+- Persistent cache (disk'e kayıt)
+
+**6. Gelişmiş RAG (Hybrid Search)**
+- Semantic + Keyword hybrid search
+- Cross-encoder reranking (opsiyonel)
+- Kod elementi extraction (functions, classes)
+- Cached embeddings
+- `search_functions` tool eklendi
+
+**7. İyileştirilmiş Tool Descriptions**
+- Daha spesifik kullanım talimatları
+- KULLAN/KULLANMA örnekleri
+- Daha iyi tool seçimi için rehberlik
+
+**8. Telemetry & Observability**
+- `utils/telemetry.py`: Distributed tracing
+- Performance monitoring
+- Debug context
+- Tool call tracing
+
+**9. Test Coverage**
+- `tests/` dizini eklendi
+- Provider testleri
+- Tool testleri
+- Utility testleri
+- pytest fixtures
+
+#### Yeni Dosyalar
+```
+utils/
+├── __init__.py
+├── cache.py           # Response & embedding cache
+├── context_manager.py # Context window management
+├── retry.py           # Retry with backoff
+├── streaming.py       # Async streaming support
+└── telemetry.py       # Tracing & monitoring
+
+tests/
+├── __init__.py
+├── conftest.py        # Pytest fixtures
+├── test_agent.py
+├── test_providers.py
+├── test_utils.py
+└── test_tools/
+    ├── __init__.py
+    ├── test_files.py
+    └── test_execution.py
+```
+
+#### Yeni Bağımlılıklar
+```
+tenacity>=8.2.0              # Retry with exponential backoff
+tiktoken>=0.5.0              # Token counting
+sentence-transformers>=2.2.0 # Reranking (optional)
+pytest>=7.0.0                # Testing
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+```

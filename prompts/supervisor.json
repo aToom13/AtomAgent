@@ -1,6 +1,0 @@
-{
-  "name": "Supervisor",
-  "description": "Ana orchestrator agent - görevleri yönetir ve diğer agentları koordine eder",
-  "version": "5.1",
-  "prompt_file": "supervisor.txt"
-}

@@ -1,7 +1,7 @@
 """
 Agent Tools - Sub-agent'lari tool olarak cagirir
 Error Recovery, Retry mekanizmasi ve RAG destegi ile
-v4.2 - Timeout Support & Better Error Handling
+v4.3 - Enhanced Retry with Telemetry
 """
 import time
 import asyncio
@@ -13,6 +13,8 @@ from langgraph.prebuilt import create_react_agent
 from core.providers import model_manager, create_llm, is_rate_limit_error, is_fallback_needed, handle_rate_limit, rotate_api_key
 from prompts import load_prompt
 from utils.logger import get_logger
+from utils.retry import retry_with_backoff, RetryContext, is_retryable_error
+from utils.telemetry import trace_tool_call, get_debug_context
 from tools.files import (
     write_file, read_file, list_files, create_directory,
     delete_file, delete_directory, scan_workspace
@@ -173,126 +175,162 @@ def is_server_error(error: Exception) -> bool:
 @tool
 def call_coder(task: str) -> str:
     """
-    Coder'i cagirir. Kod yazma, dosya islemleri icin.
-    RAG destekli - mevcut kodu anlamsal olarak arayabilir.
-    Hata durumunda otomatik retry yapar.
-    Rate limit durumunda otomatik API key rotasyonu yapar.
+    KOD YAZMA VE DÜZENLEME İÇİN KULLAN.
+    
+    KULLAN:
+    - Yeni dosya oluşturma (Python, JS, HTML, CSS, vb.)
+    - Mevcut kodu düzenleme veya refactoring
+    - Bug fix ve hata düzeltme
+    - Test yazma
+    - Kod kalitesi iyileştirme
+    
+    KULLANMA:
+    - Web araştırması için (call_researcher kullan)
+    - Sadece bilgi almak için (direkt cevap ver)
+    - Dosya okumak için (read_file kullan)
+    
+    ÖNEMLİ: Görevi detaylı ve spesifik ver!
+    KÖTÜ: "Login sayfası yap"
+    İYİ: "React ile login sayfası oluştur: email/password inputları, 
+         validation, submit butonu, hata gösterimi, Tailwind CSS"
     
     Args:
-        task: Yapilacak gorev
+        task: Yapılacak görev (detaylı olmalı)
     """
     logger.info(f"Coder: {task[:50]}...")
+    debug_ctx = get_debug_context()
     
-    max_attempts = 10  # Tüm fallback'leri deneyebilmek için
-    last_error = None
-    
-    for attempt in range(max_attempts):
-        # Her denemede agent'ı yeniden al (key değişmiş olabilir)
-        coder = _get_coder_agent()
-        
-        try:
-            # Normal invoke - timeout yok, API ne kadar sürerse sürsün
-            result = coder.invoke({"messages": [HumanMessage(content=task)]})
-            output = str(result["messages"][-1].content)
-            mark_todo_step("Kod", completed=True)
-            return output
+    with RetryContext(max_attempts=10, base_delay=1.0) as ctx:
+        while ctx.should_retry():
+            # Her denemede agent'ı yeniden al (key değişmiş olabilir)
+            coder = _get_coder_agent()
             
-        except Exception as e:
-            last_error = e
-            logger.warning(f"Coder attempt {attempt + 1} failed: {e}")
-            
-            # Server error (500, 502, etc.) - bekle ve tekrar dene
-            if is_server_error(e):
-                logger.info(f"Server error, waiting and retrying...")
-                time.sleep(3)
-                continue
-            
-            # Fallback gerekip gerekmediğini kontrol et
-            if is_fallback_needed(e):
-                config = model_manager.get_config("coder")
-                provider = config.provider if config else "unknown"
-                logger.info(f"Coder: Fallback needed for {provider}")
+            try:
+                with trace_tool_call("call_coder", {"task": task[:100]}):
+                    result = coder.invoke({"messages": [HumanMessage(content=task)]})
+                    output = str(result["messages"][-1].content)
+                    
+                    mark_todo_step("Kod", completed=True)
+                    debug_ctx.log_tool_call("call_coder", {"task": task[:50]}, output[:100], True)
+                    ctx.success()
+                    return output
                 
-                # Fallback'e geç
-                if model_manager.switch_to_fallback("coder"):
-                    clear_agent_cache()
-                    logger.info(f"Coder: Switched to fallback provider")
-                    time.sleep(0.5)
+            except Exception as e:
+                debug_ctx.log_error(str(e), {"tool": "call_coder", "attempt": ctx.attempt})
+                
+                # Server error (500, 502, etc.) - bekle ve tekrar dene
+                if is_server_error(e):
+                    logger.info(f"Server error, waiting and retrying...")
+                    ctx.failed(e)
                     continue
-            
-            if attempt < max_attempts - 1:
-                time.sleep(1)
-                task = f"BASIT YAP: {task}"
+                
+                # Fallback gerekip gerekmediğini kontrol et
+                if is_fallback_needed(e):
+                    config = model_manager.get_config("coder")
+                    provider = config.provider if config else "unknown"
+                    logger.info(f"Coder: Fallback needed for {provider}")
+                    
+                    # Fallback'e geç
+                    if model_manager.switch_to_fallback("coder"):
+                        clear_agent_cache()
+                        logger.info(f"Coder: Switched to fallback provider")
+                        ctx.failed(e)
+                        continue
+                
+                # Retryable error check
+                if is_retryable_error(e):
+                    ctx.failed(e)
+                    continue
+                
+                # Non-retryable error
+                ctx.failed(e)
+                break
     
-    logger.error(f"Coder failed: {last_error}")
-    return f"Coder hatasi: {last_error}. Gorevi basitlestirip tekrar deneyin."
+    logger.error(f"Coder failed: {ctx.last_error}")
+    return f"Coder hatasi: {ctx.last_error}. Gorevi basitlestirip tekrar deneyin."
 
 
 @tool
 def call_researcher(query: str) -> str:
     """
-    Researcher'i cagirir. Web arastirmasi ve kod tabani aramasi icin.
-    RAG destekli - yerel kod tabanini anlamsal olarak arayabilir.
-    Arama basarisiz olursa farkli query dener.
-    Rate limit durumunda otomatik API key rotasyonu yapar.
+    WEB ARAŞTIRMASI VE BİLGİ TOPLAMA İÇİN KULLAN.
+    
+    KULLAN:
+    - Güncel teknoloji bilgisi gerektiğinde
+    - API dokümantasyonu araştırması
+    - Best practice ve pattern araştırması
+    - Hata mesajı çözümü araştırması
+    - Kütüphane/framework karşılaştırması
+    
+    KULLANMA:
+    - Temel programlama bilgisi için (zaten biliyorsun)
+    - Kod yazmak için (call_coder kullan)
+    - Yerel kod aramak için (search_codebase kullan)
+    
+    ÖNEMLİ: Spesifik sorgular daha iyi sonuç verir!
+    KÖTÜ: "React"
+    İYİ: "React useEffect cleanup function best practices 2024"
     
     Args:
-        query: Aranacak konu
+        query: Araştırılacak konu (spesifik olmalı)
     """
     logger.info(f"Researcher: {query[:50]}...")
+    debug_ctx = get_debug_context()
     
-    max_attempts = 10  # Tüm fallback'leri deneyebilmek için
     queries_to_try = [query, f"{query} tutorial", f"{query} example"]
     
-    last_error = None
-    
-    for i in range(max_attempts):
-        # Her denemede agent'ı yeniden al (key değişmiş olabilir)
-        researcher = _get_researcher_agent()
-        q = queries_to_try[i] if i < len(queries_to_try) else query
-        
-        try:
-            # Normal invoke - timeout yok
-            result = researcher.invoke({"messages": [HumanMessage(content=q)]})
-            output = str(result["messages"][-1].content)
+    with RetryContext(max_attempts=10, base_delay=1.0) as ctx:
+        while ctx.should_retry():
+            researcher = _get_researcher_agent()
+            q = queries_to_try[ctx.attempt] if ctx.attempt < len(queries_to_try) else query
             
-            if "basarisiz" in output.lower() or "hata" in output.lower() or len(output) < 50:
-                if i < max_attempts - 1:
-                    logger.warning(f"Researcher got poor results, trying alternative query")
-                    time.sleep(1)
-                    continue
-            
-            mark_todo_step("Arastir", completed=True)
-            return output
-            
-        except Exception as e:
-            last_error = e
-            logger.warning(f"Researcher attempt {i + 1} failed: {e}")
-            
-            # Server error - bekle ve tekrar dene
-            if is_server_error(e):
-                logger.info(f"Server error, waiting and retrying...")
-                time.sleep(3)
-                continue
-            
-            # Fallback gerekip gerekmediğini kontrol et
-            if is_fallback_needed(e):
-                config = model_manager.get_config("researcher")
-                provider = config.provider if config else "unknown"
-                logger.info(f"Researcher: Fallback needed for {provider}")
+            try:
+                with trace_tool_call("call_researcher", {"query": q[:100]}):
+                    result = researcher.invoke({"messages": [HumanMessage(content=q)]})
+                    output = str(result["messages"][-1].content)
+                    
+                    # Check result quality
+                    if "basarisiz" in output.lower() or "hata" in output.lower() or len(output) < 50:
+                        if ctx.attempt < 3:
+                            logger.warning(f"Researcher got poor results, trying alternative query")
+                            ctx.failed(Exception("Poor results"))
+                            continue
+                    
+                    mark_todo_step("Arastir", completed=True)
+                    debug_ctx.log_tool_call("call_researcher", {"query": q[:50]}, output[:100], True)
+                    ctx.success()
+                    return output
                 
-                # Fallback'e geç
-                if model_manager.switch_to_fallback("researcher"):
-                    clear_agent_cache()
-                    logger.info(f"Researcher: Switched to fallback provider")
-                    time.sleep(0.5)
+            except Exception as e:
+                debug_ctx.log_error(str(e), {"tool": "call_researcher", "attempt": ctx.attempt})
+                
+                # Server error - bekle ve tekrar dene
+                if is_server_error(e):
+                    logger.info(f"Server error, waiting and retrying...")
+                    ctx.failed(e)
                     continue
-            
-            if i < max_attempts - 1:
-                time.sleep(1)
+                
+                # Fallback gerekip gerekmediğini kontrol et
+                if is_fallback_needed(e):
+                    config = model_manager.get_config("researcher")
+                    provider = config.provider if config else "unknown"
+                    logger.info(f"Researcher: Fallback needed for {provider}")
+                    
+                    if model_manager.switch_to_fallback("researcher"):
+                        clear_agent_cache()
+                        logger.info(f"Researcher: Switched to fallback provider")
+                        ctx.failed(e)
+                        continue
+                
+                if is_retryable_error(e):
+                    ctx.failed(e)
+                    continue
+                
+                ctx.failed(e)
+                break
     
-    logger.error(f"Researcher failed: {last_error}")
-    return f"Arastirma basarisiz: {last_error}. Farkli anahtar kelimeler deneyin."
+    logger.error(f"Researcher failed: {ctx.last_error}")
+    return f"Arastirma basarisiz: {ctx.last_error}. Farkli anahtar kelimeler deneyin."
 
 
 @tool

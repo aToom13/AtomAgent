@@ -234,11 +234,13 @@ class ToolFactoryPanel(Widget):
     def on_mount(self) -> None:
         self.refresh_tools()
     
-    def refresh_tools(self) -> None:
+    async def refresh_tools(self) -> None:
         """Tool listesini yenile"""
         tools = get_tool_list()
         scroll = self.query_one("#tf-tools-scroll", VerticalScroll)
-        scroll.remove_children()
+        
+        # Tüm children'ı kaldır ve bekle
+        await scroll.remove_children()
         
         # Stats güncelle
         loaded = len(_custom_tools)
@@ -247,7 +249,7 @@ class ToolFactoryPanel(Widget):
         stats.update(f"[cyan]Toplam:[/cyan] {total} tool | [green]Yüklü:[/green] {loaded}")
         
         if not tools:
-            scroll.mount(Static(
+            await scroll.mount(Static(
                 "[dim]Henüz custom tool yok.\n\n"
                 "Agent'a 'create_tool' kullanarak\n"
                 "yeni tool oluşturmasını söyleyin.[/dim]",
@@ -256,7 +258,7 @@ class ToolFactoryPanel(Widget):
             return
         
         for tool_info in tools:
-            scroll.mount(ToolItem(tool_info))
+            await scroll.mount(ToolItem(tool_info))
     
     def on_tool_item_view_code(self, event: ToolItem.ViewCode) -> None:
         """Tool kodunu göster"""
@@ -294,18 +296,18 @@ class ToolFactoryPanel(Widget):
         self.query_one("#tf-code-view").remove_class("visible")
         self.query_one("#tf-test-input", Input).focus()
     
-    def on_tool_item_delete_tool(self, event: ToolItem.DeleteTool) -> None:
+    async def on_tool_item_delete_tool(self, event: ToolItem.DeleteTool) -> None:
         """Tool'u sil"""
         event.stop()
         result = delete_tool_func.invoke({"name": event.tool_name})
         self.app.notify(result, severity="information", timeout=3)
-        self.refresh_tools()
+        await self.refresh_tools()
     
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         btn_id = event.button.id
         
         if btn_id == "tf-refresh":
-            self.refresh_tools()
+            await self.refresh_tools()
             self.app.notify("Tool listesi yenilendi", timeout=2)
         
         elif btn_id == "tf-close-code":

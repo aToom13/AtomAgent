@@ -1,6 +1,0 @@
-{
-  "name": "Researcher",
-  "description": "Araştırmacı agent - akıllı web araması yapar ve bilgi toplar",
-  "version": "5.0",
-  "prompt_file": "researcher.txt"
-}
