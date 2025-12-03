@@ -5,6 +5,10 @@ from langchain_core.tools import tool
 import subprocess
 import shlex
 import os
+import json
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Dict
 from config import config
 from utils.logger import get_logger
 
@@ -75,8 +79,24 @@ def _is_command_safe(command: str) -> tuple[bool, str, str]:
     return True, "OK", ""
 
 
-def execute_command_direct(command: str) -> str:
+@lru_cache(maxsize=128)
+def execute_command_cached(command: str) -> str:
+    """
+    Cache'lenmiş komut çalıştırma.
+    Sadece okuma yapan ve yan etkisi olmayan komutlar için kullanılmalı.
+    """
+    return _execute_command_impl(command)
+
+
+def execute_command_direct(command: str, use_cache: bool = False) -> str:
     """Komutu direkt çalıştırır (güvenlik kontrolü yapılmış varsayılır)"""
+    if use_cache:
+        return execute_command_cached(command)
+    return _execute_command_impl(command)
+
+
+def _execute_command_impl(command: str) -> str:
+    """Gerçek komut çalıştırma implementasyonu"""
     try:
         if not os.path.exists(WORKSPACE_DIR):
             os.makedirs(WORKSPACE_DIR)
@@ -137,3 +157,46 @@ def run_terminal_command(command: str) -> str:
     
     # Güvenli, çalıştır
     return execute_command_direct(command)
+
+
+@tool
+def run_commands_parallel(commands: List[str]) -> str:
+    """
+    Executes multiple commands in parallel.
+    Useful for running independent tasks or tests simultaneously.
+    
+    Args:
+        commands: List of commands to execute
+        
+    Returns:
+        JSON string with results for each command
+    """
+    logger.info(f"Running {len(commands)} commands in parallel")
+    results: Dict[str, str] = {}
+    
+    # Güvenlik kontrolü - hepsi güvenli olmalı
+    for cmd in commands:
+        is_safe, reason, base_cmd = _is_command_safe(cmd)
+        if not is_safe:
+            return f"❌ Command not allowed: {cmd} ({reason})"
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        # Cache kullanımı: Eğer komut 'ls', 'echo', 'cat', 'pwd', 'grep' gibi 
+        # salt okunur görünüyorsa cache kullanabiliriz.
+        # Şimdilik güvenli taraf için cache'i kapalı tutuyoruz veya 
+        # sadece belirli komutlar için açabiliriz.
+        # Agent'ın isteği üzerine cache altyapısı eklendi ama default kapalı.
+        
+        future_to_cmd = {
+            executor.submit(execute_command_direct, cmd, False): cmd 
+            for cmd in commands
+        }
+
+        for future in as_completed(future_to_cmd):
+            cmd = future_to_cmd[future]
+            try:
+                results[cmd] = future.result()
+            except Exception as exc:
+                results[cmd] = f"Error: {str(exc)}"
+
+    return json.dumps(results, indent=2, ensure_ascii=False)

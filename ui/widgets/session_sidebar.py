@@ -19,64 +19,7 @@ logger = get_logger()
 class SessionItem(Vertical):
     """Tek bir session item'ı"""
     
-    DEFAULT_CSS = """
-    SessionItem {
-        height: auto;
-        padding: 1;
-        margin: 0 0 1 0;
-        background: #3c3836;
-        border-left: thick transparent;
-    }
-    
-    SessionItem:hover {
-        background: #504945;
-        border-left: thick #fe8019;
-    }
-    
-    SessionItem.active {
-        background: #504945;
-        border-left: thick #b8bb26;
-    }
-    
-    SessionItem .session-title {
-        color: #ebdbb2;
-        height: auto;
-        width: 1fr;
-    }
-    
-    SessionItem .session-meta {
-        color: #928374;
-        height: auto;
-    }
-    
-    SessionItem .session-row {
-        height: auto;
-        width: 100%;
-        align: left middle;
-    }
-    
-    SessionItem .btn-delete {
-        width: 3;
-        min-width: 3;
-        max-width: 3;
-        height: 1;
-        background: #504945;
-        color: #928374;
-        border: none;
-        padding: 0;
-        margin: 0;
-        text-align: center;
-    }
-    
-    SessionItem .btn-delete:hover {
-        color: #fb4934;
-        background: #665c54;
-    }
-    
-    SessionItem .btn-delete:focus {
-        color: #fb4934;
-    }
-    """
+    # Styles moved to ui/styles.py
     
     class Selected(Message):
         """Session seçildiğinde gönderilen mesaj"""
@@ -135,72 +78,7 @@ class SessionItem(Vertical):
 class SessionSidebar(Vertical):
     """Session sidebar widget'ı"""
     
-    DEFAULT_CSS = """
-    SessionSidebar {
-        width: 28;
-        height: 100%;
-        background: #1d2021;
-        border-right: solid #3c3836;
-        padding: 0;
-        margin: 0;
-    }
-    
-    #sidebar-header {
-        height: 3;
-        background: #282828;
-        color: #d3869b;
-        text-align: center;
-        text-style: bold;
-        padding: 1;
-        border-bottom: solid #3c3836;
-        margin: 0;
-    }
-    
-    #sidebar-actions {
-        height: auto;
-        padding: 1;
-        background: #282828;
-        border-bottom: solid #3c3836;
-    }
-    
-    #sidebar-actions Button {
-        width: 100%;
-        margin: 0;
-    }
-    
-    #btn-new-session {
-        background: #98971a;
-        color: #1d2021;
-    }
-    
-    #btn-new-session:hover {
-        background: #b8bb26;
-    }
-    
-    #session-list-scroll {
-        height: 1fr;
-        padding: 1;
-        background: #1d2021;
-    }
-    
-    #session-list {
-        height: auto;
-    }
-    
-    #sidebar-footer {
-        height: auto;
-        padding: 1;
-        background: #282828;
-        border-top: solid #3c3836;
-        text-align: center;
-    }
-    
-    .no-sessions {
-        color: #928374;
-        text-align: center;
-        padding: 2;
-    }
-    """
+    # Styles moved to ui/styles.py
     
     # Reactive: aktif session ID
     active_session_id = reactive("")

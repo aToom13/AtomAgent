@@ -170,49 +170,89 @@ def refresh_memory() -> str:
         return f"Error refreshing memory: {e}"
 
 
+def _keyword_search(query: str, limit: int = 3) -> List[Document]:
+    """Simple keyword search implementation"""
+    results = []
+    query_lower = query.lower()
+    files = _scan_files(WORKSPACE_DIR)
+    
+    for file_path in files:
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            
+            if query_lower in content.lower():
+                # Find the line with the match
+                lines = content.splitlines()
+                for i, line in enumerate(lines):
+                    if query_lower in line.lower():
+                        # Extract context (3 lines before and after)
+                        start = max(0, i - 2)
+                        end = min(len(lines), i + 3)
+                        snippet = "\n".join(lines[start:end])
+                        
+                        rel_path = os.path.relpath(file_path, WORKSPACE_DIR)
+                        results.append(Document(
+                            page_content=snippet,
+                            metadata={"source": rel_path, "type": "keyword"}
+                        ))
+                        break # One snippet per file for now
+        except:
+            continue
+            
+    return results[:limit]
+
+
 @tool
 def search_codebase(query: str) -> str:
     """
-    Searches the codebase using semantic similarity.
-    Use this to find relevant code before making changes or fixing bugs.
+    Searches the codebase using Hybrid Search (Vector + Keyword).
+    Combines semantic similarity with exact keyword matching for better results.
     
     Args:
-        query: Natural language description of what you're looking for
-               (e.g., "function that handles user authentication")
+        query: Natural language description or specific keywords
     
     Returns:
         Relevant code snippets with file paths
     """
-    logger.info(f"Searching codebase: {query[:50]}...")
+    logger.info(f"Searching codebase (Hybrid): {query[:50]}...")
     
     try:
-        vectorstore = _get_vectorstore()
+        results = []
+        seen_sources = set()
         
-        # Check if we have any documents
+        # 1. Vector Search (Semantic)
         try:
-            count = vectorstore._collection.count()
-            if count == 0:
-                return "Memory is empty. Run refresh_memory() first to index the codebase."
-        except:
-            return "Memory not initialized. Run refresh_memory() first."
+            vectorstore = _get_vectorstore()
+            vector_results = vectorstore.similarity_search(query, k=3)
+            for doc in vector_results:
+                doc.metadata["type"] = "semantic"
+                results.append(doc)
+                seen_sources.add(doc.metadata.get("source"))
+        except Exception as e:
+            logger.warning(f"Vector search failed: {e}")
         
-        # Perform similarity search
-        results = vectorstore.similarity_search(query, k=5)
+        # 2. Keyword Search (Exact)
+        # Only if query is short enough to be a keyword/phrase
+        if len(query.split()) < 5:
+            keyword_results = _keyword_search(query, limit=3)
+            for doc in keyword_results:
+                # Avoid duplicates if possible (simple check)
+                if doc.metadata.get("source") not in seen_sources:
+                    results.append(doc)
         
         if not results:
-            return f"No relevant code found for: {query}"
+            return f"No relevant code found for: {query}. Try running refresh_memory() if this is unexpected."
         
         # Format results
-        output_parts = []
-        seen_sources = set()
+        output_parts = [f"🔍 Search Results for '{query}':\n"]
         
         for doc in results:
             source = doc.metadata.get("source", "unknown")
+            match_type = doc.metadata.get("type", "unknown")
+            icon = "🧠" if match_type == "semantic" else "🔑"
             
-            # Add source header if new file
-            if source not in seen_sources:
-                output_parts.append(f"\n📄 {source}:")
-                seen_sources.add(source)
+            output_parts.append(f"\n{icon} {source} ({match_type}):")
             
             # Add code snippet (truncated if too long)
             content = doc.page_content
@@ -222,9 +262,8 @@ def search_codebase(query: str) -> str:
             output_parts.append(f"```\n{content}\n```")
         
         result = "\n".join(output_parts)
-        logger.info(f"Found {len(results)} relevant chunks")
         return result
         
     except Exception as e:
         logger.error(f"Search failed: {e}")
-        return f"Search error: {e}. Try running refresh_memory() first."
+        return f"Search error: {e}"

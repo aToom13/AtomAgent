@@ -21,14 +21,7 @@ logger = get_logger()
 class SandboxTerminal(RichLog):
     """Sandbox terminal çıktısını gösteren widget"""
     
-    DEFAULT_CSS = """
-    SandboxTerminal {
-        height: 1fr;
-        background: #1d2021;
-        border: solid #3c3836;
-        padding: 1;
-    }
-    """
+    # Styles moved to ui/styles.py
     
     def __init__(self, **kwargs):
         super().__init__(highlight=True, markup=True, **kwargs)
@@ -37,77 +30,7 @@ class SandboxTerminal(RichLog):
 class SandboxPanel(Vertical):
     """Agent'ın sandbox terminali paneli"""
     
-    DEFAULT_CSS = """
-    SandboxPanel {
-        height: 100%;
-        background: #1d2021;
-        padding: 1;
-    }
-    
-    #sandbox-header {
-        height: 3;
-        background: #282828;
-        padding: 1;
-        border-bottom: solid #3c3836;
-    }
-    
-    #sandbox-title {
-        color: #d3869b;
-        text-style: bold;
-    }
-    
-    #sandbox-status-indicator {
-        color: #928374;
-    }
-    
-    #sandbox-controls {
-        height: auto;
-        padding: 1;
-        background: #282828;
-        border-bottom: solid #3c3836;
-    }
-    
-    #sandbox-controls Button {
-        margin-right: 1;
-        min-width: 12;
-    }
-    
-    #btn-sandbox-start {
-        background: #98971a;
-        color: #1d2021;
-    }
-    
-    #btn-sandbox-stop {
-        background: #cc241d;
-        color: #ebdbb2;
-    }
-    
-    #btn-sandbox-clear {
-        background: #458588;
-        color: #ebdbb2;
-    }
-    
-    #terminal-container {
-        height: 1fr;
-        padding: 0;
-    }
-    
-    #sandbox-terminal {
-        height: 1fr;
-        background: #0d0d0d;
-        color: #ebdbb2;
-        padding: 1;
-        border: solid #3c3836;
-    }
-    
-    #sandbox-footer {
-        height: auto;
-        padding: 1;
-        background: #282828;
-        border-top: solid #3c3836;
-        color: #928374;
-    }
-    """
+    # Styles moved to ui/styles.py
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

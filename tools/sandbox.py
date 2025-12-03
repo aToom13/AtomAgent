@@ -330,3 +330,69 @@ def get_sandbox_info() -> dict:
         "history_count": len(_terminal_history),
         "shared_dir": SHARED_DIR
     }
+
+
+@tool
+def sandbox_list_files(path: str = "/") -> str:
+    """
+    Sandbox içindeki dosyaları listeler (JSON formatında).
+    UI'daki dosya ağacı için kullanılır.
+    
+    Args:
+        path: Listelenecek dizin
+    
+    Returns:
+        JSON string: [{"name": "...", "is_dir": true/false, "size": ...}, ...]
+    """
+    if not _is_container_running():
+        return "[]"
+    
+    # Python script to list files as JSON
+    py_script = f"""
+import os
+import json
+import sys
+
+path = '{path}'
+try:
+    items = []
+    with os.scandir(path) as it:
+        for entry in it:
+            try:
+                stat = entry.stat()
+                items.append({{
+                    "name": entry.name,
+                    "path": entry.path,
+                    "is_dir": entry.is_dir(),
+                    "size": stat.st_size,
+                    "mtime": stat.st_mtime
+                }})
+            except:
+                pass
+    print(json.dumps(items))
+except Exception as e:
+    print(json.dumps([]))
+"""
+    
+    # Scripti container'da çalıştır
+    cmd = [
+        "docker", "exec", "-i", CONTAINER_NAME,
+        "python3", "-c", py_script
+    ]
+    
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=DOCKER_DIR
+        )
+        
+        if result.returncode == 0:
+            return result.stdout.strip()
+        return "[]"
+        
+    except Exception as e:
+        logger.error(f"Sandbox list error: {e}")
+        return "[]"

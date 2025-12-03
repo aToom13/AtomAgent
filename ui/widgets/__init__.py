@@ -18,6 +18,7 @@ from ui.widgets.session_widgets import (
 )
 from ui.widgets.session_sidebar import SessionSidebar, SessionItem
 from ui.widgets.sandbox_panel import SandboxPanel
+from ui.widgets.sandbox_tree import SandboxTree
 from ui.widgets.tool_factory_panel import ToolFactoryPanel, ToolItem
 
 __all__ = [
@@ -42,6 +43,7 @@ __all__ = [
     "SessionSidebar",
     "SessionItem",
     "SandboxPanel",
+    "SandboxTree",
     # Tool Factory
     "ToolFactoryPanel",
     "ToolItem"

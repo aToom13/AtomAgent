@@ -19,14 +19,16 @@ from config import config
 from utils.logger import get_logger
 # from tools.todo_tools import get_todo_content  # Todo kaldırıldı
 from tools.execution import add_allowed_command, execute_command_direct
-from ui.styles import APP_CSS
+from textual.command import Command, DiscoveryHit, Hit
+from ui.styles import BASE_CSS, get_theme_variables, THEMES
+
 from ui.handlers import ToolOutputHandler, FileHandler, ChatHandler
 from ui.widgets import (
     ModelSelectorModal, apply_saved_settings, FallbackSelectorModal,
     TaskProgressWidget, ToolActivityWidget, DebugLogWidget, 
     AgentStateWidget, MemoryUsageWidget,
     SessionBrowserModal, SessionInfoWidget, RenameSessionModal,
-    SessionSidebar, SandboxPanel, ToolFactoryPanel
+    SessionSidebar, SandboxPanel, ToolFactoryPanel, SandboxTree
 )
 from core.session_manager import session_manager, Session
 from tools.tool_factory import register_tool_callback
@@ -38,22 +40,30 @@ WORKSPACE_DIR = config.workspace.base_dir
 class AtomAgentApp(App):
     """AtomAgent - AI-Powered Development Assistant"""
 
-    CSS = APP_CSS
+    CSS = ""  # Styles loaded dynamically in on_mount
     TITLE = "AtomAgent"
     SUB_TITLE = "AI Development Assistant"
+    ENABLE_COMMAND_PALETTE = False  # Palette butonunu kaldırmak için devre dışı bırakıldı
 
     BINDINGS = [
         Binding("ctrl+c", "request_quit", "Quit", priority=True),
-        Binding("ctrl+s", "save_file", "Save"),
-        Binding("f5", "run_file", "Run"),
-        Binding("ctrl+l", "clear_chat", "Clear Chat"),
-        Binding("ctrl+r", "refresh_workspace", "Refresh"),
-        Binding("ctrl+shift+c", "copy_last", "Copy Last"),
-        Binding("ctrl+y", "copy_last", "Copy"),
-        Binding("ctrl+d", "toggle_debug", "Debug"),
-        Binding("ctrl+h", "show_history", "History"),
-        Binding("ctrl+n", "new_session", "New Session"),
-        Binding("ctrl+b", "toggle_sidebar", "Sidebar"),
+        Binding("ctrl+s", "save_file", "Save", show=False),
+        Binding("f5", "run_file", "Run", show=False),
+        Binding("ctrl+l", "clear_chat", "Clear Chat", show=False),
+        Binding("ctrl+r", "refresh_workspace", "Refresh", show=False),
+        Binding("ctrl+shift+c", "copy_last", "Copy Last", show=False),
+        Binding("ctrl+y", "copy_last", "Copy", show=False),
+        Binding("ctrl+d", "toggle_debug", "Debug", show=False),
+        Binding("ctrl+h", "show_history", "History", show=False),
+        Binding("ctrl+n", "new_session", "New Session", show=False),
+        Binding("ctrl+b", "toggle_sidebar", "Sidebar", show=False),
+        Binding("ctrl+z", "toggle_zen_mode", "Zen Mode", show=False),
+        # Binding("ctrl+p", "command_palette", "Palette", show=False), # Palette devre dışı
+        # Resize Bindings
+        Binding("ctrl+left", "resize_left_dec", "Shrink Left", show=False),
+        Binding("ctrl+right", "resize_left_inc", "Grow Left", show=False),
+        Binding("alt+left", "resize_right_inc", "Grow Right", show=False),
+        Binding("alt+right", "resize_right_dec", "Shrink Right", show=False),
     ]
 
     def __init__(self):
@@ -68,6 +78,12 @@ class AtomAgentApp(App):
         self.pending_command = None
         self.quit_requested = False
         self._last_ai_response = ""  # Son AI yanıtını sakla
+        self._stop_requested = False  # Agent durdurma flag'i
+        self._agent_running = False  # Agent çalışıyor mu?
+        
+        # Panel Widths (Default)
+        self.left_width = 35
+        self.right_width = 45
         
         # Session management
         self.current_session: Session = None
@@ -181,38 +197,57 @@ class AtomAgentApp(App):
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="main-container"):
-            # Left Side - Session Sidebar + Workspace (Tabbed)
+            # === LEFT PANEL: PROJECT EXPLORER ===
             with Vertical(id="left-sidebar"):
                 with TabbedContent(id="left-tabs"):
-                    with TabPane("💬 Sohbetler", id="tab-sessions"):
+                    # 1. Files Tab
+                    with TabPane("📂 Files", id="tab-files"):
+                        with Vertical(id="workspace-container"):
+                            yield Label("Workspace", classes="tree-label")
+                            yield DirectoryTree(WORKSPACE_DIR, id="workspace-tree")
+                            yield Button("Refresh Files", id="btn-refresh-files", variant="primary")
+                            yield Label("Sandbox", classes="tree-label")
+                            yield SandboxTree("/home/agent", id="sandbox-tree")
+                    
+                    # 2. Sessions Tab
+                    with TabPane("💬 Chats", id="tab-sessions"):
                         yield SessionSidebar(id="session-sidebar")
                     
-                    with TabPane("📁 Dosyalar", id="tab-workspace"):
-                        with Vertical(id="workspace-container"):
-                            yield Label("[cyan]📂 Workspace[/cyan]", classes="tree-label")
-                            yield DirectoryTree(WORKSPACE_DIR, id="workspace-tree")
-                            yield Label("[yellow]🐳 Sandbox[/yellow]", classes="tree-label")
-                            yield DirectoryTree("docker/shared", id="sandbox-tree")
-            
-            # Center Panel - Chat
+                    # 3. Memory Tab
+                    with TabPane("🧠 Memory", id="tab-memory"):
+                        with Vertical(id="memory-container"):
+                            yield MemoryUsageWidget(id="memory-widget")
+                            yield Label("Context Status", classes="section-label")
+                            yield Static("RAG Memory: Active\nVector DB: Ready", classes="info-box")
+                            yield Label("Quick Search", classes="section-label")
+                            yield Input(placeholder="Search memory...", id="memory-search-input")
+                            yield VerticalScroll(id="memory-search-results")
+
+            # === CENTER PANEL: CHAT ===
             with Vertical(id="left-panel"):
                 yield Label("🤖 ATOMAGENT", id="chat-header")
                 yield VerticalScroll(id="chat-scroll")
                 # Status/Permission bar
                 with Vertical(id="status-container"):
                     yield Static("[dim]Ready[/dim]", id="status-bar")
-                with Container(id="input-container"):
+                with Horizontal(id="input-container"):
                     yield Input(placeholder="Mesajınızı yazın...", id="user-input")
+                    yield Button("⏹", id="btn-stop", variant="error", classes="stop-btn")
 
-            # Right Panel - Dashboard & Tools
+            # === RIGHT PANEL: DEV TOOLS ===
             with Vertical(id="right-panel"):
                 with TabbedContent(id="right-tabs"):
-                    with TabPane("📊 Dashboard", id="tab-dashboard"):
-                        yield VerticalScroll(id="dashboard-view")
+                    # 1. Terminal (Sandbox)
+                    with TabPane("💻 Terminal", id="tab-terminal"):
+                        yield SandboxPanel(id="sandbox-panel")
 
+                    # 2. Editor
                     with TabPane("📝 Editor", id="tab-editor"):
                         with Vertical(id="editor-container"):
-                            yield Label("Dosya açık değil", id="editor-header")
+                            with Horizontal(id="editor-toolbar"):
+                                yield Label("Dosya açık değil", id="editor-header")
+                                yield Button("Save", id="btn-save-file", variant="success", classes="small-btn")
+                                yield Button("Run", id="btn-run-file", variant="warning", classes="small-btn")
                             yield TextArea(
                                 language="python",
                                 show_line_numbers=True,
@@ -220,22 +255,35 @@ class AtomAgentApp(App):
                                 theme="monokai"
                             )
                     
-                    with TabPane("🖥️ Sandbox", id="tab-sandbox"):
-                        yield SandboxPanel(id="sandbox-panel")
-                    
-                    with TabPane("🔧 Tools", id="tab-tools"):
-                        yield ToolFactoryPanel(id="tool-factory-panel")
-                    
-                    with TabPane("🔍 Debug", id="tab-debug"):
-                        with Vertical(id="debug-container"):
+                    # 3. Monitor (Dashboard + Debug)
+                    with TabPane("📊 Monitor", id="tab-monitor"):
+                        with VerticalScroll(id="monitor-scroll"):
+                            yield Label("System Status", classes="section-label")
                             yield AgentStateWidget(id="agent-state")
                             yield TaskProgressWidget(id="task-progress")
+                            
+                            yield Label("Live Activity", classes="section-label")
                             yield ToolActivityWidget(id="tool-activity")
+                            
+                            yield Label("Debug Log", classes="section-label")
                             yield DebugLogWidget(id="debug-log")
+                            
+                            yield Label("Dashboard", classes="section-label")
+                            yield Vertical(id="dashboard-view") # Nested for dynamic content
 
+                    # 4. Tools (Extensions)
+                    with TabPane("🔧 Tools", id="tab-tools"):
+                        yield ToolFactoryPanel(id="tool-factory-panel")
+            
         yield Footer()
 
     def on_mount(self) -> None:
+        """App mounted"""
+        # Initialize Theme
+        self.stylesheet.set_variables(get_theme_variables("gruvbox"))
+        self.stylesheet.add_source(BASE_CSS)
+        
+        self.title = "AtomAgent"
         self.query_one("#user-input").focus()
         self._add_system_message("AtomAgent hazır! 🚀")
         self._show_model_info()
@@ -417,6 +465,16 @@ class AtomAgentApp(App):
             status_container.remove_children()
             status_container.mount(Static(f"[{color}]{text}[/{color}]", id="status-bar"))
 
+    def _stop_agent(self):
+        """Agent'ı durdur"""
+        if self._agent_running:
+            self._stop_requested = True
+            self._update_status("⏹ Durduruluyor...", "yellow")
+            self.notify("Agent durduruluyor...", severity="warning", timeout=2)
+            self._log_debug("warning", "Agent durdurma isteği alındı")
+        else:
+            self.notify("Agent şu anda çalışmıyor", severity="information", timeout=2)
+
     # === PERMISSION DIALOG ===
 
     async def _show_permission_dialog(self, base_cmd: str, full_command: str):
@@ -448,6 +506,22 @@ class AtomAgentApp(App):
         self.pending_command = None
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-refresh-files":
+            self.action_refresh_workspace()
+            return
+
+        if event.button.id == "btn-save-file":
+            self.action_save_file()
+            return
+            
+        if event.button.id == "btn-run-file":
+            self.action_run_file()
+            return
+        
+        if event.button.id == "btn-stop":
+            self._stop_agent()
+            return
+
         if not self.pending_command:
             return
 
@@ -469,6 +543,21 @@ class AtomAgentApp(App):
         self._update_status("Ready", "dim")
         dashboard.scroll_end()
 
+    async def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input.id == "memory-search-input":
+            query = event.value
+            if query:
+                from tools.rag import search_codebase
+                result = search_codebase.invoke({"query": query})
+                results_container = self.query_one("#memory-search-results")
+                results_container.remove_children()
+                await results_container.mount(Static(result, classes="info-box"))
+            return
+
+        user_input = event.value.strip()
+        if not user_input:
+            return
+        
     # === FILE ACTIONS ===
 
     def on_directory_tree_file_selected(self, event: DirectoryTree.FileSelected) -> None:
@@ -569,7 +658,130 @@ class AtomAgentApp(App):
             self.quit_requested = False
             self._update_status("Ready", "dim")
 
+    # === PANEL RESIZING ===
+
+    def action_resize_left_dec(self):
+        self.left_width = max(20, self.left_width - 2)
+        self.query_one("#left-sidebar").styles.width = self.left_width
+        self.notify(f"Left Panel: {self.left_width}")
+
+    def action_resize_left_inc(self):
+        self.left_width = min(60, self.left_width + 2)
+        self.query_one("#left-sidebar").styles.width = self.left_width
+        self.notify(f"Left Panel: {self.left_width}")
+
+    def action_resize_right_dec(self):
+        self.right_width = max(30, self.right_width - 2)
+        self.query_one("#right-panel").styles.width = self.right_width
+        self.notify(f"Right Panel: {self.right_width}")
+
+    def action_resize_right_inc(self):
+        self.right_width = min(80, self.right_width + 2)
+        self.query_one("#right-panel").styles.width = self.right_width
+        self.notify(f"Right Panel: {self.right_width}")
+
+    # === ZEN MODE ===
+    
+    def action_toggle_zen_mode(self) -> None:
+        """Zen modunu aç/kapat (Ctrl+Z)"""
+        left_sidebar = self.query_one("#left-sidebar")
+        right_panel = self.query_one("#right-panel")
+        
+        if left_sidebar.display:
+            # Zen mode ON
+            left_sidebar.display = False
+            right_panel.display = False
+            self.notify("🧘 Zen Modu Açık", severity="information")
+            self._update_status("ZEN MODE", "magenta")
+        else:
+            # Zen mode OFF
+            left_sidebar.display = True
+            right_panel.display = True
+            self.notify("Zen Modu Kapalı", severity="information")
+            self._update_status("Ready", "dim")
+
     # === CHAT & AGENT ===
+
+    def on_mount(self) -> None:
+        """App mounted"""
+        # Initialize Theme
+        self.stylesheet.set_variables(get_theme_variables("gruvbox"))
+        self.stylesheet.add_source(BASE_CSS)
+        
+        self.title = "AtomAgent"
+        self.query_one("#user-input").focus()
+        
+        # Startup Banner
+        banner = """[bold magenta]
+    ___  __                  __                    __ 
+   /   |/ /_____  ____ ___  /   | ____ ____  ____  / /_
+  / /| / __/ __ \\/ __ `__ \\/ /| |/ __ `/ _ \\/ __ \\/ __/
+ / ___/ /_/ /_/ / / / / / / ___ / /_/ /  __/ / / / /_  
+/_/  |__/\\____/_/ /_/ /_/_/  |_\\__, /\\___/_/ /_/\\__/  
+                              /____/                  
+[/bold magenta]
+[dim]v4.2 - AI Development Assistant[/dim]
+[cyan]Tip: Ctrl+Z ile Zen Modunu deneyin![/cyan]
+"""
+        chat = self.query_one("#chat-scroll")
+        chat.mount(Static(banner, classes="system-msg"))
+        self._add_system_message("AtomAgent hazır! 🚀")
+        
+        self._show_model_info()
+        self._update_session_info()
+        
+        # Sidebar referansı ve aktif session ayarla
+        try:
+            self.session_sidebar = self.query_one("#session-sidebar", SessionSidebar)
+            if self.current_session:
+                self.session_sidebar.set_active_session(self.current_session.id)
+        except:
+            pass
+        
+        # Debug widget'larını referansla
+        try:
+            self.debug_log = self.query_one("#debug-log", DebugLogWidget)
+            self.agent_state = self.query_one("#agent-state", AgentStateWidget)
+            self.progress_tracker = self.query_one("#task-progress", TaskProgressWidget)
+            self.tool_activity = self.query_one("#tool-activity", ToolActivityWidget)
+            self._log_debug("info", "AtomAgent başlatıldı")
+            # Model bilgilerini güncelle
+            if self.agent_state:
+                self.agent_state.update_models()
+        except:
+            pass
+
+    def get_commands(self, query: str = "") -> list[DiscoveryHit]:
+        """Command Palette için komutları döndür"""
+        yield from super().get_commands(query)
+        
+        # Tema komutları Command Palette'den kaldırıldı (Kullanıcı isteği)
+        # Sadece :theme komutu ile değiştirilebilir
+
+    def action_set_theme(self, theme_name: str) -> None:
+        """Temayı değiştir"""
+        try:
+            theme_name = theme_name.lower()
+            logger.info(f"Changing theme to: {theme_name}")
+            
+            if theme_name not in THEMES:
+                self.notify(f"Tema bulunamadı: {theme_name}", severity="error")
+                return
+
+            variables = get_theme_variables(theme_name)
+            
+            # CSS değişkenlerini güncelle - Textual otomatik olarak yeniden boyayacaktır
+            self.stylesheet.set_variables(variables)
+            
+            # refresh_css() çağrısını kaldırıyoruz çünkü değişkenler kaybolabiliyor
+            # self.refresh_css() 
+            
+            self._add_system_message(f"Tema değiştirildi: {theme_name}")
+            self.notify(f"Tema değiştirildi: {theme_name}", severity="information")
+            
+        except Exception as e:
+            logger.error(f"Error changing theme: {e}")
+            self.notify(f"Tema değiştirme hatası: {e}", severity="error")
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         user_input = event.value.strip()
@@ -589,6 +801,10 @@ class AtomAgentApp(App):
         
         if user_input.lower() == ":help":
             self._show_help()
+            return
+        
+        if user_input.lower() == ":stop":
+            self._stop_agent()
             return
         
         if user_input.lower() == ":keys" or user_input.lower() == ":apikeys":
@@ -661,6 +877,15 @@ class AtomAgentApp(App):
                 self._add_system_message(f"Session yeniden adlandırıldı: {new_title}")
             return
         
+        if user_input.lower().startswith(":theme"):
+            parts = user_input.split()
+            if len(parts) > 1:
+                theme_name = parts[1]
+                self.action_set_theme(theme_name)
+            else:
+                self._add_system_message("Kullanım: :theme [gruvbox|dracula|nord]")
+            return
+
         if user_input.lower() == ":export":
             self._export_current_session()
             return
@@ -689,43 +914,41 @@ class AtomAgentApp(App):
     def _show_help(self):
         """Yardım mesajını göster"""
         help_text = """[bold cyan]Özel Komutlar:[/bold cyan]
-  :model     - Model ayarları penceresi
-  :fallback  - Yedek provider ayarları
-  :keys      - API key durumu detayı
-  :resetkeys - API key indekslerini sıfırla
-  :reset     - Tüm provider'ları sıfırla (primary'ye dön)
-  :copy      - Son AI yanıtını kopyala
-  :memory    - Hafıza durumunu göster
-  :clear     - Hafızayı temizle
-  :tools     - Tool Factory panelini aç
-  :sandbox   - Sandbox panelini aç
-  :help      - Bu yardım mesajı
+  :model       - Model ayarları ve seçimi
+  :fallback    - Yedek model (fallback) yapılandırması
+  :theme [ad]  - Temayı değiştir (örn: :theme dracula)
+  :keys        - API key kullanım durumu
+  :resetkeys   - API key indekslerini sıfırla
+  :reset       - Tüm provider'ları sıfırla
+  :stop        - Çalışan agent'ı durdur
+  :copy        - Son AI yanıtını panoya kopyala
+  :memory      - Hafıza durumunu göster
+  :clear       - Hafızayı temizle
+  :tools       - Tool Factory panelini aç
+  :sandbox     - Sandbox panelini aç
+  :help        - Bu yardım mesajı
   
 [bold magenta]Session Komutları:[/bold magenta]
-  :history   - Konuşma geçmişi (Ctrl+H)
-  :new       - Yeni session başlat (Ctrl+N)
-  :rename X  - Session'ı yeniden adlandır
-  :export    - Aktif session'ı JSON olarak export et
+  :history     - Konuşma geçmişi (Ctrl+H)
+  :new         - Yeni session başlat (Ctrl+N)
+  :rename [ad] - Aktif session'ı yeniden adlandır
+  :export      - Session'ı JSON olarak dışa aktar
   
 [bold cyan]Kısayollar:[/bold cyan]
-  Ctrl+C       - Çıkış (2 kez bas)
-  Ctrl+S       - Dosya kaydet
-  Ctrl+L       - Chat temizle / Yeni session
-  Ctrl+R       - Workspace yenile
-  Ctrl+Y       - Son yanıtı kopyala
-  Ctrl+D       - Debug paneli aç/kapat
-  Ctrl+H       - Konuşma geçmişi (modal)
-  Ctrl+N       - Yeni session
-  Ctrl+B       - Sidebar aç/kapat
-  F5           - Dosya çalıştır
+  Ctrl+C       - Çıkış
+  Ctrl+Z       - Zen Modu (Tam ekran chat)
+  Ctrl+L       - Chat temizle
+  Ctrl+S       - Dosya kaydet (Editör)
+  F5           - Dosya çalıştır (Editör)
+  Ctrl+R       - Dosyaları yenile
+  Ctrl+B       - Yan panelleri aç/kapat
   
 [bold cyan]Özellikler:[/bold cyan]
-  • Session Management - Konuşmalar otomatik kaydedilir
-  • Kod highlighting - Chat'te kod blokları renkli
-  • Debug paneli - Agent aktivitelerini izle
-  • Memory sistemi - Uzun görevlerde context koruma
-  • Tool Factory - Agent kendi tool'larını oluşturabilir
-  • Sandbox - İzole Docker ortamında kod çalıştırma"""
+  • [green]Session Management[/green] - Konuşmalar otomatik kaydedilir
+  • [green]Kod Highlighting[/green] - Renkli kod blokları
+  • [green]Memory Sistemi[/green] - Uzun süreli hafıza ve RAG
+  • [green]Tool Factory[/green] - Kendi araçlarınızı oluşturun
+  • [green]Sandbox[/green] - Güvenli kod çalıştırma ortamı"""
         
         chat = self.query_one("#chat-scroll")
         chat.mount(Static(help_text, classes="system-msg"))
@@ -793,9 +1016,14 @@ class AtomAgentApp(App):
         from tools.agents import clear_agent_cache
         from tools.memory import get_persistent_context
         
+        # Agent çalışıyor flag'ini set et
+        self._agent_running = True
+        self._stop_requested = False
+        
         chat = self.query_one("#chat-scroll")
         dashboard = self.query_one("#dashboard-view")
-        self.query_one("#right-tabs", TabbedContent).active = "tab-dashboard"
+        # Dashboard is now inside 'tab-monitor'
+        self.query_one("#right-tabs", TabbedContent).active = "tab-monitor"
 
         ai_response = Static(self.chat_handler.create_thinking_message(), classes="ai-msg")
         await chat.mount(ai_response)
@@ -828,6 +1056,12 @@ class AtomAgentApp(App):
                 config=thread_config,
                 version="v1"
             ):
+                # Stop kontrolü
+                if self._stop_requested:
+                    self._log_debug("warning", "Agent kullanıcı tarafından durduruldu")
+                    final_text += "\n\n[Kullanıcı tarafından durduruldu]"
+                    break
+                
                 kind = event["event"]
 
                 if kind == "on_chat_model_stream":
@@ -838,6 +1072,10 @@ class AtomAgentApp(App):
                         )
 
                 elif kind == "on_tool_start":
+                    # Stop kontrolü - tool başlamadan önce
+                    if self._stop_requested:
+                        break
+                    
                     tool_name = event['name']
                     await self.chat_handler.handle_tool_start(
                         tool_name, event['run_id'],
@@ -877,8 +1115,16 @@ class AtomAgentApp(App):
             if self.agent_state:
                 self.agent_state.set_idle()
             if self.progress_tracker:
-                self.progress_tracker.complete_task("Tamamlandı")
-            self._log_debug("success", "Görev tamamlandı")
+                if self._stop_requested:
+                    self.progress_tracker.complete_task("Durduruldu")
+                else:
+                    self.progress_tracker.complete_task("Tamamlandı")
+            
+            if self._stop_requested:
+                self._log_debug("warning", "Görev durduruldu")
+                self._update_status("⏹ Durduruldu", "yellow")
+            else:
+                self._log_debug("success", "Görev tamamlandı")
 
         except Exception as e:
             error_str = str(e).lower()
@@ -974,6 +1220,13 @@ class AtomAgentApp(App):
             if self.progress_tracker:
                 self.progress_tracker.fail_task(str(e)[:50])
             self._log_debug("error", f"Hata: {str(e)[:100]}")
+        
+        finally:
+            # Agent çalışma flag'lerini resetle
+            self._agent_running = False
+            self._stop_requested = False
+            if not self._stop_requested:
+                self._update_status("Ready", "dim")
 
 
 def main():

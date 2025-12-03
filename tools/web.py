@@ -299,3 +299,25 @@ def search_docs(query: str, site: str = "python") -> str:
     except Exception as e:
         logger.error(f"Docs search failed: {e}")
         return f"Arama hatası: {e}"
+
+
+@tool
+def get_page_title(url: str) -> str:
+    """
+    Web sayfasının başlığını alır.
+    
+    Args:
+        url: Sayfa URL'i
+    
+    Returns:
+        Sayfa başlığı veya hata mesajı
+    """
+    try:
+        if _is_blocked(url):
+            return f"⚠️ Bu site ({url}) engellendi."
+            
+        response = requests.get(url, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+        return soup.title.string if soup.title else "No title"
+    except Exception as e:
+        return f"❌ Hata: {str(e)}"

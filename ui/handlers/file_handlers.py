@@ -49,7 +49,8 @@ class FileHandler:
             self.app.query_one("#editor-header", Label).update(
                 f"📄 {os.path.basename(file_path)}"
             )
-            self.app.query_one(TabbedContent).active = "tab-editor"
+            # Right panel'deki TabbedContent'i seç
+            self.app.query_one("#right-tabs", TabbedContent).active = "tab-editor"
             
             return True
             

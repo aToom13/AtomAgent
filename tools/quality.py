@@ -411,4 +411,141 @@ def evaluate_code_quality(code: str) -> dict:
     elif complexity_count > 5:
         metrics["complexity_estimate"] = "medium"
     
+    if complexity_count > 10:
+        metrics["complexity_estimate"] = "high"
+    elif complexity_count > 5:
+        metrics["complexity_estimate"] = "medium"
+    
     return metrics
+
+
+@tool
+def code_review(code: str, file_path: str = None) -> str:
+    """
+    Performs a comprehensive code review using LLM.
+    Analyzes for security, performance, best practices, and bugs.
+    
+    Args:
+        code: The source code to review
+        file_path: Path to the file for context (optional)
+    
+    Returns:
+        Markdown-formatted review report
+    """
+    from core.providers import model_manager
+    from langchain_core.messages import HumanMessage
+    
+    logger.info(f"Reviewing code: {file_path or 'snippet'}")
+    
+    try:
+        # Get coder model
+        llm = model_manager.get_llm("coder")
+        if not llm:
+            return "❌ Coder model not available."
+            
+        prompt = f"""You are an expert code reviewer. Analyze the provided code thoroughly.
+
+File path (for context): {file_path or "N/A"}
+
+Code:
+```
+{code}
+```
+
+Generate a Markdown report structured as follows:
+
+## Code Review Report
+
+### ✅ Good Practices
+- List what's done well.
+
+### ⚠️ Warnings
+- Potential issues that should be addressed.
+
+### ❌ Critical Issues
+- Bugs, security vulnerabilities, or breaking problems.
+
+### 💡 Suggestions
+- Refactoring ideas, performance optimizations, best practices improvements.
+
+Be concise, actionable, and specific with line references where possible. Prioritize severity."""
+
+        response = llm.invoke([HumanMessage(content=prompt)])
+        return response.content
+        
+    except Exception as e:
+        logger.error(f"Code review failed: {e}")
+        return f"❌ Code review failed: {e}"
+
+
+@tool
+def auto_generate_tests(filename: str) -> str:
+    """
+    Generates pytest unit tests for a given Python file.
+    Reads the file content and creates a new test file with comprehensive test cases.
+    
+    Args:
+        filename: Path to the Python file to test
+        
+    Returns:
+        Path to the generated test file or error message
+    """
+    from core.providers import model_manager
+    from langchain_core.messages import HumanMessage
+    
+    logger.info(f"Generating tests for: {filename}")
+    
+    file_path = _get_safe_path(filename)
+    if not os.path.exists(file_path):
+        return f"❌ File not found: {file_path}"
+        
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            code = f.read()
+            
+        # Get coder model
+        llm = model_manager.get_llm("coder")
+        if not llm:
+            return "❌ Coder model not available."
+            
+        prompt = f"""You are an expert QA engineer. Write comprehensive unit tests using `pytest` for the following Python code.
+
+File: {filename}
+
+Code:
+```python
+{code}
+```
+
+Requirements:
+1. Use `pytest` framework.
+2. Cover happy paths and edge cases.
+3. Mock external dependencies if necessary.
+4. Return ONLY the Python code for the test file. Do not include markdown formatting or explanations.
+5. Start imports with `import pytest`.
+"""
+
+        response = llm.invoke([HumanMessage(content=prompt)])
+        test_code = response.content
+        
+        # Clean up code blocks if present
+        if "```python" in test_code:
+            test_code = test_code.split("```python")[1].split("```")[0].strip()
+        elif "```" in test_code:
+            test_code = test_code.split("```")[1].split("```")[0].strip()
+            
+        # Determine output path
+        dir_name = os.path.dirname(file_path)
+        base_name = os.path.basename(file_path)
+        test_filename = f"test_{base_name}"
+        test_path = os.path.join(dir_name, test_filename)
+        
+        with open(test_path, "w", encoding="utf-8") as f:
+            f.write(test_code)
+            
+        logger.info(f"Tests generated: {test_path}")
+        return f"✅ Tests generated: {test_path}\nRun with: pytest {test_path}"
+        
+    except Exception as e:
+        logger.error(f"Test generation failed: {e}")
+        return f"❌ Test generation failed: {e}"
