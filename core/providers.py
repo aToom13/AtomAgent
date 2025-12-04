@@ -404,14 +404,15 @@ class AgentModelConfig:
 class ModelManager:
     """Manages model configurations with fallback support"""
     
-    ROLES = ["supervisor", "coder", "researcher", "vision", "audio", "tts"]
+    ROLES = ["supervisor", "coder", "researcher", "vision", "video", "audio", "tts"]
     
     def __init__(self):
         self.configs: Dict[str, AgentModelConfig] = {
             "supervisor": AgentModelConfig("ollama", "llama3.2", 0.1),
             "coder": AgentModelConfig("ollama", "llama3.2", 0.0),
             "researcher": AgentModelConfig("ollama", "llama3.2", 0.0),
-            "vision": AgentModelConfig("openai", "gpt-4o", 0.2),
+            "vision": AgentModelConfig("openrouter", "amazon/nova-2-lite-v1:free", 0.2),
+            "video": AgentModelConfig("openrouter", "amazon/nova-2-lite-v1:free", 0.2),
             "audio": AgentModelConfig("openai", "whisper-1", 0.0),
             "tts": AgentModelConfig("openai", "tts-1", 0.0),
         }

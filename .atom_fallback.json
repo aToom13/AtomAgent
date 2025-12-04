@@ -3,7 +3,7 @@
     "fallbacks": [
       {
         "provider": "openrouter",
-        "model": "x-ai/grok-4.1-fast:free"
+        "model": "amazon/nova-2-lite-v1:free"
       },
       {
         "provider": "cerebras",
@@ -27,7 +27,7 @@
     "fallbacks": [
       {
         "provider": "openrouter",
-        "model": "x-ai/grok-4.1-fast:free"
+        "model": "amazon/nova-2-lite-v1:free"
       },
       {
         "provider": "cerebras",
@@ -51,7 +51,7 @@
     "fallbacks": [
       {
         "provider": "openrouter",
-        "model": "x-ai/grok-4.1-fast:free"
+        "model": "amazon/nova-2-lite-v1:free"
       },
       {
         "provider": "cerebras",
@@ -74,12 +74,20 @@
   "vision": {
     "fallbacks": [
       {
-        "provider": "anthropic",
-        "model": "claude-3-5-sonnet-20241022"
+        "provider": "google",
+        "model": "gemini-2.0-flash-lite"
       },
       {
+        "provider": "groq",
+        "model": "llama-3.2-90b-vision-preview"
+      }
+    ]
+  },
+  "video": {
+    "fallbacks": [
+      {
         "provider": "google",
-        "model": "gemini-1.5-pro"
+        "model": "gemini-2.0-flash-lite"
       }
     ]
   },

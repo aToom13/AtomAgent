@@ -17,7 +17,12 @@
     },
     "vision": {
       "provider": "openrouter",
-      "model": "x-ai/grok-4.1-fast:free",
+      "model": "amazon/nova-2-lite-v1:free",
+      "temperature": 0.2
+    },
+    "video": {
+      "provider": "openrouter",
+      "model": "amazon/nova-2-lite-v1:free",
       "temperature": 0.2
     },
     "audio": {
