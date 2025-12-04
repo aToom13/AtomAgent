@@ -10,7 +10,7 @@ import { updateAgentStatus, startThinkingBlock, appendThinkingToken, endThinking
 import { addDockerCommand, addDockerOutput } from './docker.js';
 import { addToolStart, addToolEnd } from './tools.js';
 import { addBrowserStart, addBrowserResult } from './browser.js';
-import { updateTaskStatus, addTaskStep } from './tasks.js';
+import { updateTaskStatus, addTaskStep, handleTodoUpdate } from './tasks.js';
 
 export function connectWebSocket() {
     const clientId = 'client_' + Date.now();
@@ -64,6 +64,12 @@ function handleWebSocketMessage(event) {
         case 'tool_end':
             addToolActivity(data.tool, data.output, 'end');
             addToolEnd(data.tool, data.output);
+            
+            // Todo tool'larını tasks paneline gönder
+            const todoTools = ['update_todo_list', 'mark_todo_done', 'get_current_todo', 'add_todo_item', 'get_next_todo_step'];
+            if (todoTools.includes(data.tool)) {
+                handleTodoUpdate(data.tool, data.output);
+            }
             break;
             
         case 'browser_start':

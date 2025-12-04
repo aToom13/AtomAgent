@@ -176,3 +176,93 @@
     border-top: 1px solid var(--border-color);
     text-align: center;
 }
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.section-header h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.todo-progress {
+    font-size: 12px;
+    color: var(--accent-primary);
+    font-weight: 500;
+}
+
+/* Todo Section */
+.todo-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.todo-progress-bar {
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.todo-progress-bar .progress-fill {
+    height: 100%;
+    background: var(--accent-success);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Todo Items */
+.todo-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.todo-item:hover {
+    background: var(--bg-hover);
+}
+
+.todo-item.completed {
+    opacity: 0.6;
+}
+
+.todo-item.completed .todo-text {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.todo-checkbox {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.todo-text {
+    flex: 1;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Tasks Section */
+.tasks-section {
+    margin-top: 16px;
+}

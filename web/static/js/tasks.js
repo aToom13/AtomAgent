@@ -1,6 +1,6 @@
 /**
  * AtomAgent - Tasks Panel
- * Görev takibi ve yönetimi
+ * Görev takibi ve yönetimi - Todo entegrasyonu
  */
 
 import { escapeHtml, formatDate } from './utils.js';
@@ -8,6 +8,9 @@ import { escapeHtml, formatDate } from './utils.js';
 // Görev listesi
 const tasks = [];
 let taskIdCounter = 0;
+
+// Todo items from agent
+let todoItems = [];
 
 // Görev durumları
 const TASK_STATUS = {
@@ -17,6 +20,55 @@ const TASK_STATUS = {
     failed: { label: 'Başarısız', icon: '❌', color: 'error' },
     cancelled: { label: 'İptal', icon: '🚫', color: 'muted' }
 };
+
+// Todo tool'larından gelen verileri işle
+export function handleTodoUpdate(toolName, output) {
+    if (toolName === 'update_todo_list' || toolName === 'get_current_todo') {
+        parseTodoContent(output);
+    } else if (toolName === 'mark_todo_done') {
+        // Bir adım tamamlandı - todo'yu güncelle
+        if (output.includes('✓')) {
+            const match = output.match(/Tamamlandı:\s*(.+)/);
+            if (match) {
+                markTodoItemDone(match[1]);
+            }
+        }
+    } else if (toolName === 'add_todo_item') {
+        // Yeni todo eklendi
+        parseTodoContent(output);
+    }
+    renderTasksPanel();
+}
+
+function parseTodoContent(content) {
+    if (!content) return;
+    
+    // Markdown todo formatını parse et
+    const lines = content.split('\n');
+    todoItems = [];
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        
+        // "- [ ] Task" veya "- [x] Task" formatı
+        const todoMatch = trimmed.match(/^-\s*\[([ x])\]\s*(.+)$/i);
+        if (todoMatch) {
+            todoItems.push({
+                id: todoItems.length + 1,
+                text: todoMatch[2].trim(),
+                completed: todoMatch[1].toLowerCase() === 'x',
+                timestamp: new Date()
+            });
+        }
+    }
+}
+
+function markTodoItemDone(text) {
+    const item = todoItems.find(t => t.text.toLowerCase().includes(text.toLowerCase()));
+    if (item) {
+        item.completed = true;
+    }
+}
 
 export function createTask(title, description = '') {
     const task = {
@@ -87,7 +139,10 @@ export function renderTasksPanel() {
     const container = document.getElementById('tasks-list');
     if (!container) return;
     
-    if (tasks.length === 0) {
+    const hasTodos = todoItems.length > 0;
+    const hasTasks = tasks.length > 0;
+    
+    if (!hasTodos && !hasTasks) {
         container.innerHTML = `
             <div class="tasks-empty">
                 <div class="tasks-empty-icon">📋</div>
@@ -99,36 +154,88 @@ export function renderTasksPanel() {
     }
     
     // İstatistikler
-    const stats = getTaskStats();
+    const todoStats = getTodoStats();
+    const taskStats = getTaskStats();
     
-    container.innerHTML = `
-        <div class="tasks-stats">
-            <div class="stat-item">
-                <span class="stat-value">${stats.total}</span>
-                <span class="stat-label">Toplam</span>
+    let html = '';
+    
+    // Todo listesi varsa göster
+    if (hasTodos) {
+        html += `
+            <div class="todo-section">
+                <div class="section-header">
+                    <h4>📝 Todo Listesi</h4>
+                    <span class="todo-progress">${todoStats.completed}/${todoStats.total}</span>
+                </div>
+                <div class="todo-progress-bar">
+                    <div class="progress-fill" style="width: ${todoStats.percent}%"></div>
+                </div>
+                <div class="todo-items">
+                    ${todoItems.map(item => renderTodoItem(item)).join('')}
+                </div>
             </div>
-            <div class="stat-item running">
-                <span class="stat-value">${stats.running}</span>
-                <span class="stat-label">Çalışıyor</span>
+        `;
+    }
+    
+    // Task listesi varsa göster
+    if (hasTasks) {
+        html += `
+            <div class="tasks-section">
+                <div class="section-header">
+                    <h4>🔧 Aktif Görevler</h4>
+                </div>
+                <div class="tasks-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">${taskStats.total}</span>
+                        <span class="stat-label">Toplam</span>
+                    </div>
+                    <div class="stat-item running">
+                        <span class="stat-value">${taskStats.running}</span>
+                        <span class="stat-label">Çalışıyor</span>
+                    </div>
+                    <div class="stat-item completed">
+                        <span class="stat-value">${taskStats.completed}</span>
+                        <span class="stat-label">Tamamlandı</span>
+                    </div>
+                </div>
+                <div class="tasks-list-items">
+                    ${tasks.map(task => renderTaskItem(task)).join('')}
+                </div>
             </div>
-            <div class="stat-item completed">
-                <span class="stat-value">${stats.completed}</span>
-                <span class="stat-label">Tamamlandı</span>
-            </div>
-        </div>
-        
-        <div class="tasks-list-items">
-            ${tasks.map(task => renderTaskItem(task)).join('')}
-        </div>
-        
-        ${tasks.length > 0 ? `
+        `;
+    }
+    
+    // Temizle butonu
+    if (hasTodos || hasTasks) {
+        html += `
             <div class="tasks-actions">
                 <button class="small-btn" onclick="window.AtomAgent.clearCompletedTasks()">
                     Tamamlananları Temizle
                 </button>
             </div>
-        ` : ''}
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function renderTodoItem(item) {
+    const statusClass = item.completed ? 'completed' : 'pending';
+    const icon = item.completed ? '✅' : '⬜';
+    
+    return `
+        <div class="todo-item ${statusClass}">
+            <span class="todo-checkbox">${icon}</span>
+            <span class="todo-text">${escapeHtml(item.text)}</span>
+        </div>
     `;
+}
+
+function getTodoStats() {
+    const total = todoItems.length;
+    const completed = todoItems.filter(t => t.completed).length;
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, percent };
 }
 
 function renderTaskItem(task) {
