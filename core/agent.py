@@ -163,6 +163,7 @@ def get_agent_executor():
         persistent_ctx = get_persistent_context()
         if persistent_ctx:
             supervisor_prompt = supervisor_prompt + "\n\n" + persistent_ctx
+            logger.info(f"Memory context loaded: {len(persistent_ctx)} chars")
         
         # Öğrenme özetini ekle
         try:
@@ -171,6 +172,12 @@ def get_agent_executor():
                 supervisor_prompt = supervisor_prompt + "\n\n[Öğrenme Hafızası]\n" + learning_summary[:500]
         except:
             pass
+        
+        # Kullanıcı adını özellikle vurgula
+        from tools.memory import _memory
+        user_name = _memory.get_context("kullanici_adi")
+        if user_name:
+            supervisor_prompt = supervisor_prompt + f"\n\n[HATIRLA: Kullanıcının adı {user_name}]"
     
     with tracer.trace_span("create_agent"):
         # Custom tool'ları da ekle

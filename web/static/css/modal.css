@@ -336,3 +336,51 @@
 
 .status-badge.active { background: rgba(34, 197, 94, 0.2); color: var(--accent-success); }
 .status-badge.inactive { background: rgba(239, 68, 68, 0.2); color: var(--accent-error); }
+
+
+/* Confirm Modal */
+.confirm-modal {
+    max-width: 400px;
+    text-align: center;
+    padding: 30px;
+}
+
+.confirm-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.confirm-modal h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.confirm-modal p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.confirm-warning {
+    font-size: 12px !important;
+    color: var(--accent-error) !important;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.small-btn.danger {
+    background: var(--accent-error);
+    border-color: var(--accent-error);
+    color: white;
+}
+
+.small-btn.danger:hover {
+    background: #dc2626;
+}

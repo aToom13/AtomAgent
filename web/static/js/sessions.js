@@ -60,11 +60,19 @@ export async function loadSession(sessionId) {
     }
 }
 
-export async function deleteSession(sessionId, event) {
+// Pending delete session
+let pendingDeleteSessionId = null;
+
+export function deleteSession(sessionId, event) {
     event.stopPropagation();
+    pendingDeleteSessionId = sessionId;
+    showDeleteConfirmModal();
+}
+
+export async function confirmDeleteSession() {
+    if (!pendingDeleteSessionId) return;
     
-    if (!confirm('Bu sohbeti silmek istediğinizden emin misiniz?')) return;
-    
+    const sessionId = pendingDeleteSessionId;
     const elements = getElements();
     
     try {
@@ -78,6 +86,28 @@ export async function deleteSession(sessionId, event) {
         await loadSessions();
     } catch (error) {
         console.error('Failed to delete session:', error);
+    }
+    
+    hideDeleteConfirmModal();
+    pendingDeleteSessionId = null;
+}
+
+export function cancelDeleteSession() {
+    hideDeleteConfirmModal();
+    pendingDeleteSessionId = null;
+}
+
+function showDeleteConfirmModal() {
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function hideDeleteConfirmModal() {
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.add('hidden');
     }
 }
 

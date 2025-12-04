@@ -5,7 +5,7 @@
 
 import { state, getElements } from './state.js';
 import { connectWebSocket } from './websocket.js';
-import { loadSessions, loadSession, deleteSession, newChat, renderSessions } from './sessions.js';
+import { loadSessions, loadSession, deleteSession, newChat, renderSessions, confirmDeleteSession, cancelDeleteSession } from './sessions.js';
 import { sendMessage, stopGeneration, autoResizeTextarea, handleInputKeydown } from './chat.js';
 import { toggleSidebar, switchTab, setupResizeHandle } from './ui.js';
 import { loadSettings, openSettings, closeSettings, switchSettingsTab, switchModelRole, switchFallbackRole, updateModel, addFallback, deleteFallback, loadPrompt, savePrompt } from './settings.js';
@@ -98,6 +98,8 @@ window.AtomAgent = {
     loadSession,
     deleteSession,
     newChat,
+    confirmDeleteSession,
+    cancelDeleteSession,
     
     // Settings
     updateModel,

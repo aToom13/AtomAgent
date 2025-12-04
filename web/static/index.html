@@ -366,6 +366,21 @@
         </div>
     </div>
 
+    <!-- Delete Confirm Modal -->
+    <div id="delete-confirm-modal" class="modal hidden">
+        <div class="modal-backdrop" onclick="window.AtomAgent.cancelDeleteSession()"></div>
+        <div class="modal-content confirm-modal">
+            <div class="confirm-icon">🗑️</div>
+            <h3>Sohbeti Sil</h3>
+            <p>Bu sohbeti silmek istediğinizden emin misiniz?</p>
+            <p class="confirm-warning">Bu işlem geri alınamaz.</p>
+            <div class="confirm-buttons">
+                <button class="small-btn" onclick="window.AtomAgent.cancelDeleteSession()">Vazgeç</button>
+                <button class="small-btn danger" onclick="window.AtomAgent.confirmDeleteSession()">Sil</button>
+            </div>
+        </div>
+    </div>
+
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
