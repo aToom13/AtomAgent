@@ -25,9 +25,24 @@ GROQ_API_KEY=your_key
 
 ## Kullanım
 
+### Terminal UI (Textual)
 ```bash
 python main.py
 ```
+
+### Web UI (Modern Dark Theme)
+```bash
+python web_main.py
+```
+Tarayıcınızda `http://localhost:8000` adresine gidin.
+
+Web UI özellikleri:
+- 🌙 Modern karanlık tema (Bento style)
+- 💬 Sol panel: Sohbet geçmişi (daraltılabilir)
+- 🤖 Orta panel: Ana chat alanı (streaming yanıtlar)
+- 🛠️ Sağ panel: Terminal, Dosya yöneticisi, Editör, Araçlar
+- ⚙️ Ayarlar popup: Model, prompt, komut ve API key yönetimi
+- 📱 Responsive tasarım (PC, tablet, mobil uyumlu)
 
 ## Özellikler
 
@@ -163,6 +178,13 @@ AtomAgent/
 │   ├── styles.py           # Gruvbox tema
 │   ├── handlers/           # Event handler'lar
 │   └── widgets/            # UI widget'ları
+├── web/
+│   ├── api.py              # FastAPI backend
+│   └── static/             # Web UI dosyaları
+│       ├── index.html
+│       ├── styles.css
+│       └── app.js
+├── web_main.py             # Web UI entry point
 ├── docker/
 │   ├── Dockerfile          # Sandbox container
 │   ├── docker-compose.yml

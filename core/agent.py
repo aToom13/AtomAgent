@@ -204,5 +204,5 @@ def get_agent_executor():
 def get_thread_config(thread_id: str = "default"):
     return {
         "configurable": {"thread_id": thread_id},
-        "recursion_limit": 100  # Default 25, artırıldı
+        "recursion_limit": 1000  # Default 25, artırıldı (chat başına çekebildiği toplam tool adedi)
     }
