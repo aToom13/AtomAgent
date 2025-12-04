@@ -116,31 +116,6 @@ export async function saveFile() {
     }
 }
 
-export async function loadUploads() {
-    const elements = getElements();
-    
-    try {
-        const response = await fetch('/api/workspace/files?path=uploads');
-        const data = await response.json();
-        
-        if (!data.items || data.items.length === 0) {
-            elements.fileTree.innerHTML = `
-                <div class="file-empty">
-                    <div class="file-empty-icon">📤</div>
-                    <p>Henüz yüklenen dosya yok</p>
-                    <p class="file-hint">Dosya eklemek için chat'teki 📎 butonunu kullanın</p>
-                </div>
-            `;
-            return;
-        }
-        
-        renderFileTree(data.items, 'uploads', 'workspace');
-    } catch (error) {
-        console.error('Failed to load uploads:', error);
-        elements.fileTree.innerHTML = '<div class="file-error">Uploads yüklenemedi</div>';
-    }
-}
-
 export function setupFileTabs() {
     document.querySelectorAll('.file-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -150,8 +125,6 @@ export function setupFileTabs() {
             state.fileSource = tab.dataset.source;
             if (state.fileSource === 'docker') {
                 loadDockerFiles();
-            } else if (state.fileSource === 'uploads') {
-                loadUploads();
             } else {
                 loadWorkspaceFiles();
             }
