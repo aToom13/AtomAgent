@@ -1,5 +1,6 @@
 /**
  * AtomAgent - Thinking & Status Bar Styles
+ * Sadece status bar ve thinking panel - chat block yok
  */
 
 /* Agent Status Bar */
@@ -72,71 +73,7 @@
 .agent-status-bar.error .status-spinner { display: none; }
 .agent-status-bar.error .status-indicator::before { content: '❌'; margin-right: 4px; }
 
-/* Thinking Block */
-.thinking-block {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-left: 3px solid var(--accent-primary);
-    border-radius: var(--radius-md);
-    margin: 12px 0;
-    overflow: hidden;
-    animation: fadeIn 0.3s ease;
-}
-
-.thinking-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.2s;
-}
-
-.thinking-header:hover { background: var(--bg-hover); }
-
-.thinking-icon {
-    color: var(--accent-primary);
-    display: flex;
-    align-items: center;
-}
-
-.thinking-title {
-    flex: 1;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-.thinking-toggle {
-    color: var(--text-muted);
-    transition: transform 0.2s;
-}
-
-.thinking-block.collapsed .thinking-toggle { transform: rotate(-90deg); }
-
-.thinking-content {
-    padding: 0 14px 14px 14px;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text-muted);
-    font-style: italic;
-    max-height: 300px;
-    overflow-y: auto;
-    border-top: 1px solid var(--border-color);
-}
-
-.thinking-block.collapsed .thinking-content { display: none; }
-
-.thinking-content p { margin: 8px 0; }
-.thinking-content strong { color: var(--text-secondary); font-style: normal; }
-
-/* Thinking animation */
-.thinking-block.active .thinking-icon svg {
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* Thinking Panel */
+/* Thinking Panel - Status bar altında açılan panel */
 .thinking-panel {
     position: absolute;
     bottom: 140px;
@@ -144,9 +81,9 @@
     right: 20px;
     max-height: 250px;
     background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--accent-primary);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
     z-index: 100;
     animation: slideUp 0.2s ease;
     overflow: hidden;
@@ -157,10 +94,11 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px;
-    background: var(--bg-tertiary);
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
     border-bottom: 1px solid var(--border-color);
     font-size: 13px;
     font-weight: 500;
+    color: var(--accent-primary);
 }
 
 .thinking-panel-content {
@@ -172,9 +110,46 @@
     color: var(--text-secondary);
 }
 
+.thinking-panel-content p {
+    margin: 8px 0;
+}
+
+.thinking-panel-content strong {
+    color: var(--accent-primary);
+}
+
+.thinking-panel-content code {
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+}
+
 .thinking-placeholder {
     color: var(--text-muted);
     font-style: italic;
     text-align: center;
     padding: 20px;
+}
+
+.thinking-active {
+    color: var(--accent-primary);
+    font-weight: 500;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Fade out animation for panel close */
+.thinking-panel.hidden {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(10px); }
 }

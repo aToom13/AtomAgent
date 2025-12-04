@@ -1,12 +1,13 @@
 /**
  * AtomAgent - Thinking/Status Functions
+ * Sadece status bar ve thinking panel - chat'e element eklenmez
  */
 
-import { state, getElements } from './state.js';
-import { renderMarkdown, scrollToBottom } from './utils.js';
+import { state } from './state.js';
+import { renderMarkdown } from './utils.js';
 
-let currentThinkingBlock = null;
 let thinkingContent = '';
+let isThinkingActive = false;
 
 export function updateAgentStatus(status, message, model) {
     const statusBar = document.getElementById('agent-status-bar');
@@ -29,85 +30,68 @@ export function updateAgentStatus(status, message, model) {
 }
 
 export function startThinkingBlock(title) {
-    const elements = getElements();
+    // Chat'e element ekleme - sadece status bar ve panel kullan
     thinkingContent = '';
+    isThinkingActive = true;
     
-    const block = document.createElement('div');
-    block.className = 'thinking-block active';
-    block.innerHTML = `
-        <div class="thinking-header" onclick="window.AtomAgent.toggleThinking(this)">
-            <span class="thinking-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-            </span>
-            <span class="thinking-title">${title || 'Düşünüyor...'}</span>
-            <span class="thinking-toggle">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </span>
-        </div>
-        <div class="thinking-content"></div>
-    `;
+    // Status bar'ı güncelle
+    const statusText = document.getElementById('status-text');
+    if (statusText) {
+        statusText.textContent = title || '🧠 Düşünüyor...';
+    }
     
-    currentThinkingBlock = block;
-    elements.messages.appendChild(block);
-    scrollToBottom(elements.messages);
+    // Thinking panel'i aç ve içeriği temizle
+    const panel = document.getElementById('thinking-panel');
+    const panelContent = document.getElementById('thinking-panel-content');
     
-    // Update thinking panel
-    updateThinkingPanel('');
+    if (panel) {
+        panel.classList.remove('hidden');
+        state.thinkingPanelOpen = true;
+    }
+    
+    if (panelContent) {
+        panelContent.innerHTML = `<p class="thinking-active">💭 ${title || 'Düşünüyor...'}</p>`;
+    }
 }
 
 export function appendThinkingToken(token) {
-    if (!currentThinkingBlock) return;
+    if (!isThinkingActive) return;
     
-    const elements = getElements();
     thinkingContent += token;
-    const contentEl = currentThinkingBlock.querySelector('.thinking-content');
     
-    if (contentEl) {
+    // Sadece thinking panel'i güncelle
+    const panelContent = document.getElementById('thinking-panel-content');
+    if (panelContent) {
         let cleanContent = thinkingContent
             .replace(/<think>/g, '')
             .replace(/<\/think>/g, '')
             .replace(/\*\*Düşünce:\*\*/g, '')
             .replace(/\*\*Thinking:\*\*/g, '');
         
-        contentEl.innerHTML = renderMarkdown(cleanContent);
+        panelContent.innerHTML = renderMarkdown(cleanContent);
     }
-    
-    scrollToBottom(elements.messages);
-    updateThinkingPanel(thinkingContent);
 }
 
 export function endThinkingBlock() {
-    if (currentThinkingBlock) {
-        currentThinkingBlock.classList.remove('active');
-        currentThinkingBlock.classList.add('collapsed');
-        
-        const titleEl = currentThinkingBlock.querySelector('.thinking-title');
-        if (titleEl && thinkingContent.length > 50) {
-            const summary = thinkingContent.substring(0, 50).replace(/<[^>]*>/g, '').trim() + '...';
-            titleEl.textContent = summary;
-        }
-    }
-    currentThinkingBlock = null;
-    thinkingContent = '';
+    isThinkingActive = false;
     
-    // Close thinking panel after delay
+    // Thinking panel'i kapat (2 saniye sonra)
     setTimeout(() => {
-        if (state.thinkingPanelOpen) {
-            toggleThinkingPanel();
+        const panel = document.getElementById('thinking-panel');
+        if (panel && state.thinkingPanelOpen) {
+            panel.classList.add('hidden');
+            state.thinkingPanelOpen = false;
         }
-    }, 2000);
+    }, 1500);
+    
+    thinkingContent = '';
 }
 
 export function toggleThinking(header) {
-    const block = header.parentElement;
-    block.classList.toggle('collapsed');
+    // Artık kullanılmıyor - eski chat block'ları için
 }
 
-// Thinking Panel
+// Thinking Panel toggle
 export function toggleThinkingPanel() {
     const panel = document.getElementById('thinking-panel');
     const statusBar = document.getElementById('agent-status-bar');
