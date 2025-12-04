@@ -8,6 +8,9 @@ import { createAIMessageElement, appendToken, finalizeAIMessage, addToolActivity
 import { loadSessions } from './sessions.js';
 import { updateAgentStatus, startThinkingBlock, appendThinkingToken, endThinkingBlock } from './thinking.js';
 import { addDockerCommand, addDockerOutput } from './docker.js';
+import { addToolStart, addToolEnd } from './tools.js';
+import { addBrowserStart, addBrowserResult } from './browser.js';
+import { updateTaskStatus, addTaskStep } from './tasks.js';
 
 export function connectWebSocket() {
     const clientId = 'client_' + Date.now();
@@ -55,10 +58,20 @@ function handleWebSocketMessage(event) {
             
         case 'tool_start':
             addToolActivity(data.tool, data.input, 'start');
+            addToolStart(data.tool, data.input);
             break;
             
         case 'tool_end':
             addToolActivity(data.tool, data.output, 'end');
+            addToolEnd(data.tool, data.output);
+            break;
+            
+        case 'browser_start':
+            addBrowserStart(data.tool, data.url);
+            break;
+            
+        case 'browser_result':
+            addBrowserResult(data.tool, data.content);
             break;
             
         case 'stream_end':

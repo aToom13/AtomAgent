@@ -1,0 +1,178 @@
+/**
+ * AtomAgent - Tasks Panel Styles
+ */
+
+/* Tasks Empty State */
+.tasks-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.tasks-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.tasks-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Tasks Stats */
+.tasks-stats {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+}
+
+.tasks-stats .stat-item.running .stat-value {
+    color: var(--accent-primary);
+}
+
+.tasks-stats .stat-item.completed .stat-value {
+    color: var(--accent-success);
+}
+
+/* Tasks List */
+.tasks-list-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+}
+
+.task-item.running {
+    border-color: var(--accent-primary);
+    border-left-width: 3px;
+}
+
+.task-item.completed {
+    border-color: var(--accent-success);
+    opacity: 0.8;
+}
+
+.task-item.failed {
+    border-color: var(--accent-error);
+}
+
+.task-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task-status-icon {
+    font-size: 14px;
+}
+
+.task-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.task-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.task-description {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Progress Bar */
+.task-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--accent-primary);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 35px;
+}
+
+/* Task Steps */
+.task-steps {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.task-step {
+    display: flex;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 11px;
+}
+
+.step-time {
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.step-text {
+    color: var(--text-secondary);
+}
+
+/* Task Error */
+.task-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.error-icon {
+    font-size: 14px;
+}
+
+.error-text {
+    font-size: 12px;
+    color: var(--accent-error);
+}
+
+/* Tasks Actions */
+.tasks-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}

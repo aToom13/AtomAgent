@@ -136,7 +136,8 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
             
             elif kind == "on_tool_start":
                 tool_name = event.get("name", "unknown")
-                tool_input = str(event.get("data", {}).get("input", ""))
+                tool_input = event.get("data", {}).get("input", {})
+                tool_input_str = str(tool_input)
                 
                 await manager.send_message(client_id, {
                     "type": "status",
@@ -146,15 +147,29 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                 await manager.send_message(client_id, {
                     "type": "tool_start",
                     "tool": tool_name,
-                    "input": tool_input[:200]
+                    "input": tool_input_str[:500]
                 })
                 
-                # Docker/sandbox komutlarını Docker sekmesine gönder
-                if tool_name in ["execute_command", "run_command", "shell", "bash", "terminal"]:
+                # Sandbox/Docker komutlarını Docker sekmesine gönder
+                sandbox_tools = ["sandbox_shell", "sandbox_start", "sandbox_stop", "sandbox_upload", "sandbox_download"]
+                if tool_name in sandbox_tools:
+                    cmd = tool_input.get("command", tool_input_str) if isinstance(tool_input, dict) else tool_input_str
                     await manager.send_message(client_id, {
                         "type": "docker_command",
-                        "command": tool_input[:500],
+                        "tool": tool_name,
+                        "command": str(cmd)[:500],
                         "status": "running"
+                    })
+                
+                # Web araçlarını browser sekmesine gönder
+                web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
+                if tool_name in web_tools:
+                    url = tool_input.get("url", tool_input.get("query", "")) if isinstance(tool_input, dict) else ""
+                    await manager.send_message(client_id, {
+                        "type": "browser_start",
+                        "tool": tool_name,
+                        "url": str(url)[:500],
+                        "status": "loading"
                     })
             
             elif kind == "on_tool_end":
@@ -172,12 +187,24 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                     "output": tool_output[:500]
                 })
                 
-                # Docker/sandbox komut çıktısını Docker sekmesine gönder
-                if tool_name in ["execute_command", "run_command", "shell", "bash", "terminal"]:
+                # Sandbox/Docker komut çıktısını Docker sekmesine gönder
+                sandbox_tools = ["sandbox_shell", "sandbox_start", "sandbox_stop", "sandbox_upload", "sandbox_download"]
+                if tool_name in sandbox_tools:
                     await manager.send_message(client_id, {
                         "type": "docker_output",
+                        "tool": tool_name,
                         "output": tool_output[:2000],
                         "status": "completed"
+                    })
+                
+                # Web araçları çıktısını browser sekmesine gönder
+                web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
+                if tool_name in web_tools:
+                    await manager.send_message(client_id, {
+                        "type": "browser_result",
+                        "tool": tool_name,
+                        "content": tool_output[:3000],
+                        "status": "loaded"
                     })
         
         if full_response:

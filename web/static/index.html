@@ -140,6 +140,31 @@
                     </svg>
                     <span>Terminal</span>
                 </button>
+                <button class="tab-btn" data-tab="tools">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                    <span>Araçlar</span>
+                </button>
+                <button class="tab-btn" data-tab="tasks">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    <span>Görevler</span>
+                </button>
+                <button class="tab-btn" data-tab="browser">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <span>Browser</span>
+                </button>
+                <button class="tab-btn" data-tab="docker">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/>
+                    </svg>
+                    <span>Docker</span>
+                </button>
                 <button class="tab-btn" data-tab="files">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -152,13 +177,6 @@
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                     <span>Editör</span>
-                </button>
-                <button class="tab-btn" data-tab="docker">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="7" width="20" height="14" rx="2"/>
-                        <path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/>
-                    </svg>
-                    <span>Docker</span>
                 </button>
             </div>
             
@@ -189,6 +207,39 @@
                         <button id="save-file-btn" class="small-btn" disabled>Kaydet</button>
                     </div>
                     <textarea id="code-editor" class="code-editor" placeholder="Dosya içeriği burada görünecek..."></textarea>
+                </div>
+                
+                <!-- Tools Tab -->
+                <div id="tab-tools" class="tab-content">
+                    <div id="tools-list" class="tools-list">
+                        <div class="tools-empty">
+                            <div class="tools-empty-icon">🔧</div>
+                            <p>Henüz araç kullanılmadı</p>
+                            <p class="tools-hint">Agent çalışmaya başladığında kullanılan araçlar burada görünecek</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tasks Tab -->
+                <div id="tab-tasks" class="tab-content">
+                    <div id="tasks-list" class="tasks-list">
+                        <div class="tasks-empty">
+                            <div class="tasks-empty-icon">📋</div>
+                            <p>Aktif görev yok</p>
+                            <p class="tasks-hint">Agent'a bir görev verdiğinizde burada takip edebilirsiniz</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Browser Tab -->
+                <div id="tab-browser" class="tab-content">
+                    <div id="browser-content" class="browser-content">
+                        <div class="browser-empty">
+                            <div class="browser-empty-icon">🌐</div>
+                            <p>Web aktivitesi yok</p>
+                            <p class="browser-hint">Agent web araması yaptığında sonuçlar burada görünecek</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Docker Tab -->

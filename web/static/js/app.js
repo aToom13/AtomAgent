@@ -12,6 +12,9 @@ import { loadSettings, openSettings, closeSettings, switchSettingsTab, switchMod
 import { loadWorkspaceFiles, loadDockerFiles, openFile, openDockerFile, saveFile, setupFileTabs } from './files.js';
 import { checkDockerStatus, setupDockerRefresh } from './docker.js';
 import { toggleThinking, toggleThinkingPanel } from './thinking.js';
+import { renderToolsPanel, clearToolHistory } from './tools.js';
+import { renderBrowserPanel, showBrowserEntry, clearBrowserHistory } from './browser.js';
+import { renderTasksPanel, clearCompletedTasks, clearAllTasks } from './tasks.js';
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', init);
@@ -25,6 +28,11 @@ async function init() {
     checkDockerStatus();
     setupFileTabs();
     setupDockerRefresh();
+    
+    // Initialize new panels
+    renderToolsPanel();
+    renderBrowserPanel();
+    renderTasksPanel();
 }
 
 function setupEventListeners() {
@@ -104,5 +112,16 @@ window.AtomAgent = {
     
     // Thinking
     toggleThinking,
-    toggleThinkingPanel
+    toggleThinkingPanel,
+    
+    // Tools
+    clearToolHistory,
+    
+    // Browser
+    showBrowserEntry,
+    clearBrowserHistory,
+    
+    // Tasks
+    clearCompletedTasks,
+    clearAllTasks
 };

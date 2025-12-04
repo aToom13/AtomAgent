@@ -12,4 +12,7 @@
 @import url('docker.css');
 @import url('thinking.css');
 @import url('markdown.css');
+@import url('tools.css');
+@import url('browser.css');
+@import url('tasks.css');
 @import url('responsive.css');

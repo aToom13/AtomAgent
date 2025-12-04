@@ -1,0 +1,128 @@
+/**
+ * AtomAgent - Tools Panel Styles
+ */
+
+/* Tools Empty State */
+.tools-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.tools-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.tools-empty p {
+    margin: 8px 0;
+}
+
+.tools-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Tools Stats */
+.tools-stats {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+}
+
+.stat-item {
+    flex: 1;
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Tools History */
+.tools-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tool-entry {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 12px;
+}
+
+.tool-entry.running {
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.tool-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tool-icon {
+    font-size: 14px;
+}
+
+.tool-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.tool-duration {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.tool-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-success);
+}
+
+.tool-status-dot.running {
+    background: var(--accent-primary);
+    animation: pulse 1s infinite;
+}
+
+.tool-input, .tool-output {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+.tool-label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.tool-input code, .tool-output code {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    word-break: break-all;
+}
