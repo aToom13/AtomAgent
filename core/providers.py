@@ -401,6 +401,9 @@ class AgentModelConfig:
         }
 
 
+SETTINGS_FILE = ".atom_settings.json"
+
+
 class ModelManager:
     """Manages model configurations with fallback support"""
     
@@ -418,7 +421,27 @@ class ModelManager:
         }
         self._llm_cache: Dict[str, BaseChatModel] = {}
         self._current_provider: Dict[str, int] = {}  # Track which provider is active (0 = primary)
-        self._load_fallback_settings()
+        self._load_settings()  # Ana settings'i yükle
+        self._load_fallback_settings()  # Fallback settings'i yükle
+    
+    def _load_settings(self):
+        """Load model settings from .atom_settings.json"""
+        try:
+            if os.path.exists(SETTINGS_FILE):
+                with open(SETTINGS_FILE, "r") as f:
+                    data = json.load(f)
+                
+                models = data.get("models", {})
+                for role in self.ROLES:
+                    if role in models:
+                        role_data = models[role]
+                        self.configs[role].provider = role_data.get("provider", self.configs[role].provider)
+                        self.configs[role].model = role_data.get("model", self.configs[role].model)
+                        self.configs[role].temperature = role_data.get("temperature", self.configs[role].temperature)
+                
+                logger.info(f"Settings loaded from {SETTINGS_FILE}")
+        except Exception as e:
+            logger.warning(f"Could not load settings: {e}")
     
     def _load_fallback_settings(self):
         """Load fallback settings from file"""
