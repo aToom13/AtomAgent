@@ -9,7 +9,7 @@ from utils.logger import get_logger
 from web import state
 
 logger = get_logger()
-
+    
 
 class ConnectionManager:
     """WebSocket bağlantı yöneticisi"""
@@ -34,10 +34,14 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+# Stop flags for each client
+stop_flags: Dict[str, bool] = {}
+
 
 async def handle_chat(websocket: WebSocket, client_id: str):
     """WebSocket chat handler"""
     await manager.connect(websocket, client_id)
+    stop_flags[client_id] = False
     
     try:
         while True:
@@ -46,6 +50,9 @@ async def handle_chat(websocket: WebSocket, client_id: str):
             if data.get("type") == "message":
                 content = data.get("content", "")
                 session_id = data.get("session_id")
+                
+                # Reset stop flag
+                stop_flags[client_id] = False
                 
                 if not session_id:
                     session = session_manager.create_session()
@@ -59,16 +66,20 @@ async def handle_chat(websocket: WebSocket, client_id: str):
                 await stream_response(client_id, session_id, content)
             
             elif data.get("type") == "stop":
+                stop_flags[client_id] = True
+                logger.info(f"Stop requested for {client_id}")
                 await manager.send_message(client_id, {
                     "type": "stopped",
-                    "message": "Agent stopped"
+                    "message": "Agent durduruldu"
                 })
     
     except WebSocketDisconnect:
         manager.disconnect(client_id)
+        stop_flags.pop(client_id, None)
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(client_id)
+        stop_flags.pop(client_id, None)
 
 
 async def stream_response(client_id: str, session_id: str, user_message: str, retry_count: int = 0):
@@ -78,6 +89,8 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
     MAX_RETRIES = 5
     current_thinking = ""
     in_thinking = False
+    first_token_received = False
+    thinking_started = False
     
     try:
         # Aktif model bilgisini gönder
@@ -88,6 +101,13 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
             "message": f"Düşünüyor...",
             "model": f"{current_provider}/{current_model}"
         })
+        
+        # Düşünme panelini başlat - model yanıt üretmeye başlayana kadar
+        await manager.send_message(client_id, {
+            "type": "thinking_start",
+            "title": "🧠 Analiz ediliyor..."
+        })
+        thinking_started = True
         
         await manager.send_message(client_id, {
             "type": "stream_start",
@@ -103,6 +123,11 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
             config=thread_config,
             version="v2"
         ):
+            # Check stop flag
+            if stop_flags.get(client_id, False):
+                logger.info(f"Stopping stream for {client_id}")
+                break
+            
             kind = event.get("event")
             
             if kind == "on_chat_model_stream":
@@ -110,13 +135,28 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                 if chunk and hasattr(chunk, "content") and chunk.content:
                     token = chunk.content
                     
-                    # Thinking block detection (<think> tags veya reasoning)
-                    if "<think>" in token or "**Düşünce:" in token or "**Thinking:" in token:
-                        in_thinking = True
+                    # İlk token geldiğinde düşünme panelini kapat
+                    if not first_token_received and thinking_started:
+                        first_token_received = True
                         await manager.send_message(client_id, {
-                            "type": "thinking_start",
-                            "title": "Düşünüyor..."
+                            "type": "thinking_end"
                         })
+                        thinking_started = False
+                    
+                    # Thinking block detection - çeşitli formatlar
+                    thinking_starts = ["<think>", "<thinking>", "**Düşünce:**", "**Thinking:**", "**Reasoning:**", "```thinking"]
+                    thinking_ends = ["</think>", "</thinking>", "```"]
+                    
+                    # Check for thinking start
+                    if not in_thinking:
+                        for start_tag in thinking_starts:
+                            if start_tag.lower() in token.lower():
+                                in_thinking = True
+                                await manager.send_message(client_id, {
+                                    "type": "thinking_start",
+                                    "title": "💭 Düşünüyor..."
+                                })
+                                break
                     
                     if in_thinking:
                         current_thinking += token
@@ -125,11 +165,14 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                             "content": token
                         })
                         
-                        if "</think>" in token or (in_thinking and token.strip().endswith("**")):
-                            in_thinking = False
-                            await manager.send_message(client_id, {
-                                "type": "thinking_end"
-                            })
+                        # Check for thinking end
+                        for end_tag in thinking_ends:
+                            if end_tag.lower() in token.lower():
+                                in_thinking = False
+                                await manager.send_message(client_id, {
+                                    "type": "thinking_end"
+                                })
+                                break
                     else:
                         full_response += token
                         await manager.send_message(client_id, {"type": "token", "content": token})
@@ -138,6 +181,20 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                 tool_name = event.get("name", "unknown")
                 tool_input = event.get("data", {}).get("input", {})
                 tool_input_str = str(tool_input)
+                
+                # Tool başlamadan önce düşünme panelini güncelle
+                if not thinking_started:
+                    await manager.send_message(client_id, {
+                        "type": "thinking_start",
+                        "title": f"🔧 {tool_name} hazırlanıyor..."
+                    })
+                    thinking_started = True
+                
+                # Düşünme paneline tool bilgisi ekle
+                await manager.send_message(client_id, {
+                    "type": "thinking_token",
+                    "content": f"\n\n**Tool:** `{tool_name}`\n**Input:** {tool_input_str[:200]}...\n"
+                })
                 
                 await manager.send_message(client_id, {
                     "type": "status",
@@ -176,6 +233,19 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                 tool_name = event.get("name", "unknown")
                 tool_output = str(event.get("data", {}).get("output", ""))
                 
+                # Düşünme paneline tool sonucunu ekle
+                if thinking_started:
+                    output_preview = tool_output[:150].replace('\n', ' ')
+                    await manager.send_message(client_id, {
+                        "type": "thinking_token",
+                        "content": f"**Sonuç:** {output_preview}...\n"
+                    })
+                    # Tool bittikten sonra düşünme panelini kapat
+                    await manager.send_message(client_id, {
+                        "type": "thinking_end"
+                    })
+                    thinking_started = False
+                
                 await manager.send_message(client_id, {
                     "type": "status",
                     "status": "thinking",
@@ -206,6 +276,12 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                         "content": tool_output[:3000],
                         "status": "loaded"
                     })
+        
+        # Düşünme paneli hala açıksa kapat
+        if thinking_started:
+            await manager.send_message(client_id, {
+                "type": "thinking_end"
+            })
         
         if full_response:
             session_manager.add_message(session_id, "ai", full_response)
