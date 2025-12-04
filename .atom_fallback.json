@@ -6,20 +6,12 @@
         "model": "amazon/nova-2-lite-v1:free"
       },
       {
-        "provider": "cerebras",
-        "model": "gpt-oss-120b"
-      },
-      {
         "provider": "groq",
-        "model": "openai/gpt-oss-120b"
+        "model": "llama-3.1-8b-instant"
       },
       {
-        "provider": "huggingface",
-        "model": "meta-llama/Llama-3.3-70B-Instruct"
-      },
-      {
-        "provider": "google",
-        "model": "gemini-2.0-flash-lite"
+        "provider": "cerebras",
+        "model": "llama3.1-8b"
       }
     ]
   },
@@ -30,20 +22,12 @@
         "model": "amazon/nova-2-lite-v1:free"
       },
       {
-        "provider": "cerebras",
-        "model": "zai-glm-4.6"
-      },
-      {
         "provider": "groq",
-        "model": "openai/gpt-oss-120b"
+        "model": "llama-3.1-8b-instant"
       },
       {
-        "provider": "huggingface",
-        "model": "moonshotai/Kimi-K2-Thinking"
-      },
-      {
-        "provider": "google",
-        "model": "gemini-2.0-flash-lite"
+        "provider": "cerebras",
+        "model": "llama3.1-8b"
       }
     ]
   },
@@ -54,29 +38,17 @@
         "model": "amazon/nova-2-lite-v1:free"
       },
       {
-        "provider": "cerebras",
-        "model": "gpt-oss-120b"
-      },
-      {
         "provider": "groq",
-        "model": "openai/gpt-oss-120b"
+        "model": "llama-3.1-8b-instant"
       },
       {
-        "provider": "huggingface",
-        "model": "zai-org/GLM-4.6"
-      },
-      {
-        "provider": "google",
-        "model": "gemini-2.0-flash-lite"
+        "provider": "cerebras",
+        "model": "llama3.1-8b"
       }
     ]
   },
   "vision": {
     "fallbacks": [
-      {
-        "provider": "google",
-        "model": "gemini-2.0-flash-lite"
-      },
       {
         "provider": "groq",
         "model": "llama-3.2-90b-vision-preview"
@@ -86,25 +58,15 @@
   "video": {
     "fallbacks": [
       {
-        "provider": "google",
-        "model": "gemini-2.0-flash-lite"
+        "provider": "groq",
+        "model": "llama-3.2-90b-vision-preview"
       }
     ]
   },
   "audio": {
-    "fallbacks": [
-      {
-        "provider": "ollama",
-        "model": "base"
-      }
-    ]
+    "fallbacks": []
   },
   "tts": {
-    "fallbacks": [
-      {
-        "provider": "google",
-        "model": "tr"
-      }
-    ]
+    "fallbacks": []
   }
 }
