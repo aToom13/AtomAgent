@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtomAgent - AI Development Assistant</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    
+    <!-- Modular CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Left Sidebar - Sessions -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <button id="toggle-sidebar" class="icon-btn" title="Paneli Daralt">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <span class="sidebar-title">Sohbetler</span>
+                <button id="new-chat-btn" class="icon-btn primary" title="Yeni Sohbet">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="sessions-list" class="sessions-list"></div>
+            <div class="sidebar-footer">
+                <button id="settings-btn" class="settings-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Ayarlar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Collapsed Sidebar -->
+        <aside id="sidebar-collapsed" class="sidebar-collapsed hidden">
+            <button id="expand-sidebar" class="icon-btn" title="Paneli Genişlet">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 5l7 7-7 7M6 5l7 7-7 7"/>
+                </svg>
+            </button>
+            <button id="new-chat-collapsed" class="icon-btn" title="Yeni Sohbet">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+            </button>
+            <div class="collapsed-spacer"></div>
+            <button id="settings-collapsed" class="icon-btn" title="Ayarlar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </button>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main id="chat-area" class="chat-area">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    <h1>AtomAgent</h1>
+                </div>
+                <div class="chat-status" id="chat-status">
+                    <span class="status-dot"></span>
+                    <span>Hazır</span>
+                </div>
+            </div>
+            
+            <div id="messages" class="messages">
+                <div class="welcome-message">
+                    <div class="welcome-icon">🤖</div>
+                    <h2>AtomAgent'a Hoş Geldiniz</h2>
+                    <p>AI destekli geliştirme asistanınız hazır. Bir soru sorun veya görev verin.</p>
+                </div>
+            </div>
+            
+            <!-- Agent Status Bar -->
+            <div id="agent-status-bar" class="agent-status-bar hidden">
+                <div class="status-indicator" id="status-indicator" onclick="window.AtomAgent.toggleThinkingPanel()">
+                    <span class="status-spinner"></span>
+                    <span id="status-text">Hazır</span>
+                    <span class="status-expand-icon">▼</span>
+                </div>
+                <div id="status-model" class="status-model"></div>
+            </div>
+            
+            <!-- Thinking Panel -->
+            <div id="thinking-panel" class="thinking-panel hidden">
+                <div class="thinking-panel-header">
+                    <span>💭 Düşünme Süreci</span>
+                    <button onclick="window.AtomAgent.toggleThinkingPanel()" class="icon-btn small">✕</button>
+                </div>
+                <div id="thinking-panel-content" class="thinking-panel-content">
+                    <p class="thinking-placeholder">Agent düşünmeye başladığında burada göreceksiniz...</p>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea id="message-input" placeholder="Mesajınızı yazın... (Enter gönderir, Shift+Enter yeni satır)" rows="1"></textarea>
+                    <button id="send-btn" class="send-btn" title="Gönder">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                    <button id="stop-btn" class="stop-btn hidden" title="Durdur">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="6" width="12" height="12" rx="2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Resize Handle -->
+        <div id="resize-handle" class="resize-handle"></div>
+
+        <!-- Right Panel -->
+        <aside id="right-panel" class="right-panel">
+            <div class="panel-tabs">
+                <button class="tab-btn active" data-tab="terminal">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                    </svg>
+                    <span>Terminal</span>
+                </button>
+                <button class="tab-btn" data-tab="files">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Dosyalar</span>
+                </button>
+                <button class="tab-btn" data-tab="editor">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    <span>Editör</span>
+                </button>
+                <button class="tab-btn" data-tab="docker">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/>
+                    </svg>
+                    <span>Docker</span>
+                </button>
+            </div>
+            
+            <div class="panel-content">
+                <!-- Terminal Tab -->
+                <div id="tab-terminal" class="tab-content active">
+                    <div class="terminal-output" id="terminal-output">
+                        <div class="terminal-line">
+                            <span class="prompt">$</span>
+                            <span>Agent çalışma çıktıları burada görünecek...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Files Tab -->
+                <div id="tab-files" class="tab-content">
+                    <div class="file-tabs">
+                        <button class="file-tab active" data-source="workspace">📁 Workspace</button>
+                        <button class="file-tab" data-source="docker">🐳 Docker</button>
+                    </div>
+                    <div class="file-tree" id="file-tree"></div>
+                </div>
+                
+                <!-- Editor Tab -->
+                <div id="tab-editor" class="tab-content">
+                    <div class="editor-header">
+                        <span id="editor-filename">Dosya seçilmedi</span>
+                        <button id="save-file-btn" class="small-btn" disabled>Kaydet</button>
+                    </div>
+                    <textarea id="code-editor" class="code-editor" placeholder="Dosya içeriği burada görünecek..."></textarea>
+                </div>
+                
+                <!-- Docker Tab -->
+                <div id="tab-docker" class="tab-content">
+                    <div class="docker-status" id="docker-status">
+                        <div class="docker-header">
+                            <span class="docker-indicator" id="docker-indicator">●</span>
+                            <span id="docker-status-text">Bağlantı kontrol ediliyor...</span>
+                            <button id="docker-refresh" class="icon-btn small" title="Yenile">↻</button>
+                        </div>
+                    </div>
+                    <div class="docker-output" id="docker-output">
+                        <div class="docker-line">
+                            <span class="docker-time">[--:--:--]</span>
+                            <span>Docker komutları burada görünecek...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2>⚙️ Ayarlar</h2>
+                <button id="close-settings" class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-settings="models">Modeller</button>
+                    <button class="settings-tab" data-settings="fallbacks">Fallback</button>
+                    <button class="settings-tab" data-settings="prompts">Promptlar</button>
+                    <button class="settings-tab" data-settings="commands">Komutlar</button>
+                    <button class="settings-tab" data-settings="api">API Keys</button>
+                </div>
+                
+                <!-- Models Settings -->
+                <div id="settings-models" class="settings-content active">
+                    <div class="settings-section">
+                        <h3>Agent Modelleri</h3>
+                        <p class="settings-note">Ayarlar .atom_settings.json dosyasına kaydedilir.</p>
+                        <div class="model-role-tabs" id="model-role-tabs">
+                            <button class="role-tab active" data-role="supervisor">Supervisor</button>
+                            <button class="role-tab" data-role="coder">Coder</button>
+                            <button class="role-tab" data-role="researcher">Researcher</button>
+                            <button class="role-tab" data-role="vision">Vision</button>
+                            <button class="role-tab" data-role="audio">Audio</button>
+                            <button class="role-tab" data-role="tts">TTS</button>
+                        </div>
+                        <div class="model-config" id="model-configs"></div>
+                    </div>
+                </div>
+                
+                <!-- Fallback Settings -->
+                <div id="settings-fallbacks" class="settings-content">
+                    <div class="settings-section">
+                        <h3>Fallback Modelleri</h3>
+                        <p class="settings-note">Rate limit veya hata durumunda kullanılacak yedek modeller.</p>
+                        <div class="model-role-tabs" id="fallback-role-tabs">
+                            <button class="role-tab active" data-role="supervisor">Supervisor</button>
+                            <button class="role-tab" data-role="coder">Coder</button>
+                            <button class="role-tab" data-role="researcher">Researcher</button>
+                            <button class="role-tab" data-role="vision">Vision</button>
+                            <button class="role-tab" data-role="audio">Audio</button>
+                            <button class="role-tab" data-role="tts">TTS</button>
+                        </div>
+                        <div class="fallback-config" id="fallback-configs"></div>
+                        <div class="add-fallback">
+                            <h4>Yeni Fallback Ekle</h4>
+                            <div class="fallback-form">
+                                <select id="new-fallback-provider"></select>
+                                <input type="text" id="new-fallback-model" placeholder="Model adı">
+                                <button id="add-fallback-btn" class="small-btn primary">Ekle</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Prompts Settings -->
+                <div id="settings-prompts" class="settings-content">
+                    <div class="settings-section">
+                        <h3>Sistem Promptları</h3>
+                        <div class="prompt-selector">
+                            <select id="prompt-select">
+                                <option value="supervisor">Supervisor</option>
+                                <option value="coder">Coder</option>
+                                <option value="researcher">Researcher</option>
+                                <option value="planner">Planner</option>
+                            </select>
+                        </div>
+                        <textarea id="prompt-editor" class="prompt-editor" rows="15"></textarea>
+                        <button id="save-prompt-btn" class="primary-btn">Promptu Kaydet</button>
+                    </div>
+                </div>
+                
+                <!-- Commands Settings -->
+                <div id="settings-commands" class="settings-content">
+                    <div class="settings-section">
+                        <h3>İzin Verilen Komutlar</h3>
+                        <div id="allowed-commands" class="command-list"></div>
+                        <div class="add-command">
+                            <input type="text" id="new-command" placeholder="Yeni komut ekle...">
+                            <button id="add-command-btn" class="small-btn">Ekle</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Keys Settings -->
+                <div id="settings-api" class="settings-content">
+                    <div class="settings-section">
+                        <h3>API Anahtarları</h3>
+                        <p class="settings-note">API anahtarları .env dosyasında saklanır.</p>
+                        <div id="api-status" class="api-status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Modular JavaScript (ES6 Modules) -->
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

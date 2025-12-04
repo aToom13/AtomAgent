@@ -1,0 +1,95 @@
+/**
+ * AtomAgent - Responsive Styles
+ */
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Large screens */
+@media (max-width: 1200px) {
+    .right-panel { width: 320px; min-width: 320px; }
+}
+
+/* Tablets */
+@media (max-width: 1024px) {
+    #app { flex-direction: column; gap: 8px; padding: 8px; }
+    
+    .sidebar { 
+        width: 100%; 
+        min-width: 100%; 
+        max-height: 200px;
+        border-radius: var(--radius-md);
+    }
+    
+    .sidebar-collapsed { display: none; }
+    
+    .sessions-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+    .session-item { min-width: 200px; }
+    
+    .chat-area { 
+        flex: 1; 
+        min-height: 0;
+        border-radius: var(--radius-md);
+    }
+    
+    .right-panel { 
+        width: 100%; 
+        min-width: 100%; 
+        max-height: 250px;
+        border-radius: var(--radius-md);
+    }
+    
+    .panel-tabs { justify-content: center; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    :root { --gap: 8px; }
+    
+    .sidebar { max-height: 150px; }
+    .sidebar-header { padding: 12px; }
+    .sidebar-title { font-size: 13px; }
+    
+    .chat-header { padding: 12px 16px; }
+    .chat-title h1 { font-size: 16px; }
+    
+    .messages { padding: 12px; gap: 12px; }
+    .message { max-width: 95%; padding: 12px 14px; font-size: 13px; }
+    
+    .input-area { padding: 12px; }
+    .input-container { padding: 6px 10px; }
+    
+    .right-panel { max-height: 200px; }
+    .tab-btn span { display: none; }
+    .tab-btn { padding: 8px; }
+    
+    .modal-content { width: 95%; max-height: 90vh; border-radius: var(--radius-lg); }
+    .modal-header { padding: 16px; }
+    .modal-body { padding: 16px; }
+    
+    .settings-tabs { flex-wrap: wrap; }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .sidebar { max-height: 120px; }
+    .session-item { min-width: 150px; padding: 10px; }
+    .session-title { font-size: 12px; }
+    
+    .welcome-message { padding: 30px 16px; }
+    .welcome-icon { font-size: 36px; }
+    .welcome-message h2 { font-size: 18px; }
+    
+    .message { font-size: 12px; }
+    
+    #message-input { font-size: 13px; }
+    .send-btn, .stop-btn { width: 32px; height: 32px; }
+}

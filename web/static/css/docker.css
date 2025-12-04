@@ -1,0 +1,53 @@
+/**
+ * AtomAgent - Docker Tab Styles
+ */
+
+.docker-status {
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.docker-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.docker-indicator { font-size: 10px; }
+.docker-indicator.online { color: var(--accent-success); }
+.docker-indicator.offline { color: var(--accent-error); }
+.docker-indicator.loading { color: var(--accent-warning); animation: pulse 1s infinite; }
+
+#docker-status-text {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.docker-output {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 12px;
+    height: calc(100% - 60px);
+    overflow-y: auto;
+}
+
+.docker-line {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.docker-line:last-child { border-bottom: none; }
+
+.docker-line.running {
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 2px solid var(--accent-primary);
+    padding-left: 10px;
+}
+
+.docker-time { color: var(--text-muted); margin-right: 8px; }
+.docker-cmd { color: var(--accent-primary); }
+.docker-output-text { color: var(--text-secondary); }
+.docker-error { color: var(--accent-error); }
+.docker-status { color: var(--accent-warning); font-size: 11px; margin-top: 4px; }

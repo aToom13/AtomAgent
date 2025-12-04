@@ -1,0 +1,70 @@
+/**
+ * AtomAgent - Button Styles
+ */
+
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.icon-btn.primary { background: var(--accent-primary); color: white; }
+.icon-btn.primary:hover { background: #2563eb; }
+.icon-btn.small { width: 24px; height: 24px; font-size: 12px; }
+
+.small-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.small-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.small-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.small-btn.primary { background: var(--accent-primary); border-color: var(--accent-primary); color: white; }
+.small-btn.primary:hover { background: #2563eb; }
+
+.primary-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: var(--accent-primary);
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.primary-btn:hover { background: #2563eb; }
+
+.send-btn, .stop-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.send-btn { background: var(--accent-primary); color: white; }
+.send-btn:hover { background: #2563eb; }
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.stop-btn { background: var(--accent-error); color: white; }
+.stop-btn:hover { background: #dc2626; }

@@ -1,0 +1,180 @@
+/**
+ * AtomAgent - Thinking & Status Bar Styles
+ */
+
+/* Agent Status Bar */
+.agent-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin: 0 20px 8px 20px;
+    font-size: 12px;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.status-indicator:hover { background: var(--bg-hover); }
+
+.status-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-light);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.status-model {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.status-expand-icon {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: 4px;
+    transition: transform 0.2s;
+}
+
+.agent-status-bar.expanded .status-expand-icon { transform: rotate(180deg); }
+
+/* Status bar states */
+.agent-status-bar.thinking .status-spinner { border-top-color: var(--accent-primary); }
+.agent-status-bar.tool .status-spinner { border-top-color: var(--accent-warning); }
+.agent-status-bar.switching .status-spinner { border-top-color: var(--accent-secondary); }
+.agent-status-bar.error .status-spinner { display: none; }
+.agent-status-bar.error .status-indicator::before { content: '❌'; margin-right: 4px; }
+
+/* Thinking Block */
+.thinking-block {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-primary);
+    border-radius: var(--radius-md);
+    margin: 12px 0;
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
+}
+
+.thinking-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.thinking-header:hover { background: var(--bg-hover); }
+
+.thinking-icon {
+    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+}
+
+.thinking-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.thinking-toggle {
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+
+.thinking-block.collapsed .thinking-toggle { transform: rotate(-90deg); }
+
+.thinking-content {
+    padding: 0 14px 14px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    font-style: italic;
+    max-height: 300px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border-color);
+}
+
+.thinking-block.collapsed .thinking-content { display: none; }
+
+.thinking-content p { margin: 8px 0; }
+.thinking-content strong { color: var(--text-secondary); font-style: normal; }
+
+/* Thinking animation */
+.thinking-block.active .thinking-icon svg {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Thinking Panel */
+.thinking-panel {
+    position: absolute;
+    bottom: 140px;
+    left: 20px;
+    right: 20px;
+    max-height: 250px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    animation: slideUp 0.2s ease;
+    overflow: hidden;
+}
+
+.thinking-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.thinking-panel-content {
+    padding: 14px;
+    max-height: 180px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.thinking-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}

@@ -1,0 +1,66 @@
+/**
+ * AtomAgent - Markdown Styles
+ */
+
+.message h1, .message h2, .message h3 { margin: 16px 0 8px; }
+.message h1 { font-size: 1.4em; }
+.message h2 { font-size: 1.2em; }
+.message h3 { font-size: 1.1em; }
+
+.message ul, .message ol { margin: 8px 0; padding-left: 24px; }
+.message li { margin: 4px 0; }
+
+.message blockquote {
+    border-left: 3px solid var(--accent-primary);
+    padding-left: 12px;
+    margin: 12px 0;
+    color: var(--text-secondary);
+}
+
+.message table {
+    border-collapse: collapse;
+    margin: 12px 0;
+    width: 100%;
+}
+
+.message th, .message td {
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.message th { background: var(--bg-tertiary); }
+
+.message a {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+.message a:hover { text-decoration: underline; }
+
+.message hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 16px 0;
+}
+
+/* Copy button for code blocks */
+.code-block-wrapper { position: relative; }
+
+.copy-code-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.code-block-wrapper:hover .copy-code-btn { opacity: 1; }
+.copy-code-btn:hover { background: var(--bg-active); color: var(--text-primary); }
