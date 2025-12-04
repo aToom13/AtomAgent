@@ -6,7 +6,7 @@ import { state, getElements } from './state.js';
 import { updateStatus, updateStreamingUI } from './ui.js';
 import { createAIMessageElement, appendToken, finalizeAIMessage, addToolActivity, showError, showSystemMessage } from './chat.js';
 import { loadSessions } from './sessions.js';
-import { updateAgentStatus, startThinkingBlock, appendThinkingToken, endThinkingBlock } from './thinking.js';
+import { updateAgentStatus } from './thinking.js';
 import { addDockerCommand, addDockerOutput } from './docker.js';
 import { addToolStart, addToolEnd } from './tools.js';
 import { addBrowserStart, addBrowserResult } from './browser.js';
@@ -106,16 +106,11 @@ function handleWebSocketMessage(event) {
             updateAgentStatus(data.status, data.message, data.model);
             break;
             
+        // Thinking artık sadece status bar'da gösteriliyor
         case 'thinking_start':
-            startThinkingBlock(data.title);
-            break;
-            
         case 'thinking_token':
-            appendThinkingToken(data.content);
-            break;
-            
         case 'thinking_end':
-            endThinkingBlock();
+            // Artık kullanılmıyor - status bar yeterli
             break;
             
         case 'docker_command':
