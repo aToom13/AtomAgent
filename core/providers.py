@@ -286,10 +286,12 @@ def handle_rate_limit(provider: str) -> bool:
     Returns True if successfully rotated, False if no more keys.
     """
     key_info = get_api_key_info(provider)
+    logger.info(f"Handling rate limit for {provider}: {key_info}")
     
     if key_info["has_more"]:
         if rotate_api_key(provider):
-            logger.info(f"Rate limit hit - rotated to key {key_info['current'] + 1}/{key_info['total']} for {provider}")
+            new_info = get_api_key_info(provider)
+            logger.info(f"Rate limit hit - rotated to key {new_info['current']}/{new_info['total']} for {provider}")
             return True
     
     logger.warning(f"Rate limit hit - no more API keys for {provider}")

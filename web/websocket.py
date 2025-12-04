@@ -219,10 +219,32 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
         await manager.send_message(client_id, {"type": "stream_end", "session_id": session_id})
 
     except Exception as e:
+        from core.providers import handle_rate_limit, is_rate_limit_error
+        
         error_str = str(e)
         logger.error(f"Stream error: {error_str}")
 
         if is_fallback_needed(e) and retry_count < MAX_RETRIES:
+            current_provider, _ = model_manager.get_current_provider_info("supervisor")
+            
+            # Önce aynı provider içinde API key rotation dene
+            if is_rate_limit_error(e) and handle_rate_limit(current_provider):
+                logger.info(f"Rotated API key for {current_provider}")
+                
+                await manager.send_message(client_id, {
+                    "type": "status",
+                    "status": "switching",
+                    "message": f"API key değiştiriliyor...",
+                    "model": f"{current_provider}"
+                })
+                
+                # Cache'i temizle ve yeni key ile agent oluştur
+                model_manager.clear_cache("supervisor")
+                state.update_agent()
+                await stream_response(client_id, session_id, user_message, retry_count + 1)
+                return
+            
+            # API key rotation başarısızsa, farklı provider'a geç
             switched = model_manager.switch_to_fallback("supervisor")
 
             if switched:
@@ -242,7 +264,7 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
             else:
                 await manager.send_message(client_id, {
                     "type": "error",
-                    "message": "Tüm provider'lar tükendi."
+                    "message": "Tüm provider'lar ve API key'ler tükendi."
                 })
         else:
             await manager.send_message(client_id, {"type": "error", "message": error_str})
