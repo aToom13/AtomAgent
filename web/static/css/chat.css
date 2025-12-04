@@ -201,3 +201,44 @@
     0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
     30% { transform: translateY(-4px); opacity: 1; }
 }
+
+
+/* Message Attachments */
+.message-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.message-attachment {
+    padding: 6px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.message-attachment.image {
+    padding: 4px;
+}
+
+.message-attachment.image img {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+.message-attachment.audio {
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-card));
+}
+
+.message-attachment.file {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

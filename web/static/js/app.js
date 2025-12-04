@@ -15,6 +15,7 @@ import { toggleThinking, toggleThinkingPanel } from './thinking.js';
 import { renderToolsPanel, clearToolHistory } from './tools.js';
 import { renderBrowserPanel, showBrowserEntry, clearBrowserHistory } from './browser.js';
 import { renderTasksPanel, clearCompletedTasks, clearAllTasks } from './tasks.js';
+import { initAttachments, removeAttachment, clearAttachments } from './attachments.js';
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', init);
@@ -33,6 +34,9 @@ async function init() {
     renderToolsPanel();
     renderBrowserPanel();
     renderTasksPanel();
+    
+    // Initialize attachments
+    initAttachments();
 }
 
 function setupEventListeners() {
@@ -125,5 +129,9 @@ window.AtomAgent = {
     
     // Tasks
     clearCompletedTasks,
-    clearAllTasks
+    clearAllTasks,
+    
+    // Attachments
+    removeAttachment,
+    clearAttachments
 };

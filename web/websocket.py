@@ -1,14 +1,88 @@
 """WebSocket Chat Handler"""
+import os
+import base64
+import tempfile
 from fastapi import WebSocket, WebSocketDisconnect
-from typing import Dict
+from typing import Dict, List
 
 from core.agent import get_thread_config, get_agent_executor
 from core.session_manager import session_manager
 from core.providers import model_manager, is_fallback_needed
 from utils.logger import get_logger
+from config import config
 from web import state
 
 logger = get_logger()
+
+# Attachment storage directory
+ATTACHMENT_DIR = os.path.join(config.workspace.base_dir, ".attachments")
+os.makedirs(ATTACHMENT_DIR, exist_ok=True)
+
+
+async def process_attachments(content: str, attachments: List[dict]) -> str:
+    """
+    Process attachments and add them to the message content.
+    Files are saved to sandbox shared folder for agent access.
+    """
+    if not attachments:
+        return content
+    
+    attachment_info = []
+    
+    for att in attachments:
+        try:
+            name = att.get("name", "unknown")
+            att_type = att.get("type", "file")
+            mime_type = att.get("mimeType", "")
+            data = att.get("data", "")
+            
+            # Decode base64 data
+            if data.startswith("data:"):
+                # Remove data URL prefix
+                data = data.split(",", 1)[1] if "," in data else data
+            
+            file_data = base64.b64decode(data)
+            
+            # Save to shared folder (accessible by sandbox)
+            shared_dir = os.path.join(config.workspace.base_dir, "..", "docker", "shared")
+            os.makedirs(shared_dir, exist_ok=True)
+            
+            file_path = os.path.join(shared_dir, name)
+            with open(file_path, "wb") as f:
+                f.write(file_data)
+            
+            # Build attachment info for agent
+            if att_type == "image":
+                attachment_info.append(f"[Resim eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
+                attachment_info.append(f"Bu resmi analiz etmek için analyze_image tool'unu kullan: analyze_image('/home/agent/shared/{name}', 'Bu resimde ne var?')")
+            elif att_type == "audio":
+                attachment_info.append(f"[Ses dosyası eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
+                attachment_info.append(f"Bu ses dosyasını transkript etmek için transcribe_audio tool'unu kullan.")
+            elif att_type == "code":
+                # Read code content for inline display
+                try:
+                    code_content = file_data.decode("utf-8")[:2000]
+                    attachment_info.append(f"[Kod dosyası eklendi: {name}]\n```\n{code_content}\n```")
+                except:
+                    attachment_info.append(f"[Kod dosyası eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
+            else:
+                attachment_info.append(f"[Dosya eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
+            
+            logger.info(f"Attachment saved: {name} -> {file_path}")
+            
+        except Exception as e:
+            logger.error(f"Failed to process attachment: {e}")
+            attachment_info.append(f"[Dosya işlenemedi: {att.get('name', 'unknown')}]")
+    
+    # Combine content with attachment info
+    if attachment_info:
+        attachment_text = "\n\n".join(attachment_info)
+        if content:
+            return f"{content}\n\n---\nEkler:\n{attachment_text}"
+        else:
+            return f"Ekler:\n{attachment_text}"
+    
+    return content
 
 
 class ConnectionManager:
@@ -50,6 +124,7 @@ async def handle_chat(websocket: WebSocket, client_id: str):
             if data.get("type") == "message":
                 content = data.get("content", "")
                 session_id = data.get("session_id")
+                attachments = data.get("attachments", [])
 
                 # Reset stop flag
                 stop_flags[client_id] = False
@@ -62,8 +137,13 @@ async def handle_chat(websocket: WebSocket, client_id: str):
                         "session": session.to_dict()
                     })
 
+                # Process attachments
+                processed_content = content
+                if attachments:
+                    processed_content = await process_attachments(content, attachments)
+
                 session_manager.add_message(session_id, "human", content)
-                await stream_response(client_id, session_id, content)
+                await stream_response(client_id, session_id, processed_content)
 
             elif data.get("type") == "stop":
                 stop_flags[client_id] = True

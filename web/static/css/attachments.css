@@ -1,0 +1,221 @@
+/**
+ * AtomAgent - Attachment Styles
+ */
+
+/* Hidden file inputs */
+.hidden-input {
+    display: none;
+}
+
+/* Attach Button */
+.attach-wrapper {
+    position: relative;
+}
+
+.attach-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.attach-btn:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* Attach Menu */
+.attach-menu {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 8px;
+    min-width: 160px;
+    z-index: 100;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.attach-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.attach-option:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+}
+
+.attach-option svg {
+    color: var(--text-muted);
+}
+
+.attach-option:hover svg {
+    color: var(--accent-primary);
+}
+
+/* Attachment Preview */
+.attachment-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    margin: 0 16px;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    max-width: 200px;
+}
+
+.attachment-item .attachment-icon {
+    font-size: 16px;
+}
+
+.attachment-item .attachment-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-secondary);
+}
+
+.attachment-item .attachment-size {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.attachment-item .attachment-remove {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.attachment-item .attachment-remove:hover {
+    background: var(--accent-error);
+    color: white;
+}
+
+/* Image Preview */
+.attachment-item.image-preview {
+    padding: 4px;
+}
+
+.attachment-item.image-preview img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.attachment-item.image-preview .attachment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Audio Preview */
+.attachment-item.audio-preview {
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-tertiary));
+}
+
+.attachment-item.audio-preview .audio-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* Drag & Drop Overlay */
+.drag-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(99, 102, 241, 0.1);
+    border: 2px dashed var(--accent-primary);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    pointer-events: none;
+}
+
+.drag-overlay-content {
+    text-align: center;
+    color: var(--accent-primary);
+}
+
+.drag-overlay-content svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+}
+
+.drag-overlay-content p {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Input container with attachment */
+.input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+.attachment-preview:not(.hidden) + .input-container {
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}

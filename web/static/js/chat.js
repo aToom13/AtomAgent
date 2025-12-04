@@ -4,6 +4,7 @@
 
 import { state, getElements } from './state.js';
 import { escapeHtml, renderMarkdown, highlightCode, scrollToBottom } from './utils.js';
+import { getAttachments, clearAttachments, hasAttachments } from './attachments.js';
 
 let currentAIMessage = null;
 let currentAIContent = '';
@@ -11,33 +12,78 @@ let currentAIContent = '';
 export function sendMessage() {
     const elements = getElements();
     const content = elements.messageInput.value.trim();
-    if (!content || state.isStreaming) return;
+    const attachments = getAttachments();
+    
+    // Need either content or attachments
+    if ((!content && attachments.length === 0) || state.isStreaming) return;
     
     // Clear welcome message
     const welcome = elements.messages.querySelector('.welcome-message');
     if (welcome) welcome.remove();
     
-    // Add user message
-    addUserMessage(content);
-    
-    // Send via WebSocket
-    state.ws.send(JSON.stringify({
+    // Build message with attachments
+    let messageContent = content;
+    let messageData = {
         type: 'message',
         content: content,
         session_id: state.currentSessionId
-    }));
+    };
     
-    // Clear input
+    // Add attachments if any
+    if (attachments.length > 0) {
+        messageData.attachments = attachments.map(att => ({
+            name: att.name,
+            type: att.type,
+            mimeType: att.mimeType,
+            data: att.data,
+            size: att.size
+        }));
+        
+        // Add attachment info to display message
+        const attachmentNames = attachments.map(a => a.name).join(', ');
+        if (content) {
+            messageContent = `${content}\n\n📎 Ekler: ${attachmentNames}`;
+        } else {
+            messageContent = `📎 Ekler: ${attachmentNames}`;
+        }
+    }
+    
+    // Add user message to UI
+    addUserMessage(messageContent, attachments);
+    
+    // Send via WebSocket
+    state.ws.send(JSON.stringify(messageData));
+    
+    // Clear input and attachments
     elements.messageInput.value = '';
+    clearAttachments();
     autoResizeTextarea();
     scrollToBottom(elements.messages);
 }
 
-export function addUserMessage(content) {
+export function addUserMessage(content, attachments = []) {
     const elements = getElements();
     const div = document.createElement('div');
     div.className = 'message user';
-    div.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
+    
+    let html = escapeHtml(content).replace(/\n/g, '<br>');
+    
+    // Add attachment previews
+    if (attachments.length > 0) {
+        html += '<div class="message-attachments">';
+        for (const att of attachments) {
+            if (att.type === 'image' && att.thumbnail) {
+                html += `<div class="message-attachment image"><img src="${att.thumbnail}" alt="${att.name}"></div>`;
+            } else if (att.type === 'audio') {
+                html += `<div class="message-attachment audio">🎵 ${escapeHtml(att.name)}</div>`;
+            } else {
+                html += `<div class="message-attachment file">📎 ${escapeHtml(att.name)}</div>`;
+            }
+        }
+        html += '</div>';
+    }
+    
+    div.innerHTML = html;
     elements.messages.appendChild(div);
     scrollToBottom(elements.messages);
 }
@@ -144,8 +190,10 @@ export function showSystemMessage(message) {
 }
 
 export function stopGeneration() {
-    if (state.ws && state.isStreaming) {
+    console.log('Stop requested, isStreaming:', state.isStreaming);
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
         state.ws.send(JSON.stringify({ type: 'stop' }));
+        console.log('Stop message sent');
     }
 }
 
