@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import get_logger
 from web import state
 from web.websocket import handle_chat
-from web.routes import sessions_router, settings_router, prompts_router, workspace_router, docker_router
+from web.routes import sessions_router, settings_router, prompts_router, workspace_router, docker_router, canvas_router
 
 logger = get_logger()
 
@@ -55,6 +55,7 @@ app.include_router(settings_router)
 app.include_router(prompts_router)
 app.include_router(workspace_router)
 app.include_router(docker_router)
+app.include_router(canvas_router)
 
 
 # === ROOT ROUTES ===

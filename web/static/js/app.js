@@ -1,6 +1,7 @@
 /**
  * AtomAgent Web UI - Main Application Entry Point
  * Modular ES6 Architecture
+ * v2.0 - Enhanced with Agent System, Todos, Memory, Metrics
  */
 
 import { state, getElements } from './state.js';
@@ -17,6 +18,12 @@ import { renderBrowserPanel, showBrowserEntry, clearBrowserHistory } from './bro
 import { renderTasksPanel, clearCompletedTasks, clearAllTasks } from './tasks.js';
 import { initAttachments, removeAttachment, clearAttachments } from './attachments.js';
 
+// v2.0 New Modules
+import { AGENTS, renderAgentSelector, setActiveAgent, toggleAutoRouting, routeMessage, getActiveAgent, updateAgentUI, toggleAgentDropdown, renderAgentListInSettings } from './agents.js';
+import { renderTodosPanel, addTodo, updateTodo, setTodoStatus, cycleTodoStatus, toggleTodoChildren, clearCompletedTodos, clearAllTodos, handleTodoUpdate, deleteTodo } from './todos.js';
+import { renderMemoryPanel, addMemory, updateMemory, deleteMemory, filterMemories, toggleMemoryTag, openAddMemoryModal, closeAddMemoryModal, saveNewMemory, handleMemoryUpdate, searchMemories } from './memory.js';
+import { initCanvas, loadUrl as loadCanvasUrl, refreshCanvas, retryCanvas, handleServerStart, handleCanvasMessage, terminalExec, clearTerminal } from './canvas.js';
+
 // Initialize application
 document.addEventListener('DOMContentLoaded', init);
 
@@ -30,13 +37,22 @@ async function init() {
     setupFileTabs();
     setupDockerRefresh();
     
-    // Initialize new panels
+    // Initialize panels
     renderToolsPanel();
     renderBrowserPanel();
     renderTasksPanel();
     
     // Initialize attachments
     initAttachments();
+    
+    // v2.0 Initialize new panels
+    renderTodosPanel();
+    renderMemoryPanel();
+    updateAgentUI();
+    renderAgentListInSettings();
+    
+    // Initialize canvas
+    initCanvas();
 }
 
 function setupEventListeners() {
@@ -133,5 +149,32 @@ window.AtomAgent = {
     
     // Attachments
     removeAttachment,
-    clearAttachments
+    clearAttachments,
+    
+    // v2.0 - Agents
+    setActiveAgent,
+    toggleAutoRouting,
+    toggleAgentDropdown,
+    
+    // v2.0 - Todos
+    cycleTodoStatus,
+    toggleTodoChildren,
+    clearCompletedTodos,
+    clearAllTodos,
+    
+    // v2.0 - Memory
+    deleteMemory,
+    filterMemories,
+    toggleMemoryTag,
+    openAddMemoryModal,
+    closeAddMemoryModal,
+    saveNewMemory,
+    
+    // Canvas
+    loadCanvasUrl,
+    refreshCanvas,
+    retryCanvas,
+    handleServerStart,
+    terminalExec,
+    clearTerminal
 };

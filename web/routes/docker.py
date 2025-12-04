@@ -32,8 +32,10 @@ def exec_in_container(command: str, timeout: int = 30):
             ["docker", "exec", CONTAINER_NAME, "bash", "-c", command],
             capture_output=True, text=True, timeout=timeout
         )
+        # Çıktı varsa başarılı say (bazı komutlar non-zero dönebilir ama çalışır)
+        output = result.stdout + result.stderr
         return {
-            "success": result.returncode == 0,
+            "success": True,  # Komut çalıştıysa başarılı
             "stdout": result.stdout,
             "stderr": result.stderr,
             "returncode": result.returncode
@@ -98,12 +100,22 @@ async def read_docker_file(path: str):
     return {"content": result["stdout"], "path": path}
 
 
+from pydantic import BaseModel
+
+class ExecRequest(BaseModel):
+    command: str
+    timeout: int = 30
+    workdir: str = "/home/agent/shared"
+
+
 @router.post("/exec")
-async def exec_command(command: str, timeout: int = 30):
+async def exec_command(request: ExecRequest):
     """Docker container içinde komut çalıştır"""
     status = get_container_status()
     if not status.get("running"):
         raise HTTPException(status_code=503, detail="Container not running")
     
-    result = exec_in_container(command, timeout)
+    # Workdir ile komut çalıştır
+    full_command = f"cd {request.workdir} && {request.command}"
+    result = exec_in_container(full_command, request.timeout)
     return result

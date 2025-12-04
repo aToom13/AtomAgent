@@ -172,6 +172,21 @@ def is_server_error(error: Exception) -> bool:
 # AGENT TOOLS WITH ERROR RECOVERY
 # ============================================
 
+class StopRequestedException(Exception):
+    """Exception raised when stop is requested"""
+    pass
+
+
+def check_stop_flag():
+    """Check if stop was requested - raises exception if so"""
+    try:
+        from web.state import is_stopped
+        if is_stopped():
+            raise StopRequestedException("İşlem kullanıcı tarafından durduruldu")
+    except ImportError:
+        pass  # Web modülü yüklü değilse devam et
+
+
 @tool
 def call_coder(task: str) -> str:
     """
@@ -200,8 +215,20 @@ def call_coder(task: str) -> str:
     logger.info(f"Coder: {task[:50]}...")
     debug_ctx = get_debug_context()
     
+    # Check stop flag before starting
+    try:
+        check_stop_flag()
+    except StopRequestedException as e:
+        return str(e)
+    
     with RetryContext(max_attempts=10, base_delay=1.0) as ctx:
         while ctx.should_retry():
+            # Check stop flag on each retry
+            try:
+                check_stop_flag()
+            except StopRequestedException as e:
+                return str(e)
+            
             # Her denemede agent'ı yeniden al (key değişmiş olabilir)
             coder = _get_coder_agent()
             
@@ -215,6 +242,8 @@ def call_coder(task: str) -> str:
                     ctx.success()
                     return output
                 
+            except StopRequestedException as e:
+                return str(e)
             except Exception as e:
                 debug_ctx.log_error(str(e), {"tool": "call_coder", "attempt": ctx.attempt})
                 
@@ -277,10 +306,22 @@ def call_researcher(query: str) -> str:
     logger.info(f"Researcher: {query[:50]}...")
     debug_ctx = get_debug_context()
     
+    # Check stop flag before starting
+    try:
+        check_stop_flag()
+    except StopRequestedException as e:
+        return str(e)
+    
     queries_to_try = [query, f"{query} tutorial", f"{query} example"]
     
     with RetryContext(max_attempts=10, base_delay=1.0) as ctx:
         while ctx.should_retry():
+            # Check stop flag on each retry
+            try:
+                check_stop_flag()
+            except StopRequestedException as e:
+                return str(e)
+            
             researcher = _get_researcher_agent()
             q = queries_to_try[ctx.attempt] if ctx.attempt < len(queries_to_try) else query
             
@@ -301,6 +342,8 @@ def call_researcher(query: str) -> str:
                     ctx.success()
                     return output
                 
+            except StopRequestedException as e:
+                return str(e)
             except Exception as e:
                 debug_ctx.log_error(str(e), {"tool": "call_researcher", "attempt": ctx.attempt})
                 

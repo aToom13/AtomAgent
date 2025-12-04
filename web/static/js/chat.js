@@ -5,6 +5,7 @@
 import { state, getElements } from './state.js';
 import { escapeHtml, renderMarkdown, highlightCode, scrollToBottom } from './utils.js';
 import { getAttachments, clearAttachments, hasAttachments } from './attachments.js';
+import { routeMessage, getActiveAgent } from './agents.js';
 
 let currentAIMessage = null;
 let currentAIContent = '';
@@ -21,12 +22,18 @@ export function sendMessage() {
     const welcome = elements.messages.querySelector('.welcome-message');
     if (welcome) welcome.remove();
     
+    // Route message to appropriate agent
+    const agentId = routeMessage(content);
+    const agent = getActiveAgent();
+    
     // Build message with attachments
     let messageContent = content;
     let messageData = {
         type: 'message',
         content: content,
-        session_id: state.currentSessionId
+        session_id: state.currentSessionId,
+        agent: agentId,
+        agent_name: agent.name
     };
     
     // Add attachments if any

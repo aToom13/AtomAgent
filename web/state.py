@@ -1,6 +1,7 @@
 """Global State Management"""
 import json
 import os
+import threading
 from utils.logger import get_logger
 from core.agent import get_agent_executor
 from core.providers import model_manager
@@ -10,6 +11,38 @@ logger = get_logger()
 # Global state
 agent_executor = None
 system_prompt = None
+
+# Global stop flags - thread-safe
+_stop_flags_lock = threading.Lock()
+_stop_flags = {}
+
+
+def set_stop_flag(client_id: str, value: bool):
+    """Set stop flag for a client"""
+    with _stop_flags_lock:
+        _stop_flags[client_id] = value
+        logger.info(f"Stop flag set for {client_id}: {value}")
+
+
+def get_stop_flag(client_id: str) -> bool:
+    """Get stop flag for a client"""
+    with _stop_flags_lock:
+        return _stop_flags.get(client_id, False)
+
+
+def clear_stop_flag(client_id: str):
+    """Clear stop flag for a client"""
+    with _stop_flags_lock:
+        _stop_flags.pop(client_id, None)
+
+
+def is_stopped(client_id: str = None) -> bool:
+    """Check if any client requested stop (for sub-agents)"""
+    with _stop_flags_lock:
+        if client_id:
+            return _stop_flags.get(client_id, False)
+        # If no client_id, check if any client requested stop
+        return any(_stop_flags.values())
 
 # Settings file paths
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

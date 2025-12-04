@@ -1,6 +1,7 @@
 /**
  * AtomAgent Web UI - Main CSS Entry Point
  * Imports all modular CSS files
+ * v2.0 - Enhanced with Agent System, Todos, Memory, Metrics
  */
 
 @import url('variables.css');
@@ -16,4 +17,11 @@
 @import url('browser.css');
 @import url('tasks.css');
 @import url('attachments.css');
+
+/* New v2.0 Modules */
+@import url('agents.css');
+@import url('todos.css');
+@import url('memory.css');
+@import url('canvas.css');
+
 @import url('responsive.css');

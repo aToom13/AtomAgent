@@ -16,7 +16,19 @@ export const state = {
     rightPanelWidth: 380,
     fileSource: 'workspace',
     thinkingPanelOpen: false,
-    hasReceivedContent: false
+    hasReceivedContent: false,
+    
+    // v2.0 - Agent System
+    activeAgent: 'supervisor',
+    autoRouting: true,
+    
+    // v2.0 - Todos
+    todos: [],
+    todoStats: { total: 0, completed: 0, inProgress: 0, pending: 0 },
+    
+    // v2.0 - Memory
+    memories: [],
+    memoryTags: new Set()
 };
 
 // DOM Elements - lazy loaded

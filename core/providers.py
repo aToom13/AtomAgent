@@ -614,6 +614,9 @@ class ModelManager:
                 logger.warning(f"Skipping {provider} - no API key")
                 continue
             
+            # Yeni provider'a geçerken API key index'ini sıfırla
+            reset_api_key_index(provider)
+            
             llm = create_llm(provider, model, config.temperature)
             if llm:
                 # Clear old cache and set new
@@ -623,7 +626,8 @@ class ModelManager:
                 self._llm_cache[role] = llm
                 self._current_provider[role] = i
                 
-                logger.warning(f"Switched {role} to fallback: {provider}/{model}")
+                key_info = get_api_key_info(provider)
+                logger.warning(f"Switched {role} to fallback: {provider}/{model} (API key 1/{key_info['total']})")
                 return True
             else:
                 logger.warning(f"Failed to create LLM for {provider}/{model}")
@@ -634,6 +638,9 @@ class ModelManager:
                 provider, model = providers[i]
                 if not check_api_key(provider):
                     continue
+                
+                # Yeni provider'a geçerken API key index'ini sıfırla
+                reset_api_key_index(provider)
                 
                 llm = create_llm(provider, model, config.temperature)
                 if llm:

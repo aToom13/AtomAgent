@@ -1,0 +1,162 @@
+/**
+ * AtomAgent - Metrics Panel Styles
+ */
+
+/* Metrics Panel */
+.metrics-panel {
+    padding: 12px;
+}
+
+.metrics-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.metrics-icon {
+    font-size: 16px;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.metric-card {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+}
+
+.metric-card.full-width {
+    grid-column: span 2;
+}
+
+.metric-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.metric-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.metric-number {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.metric-number.success {
+    color: var(--accent-success);
+}
+
+.metric-unit {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Metric Bar */
+.metric-bar {
+    height: 4px;
+    background: var(--bg-primary);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.metric-bar-fill {
+    height: 100%;
+    background: var(--accent-primary);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.metric-bar-fill.success {
+    background: var(--accent-success);
+}
+
+/* Compact Metrics (Header) */
+.compact-metrics {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 6px 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.compact-metric {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.compact-icon {
+    font-size: 12px;
+}
+
+.compact-value {
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.compact-bar {
+    width: 40px;
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.compact-bar-fill {
+    height: 100%;
+    background: var(--accent-primary);
+    transition: width 0.3s ease;
+}
+
+/* Token Warning */
+.token-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--accent-error);
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--accent-error);
+}
+
+.token-warning-icon {
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-card.full-width {
+        grid-column: span 1;
+    }
+    
+    .compact-metrics {
+        gap: 12px;
+        padding: 4px 8px;
+    }
+    
+    .compact-bar {
+        display: none;
+    }
+}

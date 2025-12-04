@@ -76,6 +76,19 @@
                     </svg>
                     <h1>AtomAgent</h1>
                 </div>
+                
+                <!-- Active Agent Indicator with Dropdown -->
+                <div id="active-agent-indicator" class="active-agent-indicator" onclick="window.AtomAgent.toggleAgentDropdown()">
+                    <span class="agent-icon" style="background: #3b82f620; color: #3b82f6">🎯</span>
+                    <span class="agent-name">Supervisor</span>
+                    <span class="auto-badge">AUTO</span>
+                    <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <!-- Agent Dropdown Menu -->
+                <div id="agent-dropdown" class="agent-dropdown hidden"></div>
+                
                 <div class="chat-status" id="chat-status">
                     <span class="status-dot"></span>
                     <span>Hazır</span>
@@ -160,7 +173,7 @@
                         </svg>
                     </button>
                 </div>
-            </div>""
+            </div>
         </main>
 
         <!-- Resize Handle -->
@@ -169,29 +182,25 @@
         <!-- Right Panel -->
         <aside id="right-panel" class="right-panel">
             <div class="panel-tabs">
-                <button class="tab-btn active" data-tab="terminal">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-                    </svg>
-                    <span>Terminal</span>
-                </button>
-                <button class="tab-btn" data-tab="tools">
+                <button class="tab-btn active" data-tab="tools">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                     </svg>
                     <span>Araçlar</span>
-                </button>
-                <button class="tab-btn" data-tab="tasks">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                    </svg>
-                    <span>Görevler</span>
                 </button>
                 <button class="tab-btn" data-tab="browser">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                     </svg>
                     <span>Browser</span>
+                </button>
+                <button class="tab-btn" data-tab="canvas">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <span>Canvas</span>
                 </button>
                 <button class="tab-btn" data-tab="docker">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -206,46 +215,39 @@
                     </svg>
                     <span>Dosyalar</span>
                 </button>
-                <button class="tab-btn" data-tab="editor">
+                <button class="tab-btn" data-tab="todos">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                     </svg>
-                    <span>Editör</span>
+                    <span>Görevler</span>
                 </button>
             </div>
             
             <div class="panel-content">
-                <!-- Terminal Tab -->
-                <div id="tab-terminal" class="tab-content active">
-                    <div class="terminal-output" id="terminal-output">
-                        <div class="terminal-line">
-                            <span class="prompt">$</span>
-                            <span>Agent çalışma çıktıları burada görünecek...</span>
+                <!-- Files Tab (with integrated editor) -->
+                <div id="tab-files" class="tab-content">
+                    <div class="files-container">
+                        <div class="files-sidebar">
+                            <div class="file-tabs">
+                                <button class="file-tab active" data-source="workspace">📁 Workspace</button>
+                                <button class="file-tab" data-source="docker">🐳 Docker</button>
+                                <button class="file-tab" data-source="memory">🧠 Hafıza</button>
+                            </div>
+                            <div class="file-tree" id="file-tree"></div>
+                            <div id="memory-panel" class="memory-panel hidden"></div>
+                        </div>
+                        <div class="files-editor">
+                            <div class="editor-header">
+                                <span id="editor-filename">Dosya seçilmedi</span>
+                                <button id="save-file-btn" class="small-btn" disabled>Kaydet</button>
+                            </div>
+                            <textarea id="code-editor" class="code-editor" placeholder="Dosya seçin veya tıklayın..."></textarea>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Files Tab -->
-                <div id="tab-files" class="tab-content">
-                    <div class="file-tabs">
-                        <button class="file-tab active" data-source="workspace">📁 Workspace</button>
-                        <button class="file-tab" data-source="docker">� Doclker</button>
-                    </div>
-                    <div class="file-tree" id="file-tree"></div>
-                </div>
-                
-                <!-- Editor Tab -->
-                <div id="tab-editor" class="tab-content">
-                    <div class="editor-header">
-                        <span id="editor-filename">Dosya seçilmedi</span>
-                        <button id="save-file-btn" class="small-btn" disabled>Kaydet</button>
-                    </div>
-                    <textarea id="code-editor" class="code-editor" placeholder="Dosya içeriği burada görünecek..."></textarea>
-                </div>
-                
                 <!-- Tools Tab -->
-                <div id="tab-tools" class="tab-content">
+                <div id="tab-tools" class="tab-content active">
                     <div id="tools-list" class="tools-list">
                         <div class="tools-empty">
                             <div class="tools-empty-icon">🔧</div>
@@ -255,15 +257,9 @@
                     </div>
                 </div>
                 
-                <!-- Tasks Tab -->
-                <div id="tab-tasks" class="tab-content">
-                    <div id="tasks-list" class="tasks-list">
-                        <div class="tasks-empty">
-                            <div class="tasks-empty-icon">📋</div>
-                            <p>Aktif görev yok</p>
-                            <p class="tasks-hint">Agent'a bir görev verdiğinizde burada takip edebilirsiniz</p>
-                        </div>
-                    </div>
+                <!-- Todos Tab (v2.0) -->
+                <div id="tab-todos" class="tab-content">
+                    <div id="todos-panel" class="todos-panel"></div>
                 </div>
                 
                 <!-- Browser Tab -->
@@ -293,6 +289,97 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Canvas Tab - Live Preview -->
+                <div id="tab-canvas" class="tab-content">
+                    <div class="canvas-toolbar">
+                        <div class="canvas-mode-tabs">
+                            <button class="canvas-mode-btn active" data-mode="web" title="Web Sunucu">🌐 Web</button>
+                            <button class="canvas-mode-btn" data-mode="html" title="HTML Dosyası">📄 HTML</button>
+                            <button class="canvas-mode-btn" data-mode="vnc" title="GUI Uygulaması">🖥️ GUI</button>
+                        </div>
+                        <div class="canvas-controls">
+                            <button id="canvas-refresh" class="icon-btn small" title="Yenile">↻</button>
+                            <button id="canvas-open-external" class="icon-btn small" title="Yeni Sekmede Aç">↗</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Web Mode Controls -->
+                    <div id="canvas-web-controls" class="canvas-mode-controls">
+                        <div class="canvas-url-bar">
+                            <span class="canvas-protocol">http://</span>
+                            <input type="text" id="canvas-url" placeholder="localhost:8000" value="localhost:8000">
+                            <button id="canvas-go" class="icon-btn small" title="Git">→</button>
+                        </div>
+                        <select id="canvas-port-select" title="Port Seç">
+                            <option value="">Port...</option>
+                            <option value="13000">3000→13000</option>
+                            <option value="15000">5000→15000</option>
+                            <option value="18000">8000→18000</option>
+                            <option value="18080">8080→18080</option>
+                            <option value="18501">8501→18501</option>
+                        </select>
+                    </div>
+                    
+                    <!-- HTML Mode Controls -->
+                    <div id="canvas-html-controls" class="canvas-mode-controls hidden">
+                        <select id="canvas-html-select">
+                            <option value="">HTML dosyası seç...</option>
+                        </select>
+                        <button id="canvas-load-html" class="small-btn">Yükle</button>
+                    </div>
+                    
+                    <!-- VNC Mode Controls -->
+                    <div id="canvas-vnc-controls" class="canvas-mode-controls hidden">
+                        <span class="vnc-status" id="vnc-status">● VNC Bağlantısı</span>
+                        <button id="canvas-vnc-connect" class="small-btn">Bağlan</button>
+                        <button id="canvas-vnc-fullscreen" class="icon-btn small" title="Tam Ekran">⛶</button>
+                    </div>
+                    
+                    <div class="canvas-status" id="canvas-status">
+                        <span class="canvas-status-icon">○</span>
+                        <span id="canvas-status-text">Bağlantı bekleniyor...</span>
+                    </div>
+                    
+                    <div class="canvas-main">
+                        <div class="canvas-container" id="canvas-container">
+                            <div class="canvas-empty" id="canvas-empty">
+                                <div class="canvas-empty-icon">🖥️</div>
+                                <h3>Canlı Önizleme</h3>
+                                <p>Agent bir uygulama oluşturduğunda burada görünecek</p>
+                                <div class="canvas-hints">
+                                    <p>💡 Desteklenen modlar:</p>
+                                    <ul>
+                                        <li><strong>🌐 Web:</strong> Flask, FastAPI, React, Streamlit...</li>
+                                        <li><strong>📄 HTML:</strong> Statik HTML/CSS/JS dosyaları</li>
+                                        <li><strong>🖥️ GUI:</strong> Pygame, Tkinter, PyQt (VNC)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <iframe id="canvas-iframe" class="canvas-iframe hidden"></iframe>
+                        </div>
+                        
+                        <!-- Interactive Terminal -->
+                        <div class="canvas-terminal-resize" id="canvas-terminal-resize"></div>
+                        <div class="canvas-terminal" id="canvas-terminal">
+                            <div class="canvas-terminal-header">
+                                <span>📟 Terminal</span>
+                                <div class="canvas-terminal-controls">
+                                    <button id="canvas-terminal-clear" class="icon-btn small" title="Temizle">🗑️</button>
+                                    <button id="canvas-terminal-toggle" class="icon-btn small" title="Gizle/Göster">▼</button>
+                                </div>
+                            </div>
+                            <div class="canvas-terminal-output" id="canvas-terminal-output">
+                                <div class="terminal-line system">Docker sandbox terminali hazır. Komut yazın...</div>
+                            </div>
+                            <div class="canvas-terminal-input-area">
+                                <span class="terminal-prompt">$</span>
+                                <input type="text" id="canvas-terminal-input" placeholder="Komut yazın... (Enter ile çalıştır)" autocomplete="off">
+                                <button id="canvas-terminal-run" class="small-btn">Çalıştır</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </aside>
     </div>
@@ -311,15 +398,49 @@
             </div>
             <div class="modal-body">
                 <div class="settings-tabs">
-                    <button class="settings-tab active" data-settings="models">Modeller</button>
+                    <button class="settings-tab active" data-settings="agents">Agentlar</button>
+                    <button class="settings-tab" data-settings="models">Modeller</button>
                     <button class="settings-tab" data-settings="fallbacks">Fallback</button>
                     <button class="settings-tab" data-settings="prompts">Promptlar</button>
-                    <button class="settings-tab" data-settings="commands">Komutlar</button>
                     <button class="settings-tab" data-settings="api">API Keys</button>
                 </div>
                 
+                <!-- Agents Settings -->
+                <div id="settings-agents" class="settings-content active">
+                    <div class="settings-section">
+                        <h3>Agent Ayarları</h3>
+                        <p class="settings-note">Otomatik agent routing ve varsayılan agent ayarları.</p>
+                        
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                <input type="checkbox" id="settings-auto-routing" checked>
+                                <span>Otomatik Agent Routing</span>
+                            </label>
+                            <p class="setting-desc">Mesaj içeriğine göre otomatik olarak uygun agent'a yönlendir.</p>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="setting-label">Varsayılan Agent</label>
+                            <select id="settings-default-agent">
+                                <option value="supervisor" selected>🎯 Supervisor</option>
+                                <option value="coder">👨‍💻 Coder</option>
+                                <option value="researcher">🔍 Researcher</option>
+                                <option value="devops">🚀 DevOps</option>
+                                <option value="qa">🧪 QA</option>
+                                <option value="security">🔒 Security</option>
+                                <option value="uiux">🎨 UI/UX</option>
+                                <option value="data">📊 Data</option>
+                                <option value="api">🔌 API</option>
+                            </select>
+                        </div>
+                        
+                        <h4>Agent Listesi</h4>
+                        <div id="agent-list" class="agent-list"></div>
+                    </div>
+                </div>
+                
                 <!-- Models Settings -->
-                <div id="settings-models" class="settings-content active">
+                <div id="settings-models" class="settings-content">
                     <div class="settings-section">
                         <h3>Agent Modelleri</h3>
                         <p class="settings-note">Ayarlar .atom_settings.json dosyasına kaydedilir.</p>
@@ -377,18 +498,6 @@
                     </div>
                 </div>
                 
-                <!-- Commands Settings -->
-                <div id="settings-commands" class="settings-content">
-                    <div class="settings-section">
-                        <h3>İzin Verilen Komutlar</h3>
-                        <div id="allowed-commands" class="command-list"></div>
-                        <div class="add-command">
-                            <input type="text" id="new-command" placeholder="Yeni komut ekle...">
-                            <button id="add-command-btn" class="small-btn">Ekle</button>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- API Keys Settings -->
                 <div id="settings-api" class="settings-content">
                     <div class="settings-section">
@@ -421,6 +530,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <!-- Modular JavaScript (ES6 Modules) -->
-    <script type="module" src="/static/js/app.js?v=3"></script>
+    <script type="module" src="/static/js/app.js?v=5"></script>
 </body>
 </html>

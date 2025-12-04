@@ -10,7 +10,10 @@ import { updateAgentStatus } from './thinking.js';
 import { addDockerCommand, addDockerOutput } from './docker.js';
 import { addToolStart, addToolEnd } from './tools.js';
 import { addBrowserStart, addBrowserResult } from './browser.js';
-import { updateTaskStatus, addTaskStep, handleTodoUpdate } from './tasks.js';
+import { updateTaskStatus, addTaskStep, handleTodoUpdate as handleTaskTodoUpdate } from './tasks.js';
+import { handleTodoUpdate } from './todos.js';
+import { handleMemoryUpdate } from './memory.js';
+import { handleCanvasMessage, handleServerStart, handleHtmlCreated, handleGuiAppStart } from './canvas.js';
 
 export function connectWebSocket() {
     const clientId = 'client_' + Date.now();
@@ -68,8 +71,18 @@ function handleWebSocketMessage(event) {
             // Todo tool'larını tasks paneline gönder
             const todoTools = ['update_todo_list', 'mark_todo_done', 'get_current_todo', 'add_todo_item', 'get_next_todo_step'];
             if (todoTools.includes(data.tool)) {
-                handleTodoUpdate(data.tool, data.output);
+                handleTaskTodoUpdate(data.tool, data.output);
             }
+            break;
+            
+        // v2.0 - Todo updates
+        case 'todo_update':
+            handleTodoUpdate(data);
+            break;
+            
+        // v2.0 - Memory updates
+        case 'memory_update':
+            handleMemoryUpdate(data);
             break;
             
         case 'browser_start':
@@ -96,6 +109,7 @@ function handleWebSocketMessage(event) {
         case 'stopped':
             state.isStreaming = false;
             updateStreamingUI(false);
+            finalizeAIMessage();
             break;
             
         case 'system':
@@ -119,6 +133,23 @@ function handleWebSocketMessage(event) {
             
         case 'docker_output':
             addDockerOutput(data.output, data.status);
+            break;
+            
+        // Canvas - Live Preview
+        case 'server_started':
+            handleServerStart(data.port, data.server_type);
+            break;
+            
+        case 'canvas_url':
+            handleCanvasMessage(data);
+            break;
+            
+        case 'html_created':
+            handleHtmlCreated(data.path);
+            break;
+            
+        case 'gui_started':
+            handleGuiAppStart();
             break;
     }
 }

@@ -66,3 +66,27 @@ async def write_file(path: str, data: FileContent):
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/raw/{path:path}")
+async def get_raw_file(path: str):
+    """
+    Dosyayı raw olarak döndür (CSS, JS, resimler için).
+    HTML içindeki relative path'ler için kullanılır.
+    """
+    from fastapi.responses import FileResponse
+    import mimetypes
+    
+    full_path = os.path.join(config.workspace.base_dir, path)
+    
+    if not os.path.exists(full_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    if not os.path.isfile(full_path):
+        raise HTTPException(status_code=400, detail="Not a file")
+    
+    # MIME type belirle
+    mime_type, _ = mimetypes.guess_type(full_path)
+    if not mime_type:
+        mime_type = "application/octet-stream"
+    
+    return FileResponse(full_path, media_type=mime_type)

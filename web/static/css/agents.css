@@ -1,0 +1,319 @@
+/**
+ * AtomAgent - Agent Selector Styles
+ */
+
+/* Settings - Agent List */
+.agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.agent-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--agent-color);
+}
+
+.agent-list-item .agent-icon {
+    font-size: 20px;
+    width: 32px;
+    text-align: center;
+}
+
+.agent-list-item .agent-info {
+    flex: 1;
+}
+
+.agent-list-item .agent-name {
+    display: block;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.agent-list-item .agent-desc {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.agent-list-item .agent-keywords {
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Settings Items */
+.setting-item {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+}
+
+.setting-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.setting-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-primary);
+}
+
+.setting-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    margin-left: 24px;
+}
+
+.setting-item select {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+/* Active Agent Indicator (Header) */
+.active-agent-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.active-agent-indicator:hover {
+    background: var(--bg-hover);
+}
+
+.active-agent-indicator .agent-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.active-agent-indicator .agent-name {
+    font-weight: 500;
+}
+
+.active-agent-indicator .auto-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    background: var(--accent-primary);
+    color: white;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.active-agent-indicator .dropdown-arrow {
+    margin-left: 4px;
+    opacity: 0.6;
+    transition: var(--transition);
+}
+
+.active-agent-indicator:hover .dropdown-arrow {
+    opacity: 1;
+}
+
+/* Agent Dropdown Menu */
+.agent-dropdown {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.agent-dropdown-header {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.auto-routing-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.auto-routing-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-primary);
+}
+
+.agent-dropdown-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.agent-dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    text-align: left;
+    transition: var(--transition);
+}
+
+.agent-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.agent-dropdown-option:hover {
+    background: var(--bg-hover);
+}
+
+.agent-dropdown-option.active {
+    background: color-mix(in srgb, var(--agent-color) 15%, transparent);
+    border-left: 3px solid var(--agent-color);
+}
+
+.agent-dropdown-option .agent-icon {
+    font-size: 20px;
+    width: 32px;
+    text-align: center;
+}
+
+.agent-dropdown-option .agent-info {
+    flex: 1;
+}
+
+.agent-dropdown-option .agent-name {
+    display: block;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.agent-dropdown-option .agent-desc {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Agent Switch Notification */
+.agent-switch-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+}
+
+.agent-switch-notification .agent-icon {
+    font-size: 18px;
+}
+
+.agent-switch-notification.fade-out {
+    animation: fadeUp 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+}
+
+/* Agent Info Tooltip */
+.agent-option[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .agent-options {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .agent-option .agent-name {
+        display: none;
+    }
+    
+    .agent-option {
+        padding: 10px;
+    }
+    
+    .agent-option .agent-icon {
+        font-size: 20px;
+    }
+}

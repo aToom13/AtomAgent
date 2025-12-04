@@ -10,8 +10,19 @@ services:
     volumes:
       # Shared folder - dosya transferi için
       - ./shared:/home/agent/shared
+    ports:
+      # Web server ports (host:container)
+      - "13000:3000"
+      - "15000:5000"
+      - "18000:8000"
+      - "18080:8080"
+      - "18501:8501"
+      # VNC ports
+      - "15900:5900"
+      - "16080:6080"
     environment:
       - USER=agent
+      - DISPLAY=:99
     stdin_open: true
     tty: true
     restart: unless-stopped

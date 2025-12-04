@@ -117,14 +117,15 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-# Stop flags for each client
-stop_flags: Dict[str, bool] = {}
+# Active tasks for each client - for cancellation
+import asyncio
+active_tasks: Dict[str, asyncio.Task] = {}
 
 
 async def handle_chat(websocket: WebSocket, client_id: str):
     """WebSocket chat handler"""
     await manager.connect(websocket, client_id)
-    stop_flags[client_id] = False
+    state.set_stop_flag(client_id, False)
 
     try:
         while True:
@@ -134,9 +135,24 @@ async def handle_chat(websocket: WebSocket, client_id: str):
                 content = data.get("content", "")
                 session_id = data.get("session_id")
                 attachments = data.get("attachments", [])
+                agent_id = data.get("agent", "supervisor")
+                agent_name = data.get("agent_name", "Supervisor")
+
+                # Cancel any existing task for this client
+                if client_id in active_tasks:
+                    old_task = active_tasks[client_id]
+                    if not old_task.done():
+                        old_task.cancel()
+                        try:
+                            await old_task
+                        except asyncio.CancelledError:
+                            pass
 
                 # Reset stop flag
-                stop_flags[client_id] = False
+                state.set_stop_flag(client_id, False)
+                
+                # Log agent info
+                logger.info(f"Message routed to agent: {agent_name} ({agent_id})")
 
                 if not session_id:
                     session = session_manager.create_session()
@@ -152,32 +168,67 @@ async def handle_chat(websocket: WebSocket, client_id: str):
                     processed_content = await process_attachments(content, attachments)
 
                 session_manager.add_message(session_id, "human", content)
-                await stream_response(client_id, session_id, processed_content)
+                
+                # Create task and track it
+                task = asyncio.create_task(stream_response(client_id, session_id, processed_content))
+                active_tasks[client_id] = task
+                
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    logger.info(f"Task cancelled for {client_id}")
+                finally:
+                    active_tasks.pop(client_id, None)
 
             elif data.get("type") == "stop":
-                stop_flags[client_id] = True
+                state.set_stop_flag(client_id, True)
                 logger.info(f"Stop requested for {client_id}")
+                
+                # Cancel the active task
+                if client_id in active_tasks:
+                    task = active_tasks[client_id]
+                    if not task.done():
+                        task.cancel()
+                        logger.info(f"Task cancelled for {client_id}")
+                
                 await manager.send_message(client_id, {
                     "type": "stopped",
                     "message": "Agent durduruldu"
                 })
+                await manager.send_message(client_id, {
+                    "type": "stream_end",
+                    "session_id": "stopped"
+                })
+                await manager.send_message(client_id, {
+                    "type": "status",
+                    "status": "ready",
+                    "message": "Hazır"
+                })
 
     except WebSocketDisconnect:
         manager.disconnect(client_id)
-        stop_flags.pop(client_id, None)
+        state.clear_stop_flag(client_id)
+        active_tasks.pop(client_id, None)
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(client_id)
-        stop_flags.pop(client_id, None)
+        state.clear_stop_flag(client_id)
+        active_tasks.pop(client_id, None)
 
 
 async def stream_response(client_id: str, session_id: str, user_message: str, retry_count: int = 0):
     """Agent yanıtını stream et - fallback destekli"""
     from langchain_core.messages import HumanMessage
+    import asyncio
 
-    MAX_RETRIES = 5
+    # Toplam API key sayısı + fallback provider sayısı kadar retry hakkı
+    MAX_RETRIES = 20
 
     try:
+        # Check if already cancelled
+        if state.get_stop_flag(client_id):
+            logger.info(f"Stream cancelled before start for {client_id}")
+            return
         # Aktif model bilgisini gönder - sadece status bar
         current_provider, current_model = model_manager.get_current_provider_info("supervisor")
         await manager.send_message(client_id, {
@@ -196,17 +247,18 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
         full_response = ""
         agent = state.get_agent()
 
-        async for event in agent.astream_events(
-            {"messages": [HumanMessage(content=user_message)]},
-            config=thread_config,
-            version="v2"
-        ):
-            # Check stop flag
-            if stop_flags.get(client_id, False):
-                logger.info(f"Stopping stream for {client_id}")
-                break
+        try:
+            async for event in agent.astream_events(
+                {"messages": [HumanMessage(content=user_message)]},
+                config=thread_config,
+                version="v2"
+            ):
+                # Check stop flag - her event'te kontrol et
+                if state.get_stop_flag(client_id):
+                    logger.info(f"Stopping stream for {client_id}")
+                    return  # Fonksiyondan tamamen çık
 
-            kind = event.get("event")
+                kind = event.get("event")
 
             if kind == "on_chat_model_stream":
                 chunk = event.get("data", {}).get("chunk")
@@ -283,6 +335,60 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                         "output": tool_output[:2000],
                         "status": "completed"
                     })
+                    
+                    # Sunucu başlatma komutlarını algıla ve Canvas'a bildir
+                    server_patterns = [
+                        ("python", ["flask run", "uvicorn", "python -m http.server", "streamlit run", "gradio", "manage.py runserver"]),
+                        ("node", ["npm start", "npm run dev", "yarn start", "yarn dev", "node server", "npx serve"]),
+                    ]
+                    
+                    tool_input = event.get("data", {}).get("input", {})
+                    cmd = tool_input.get("command", "") if isinstance(tool_input, dict) else str(tool_input)
+                    cmd_lower = cmd.lower()
+                    
+                    for server_type, patterns in server_patterns:
+                        for pattern in patterns:
+                            if pattern in cmd_lower:
+                                # Port'u bulmaya çalış
+                                import re
+                                port_match = re.search(r':(\d{4,5})|--port[= ](\d+)|-p[= ]?(\d+)', cmd)
+                                port = 8000  # default
+                                if port_match:
+                                    port = int(port_match.group(1) or port_match.group(2) or port_match.group(3))
+                                elif "5000" in cmd:
+                                    port = 5000
+                                elif "3000" in cmd:
+                                    port = 3000
+                                elif "8080" in cmd:
+                                    port = 8080
+                                elif "8501" in cmd:  # streamlit default
+                                    port = 8501
+                                
+                                await manager.send_message(client_id, {
+                                    "type": "server_started",
+                                    "port": port,
+                                    "server_type": server_type,
+                                    "command": cmd[:200]
+                                })
+                                break
+
+                    # GUI uygulama başlatma algıla (pygame, tkinter, etc.)
+                    gui_patterns = ["pygame", "tkinter", "pyqt", "pyside", "kivy", "wxpython"]
+                    if any(pattern in cmd_lower for pattern in gui_patterns):
+                        await manager.send_message(client_id, {
+                            "type": "gui_started",
+                            "command": cmd[:200]
+                        })
+                
+                # write_file ile HTML dosyası oluşturulduğunu algıla
+                if tool_name == "write_file":
+                    tool_input = event.get("data", {}).get("input", {})
+                    file_path = tool_input.get("path", "") if isinstance(tool_input, dict) else ""
+                    if file_path.endswith('.html') or file_path.endswith('.htm'):
+                        await manager.send_message(client_id, {
+                            "type": "html_created",
+                            "path": file_path
+                        })
 
                 # Web araçları çıktısını browser sekmesine gönder
                 web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
@@ -293,6 +399,10 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                         "content": tool_output[:3000],
                         "status": "loaded"
                     })
+                    
+        except asyncio.CancelledError:
+            logger.info(f"Stream cancelled for {client_id}")
+            return  # Task cancelled, just return
 
         if full_response:
             session_manager.add_message(session_id, "ai", full_response)
@@ -308,34 +418,40 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
         await manager.send_message(client_id, {"type": "stream_end", "session_id": session_id})
 
     except Exception as e:
-        from core.providers import handle_rate_limit, is_rate_limit_error
+        from core.providers import handle_rate_limit, is_rate_limit_error, get_api_key_info
         
         error_str = str(e)
-        logger.error(f"Stream error: {error_str}")
+        logger.error(f"Stream error (retry {retry_count}): {error_str}")
 
         if is_fallback_needed(e) and retry_count < MAX_RETRIES:
-            current_provider, _ = model_manager.get_current_provider_info("supervisor")
+            current_provider, current_model = model_manager.get_current_provider_info("supervisor")
+            logger.info(f"Fallback needed for {current_provider}/{current_model}")
             
             # Önce aynı provider içinde API key rotation dene
-            if is_rate_limit_error(e) and handle_rate_limit(current_provider):
-                logger.info(f"Rotated API key for {current_provider}")
+            if is_rate_limit_error(e):
+                key_info = get_api_key_info(current_provider)
+                logger.info(f"API key info for {current_provider}: {key_info}")
                 
-                await manager.send_message(client_id, {
-                    "type": "status",
-                    "status": "switching",
-                    "message": f"API key değiştiriliyor...",
-                    "model": f"{current_provider}"
-                })
-                
-                # Cache'i temizle ve yeni key ile agent oluştur
-                model_manager.clear_cache("supervisor")
-                state.update_agent()
-                await stream_response(client_id, session_id, user_message, retry_count + 1)
-                return
+                if handle_rate_limit(current_provider):
+                    new_key_info = get_api_key_info(current_provider)
+                    logger.info(f"Rotated API key for {current_provider}: {new_key_info['current']}/{new_key_info['total']}")
+                    
+                    await manager.send_message(client_id, {
+                        "type": "status",
+                        "status": "switching",
+                        "message": f"API key değiştiriliyor ({new_key_info['current']}/{new_key_info['total']})...",
+                        "model": f"{current_provider}/{current_model}"
+                    })
+                    
+                    # Cache'i temizle ve yeni key ile agent oluştur
+                    model_manager.clear_cache("supervisor")
+                    state.update_agent()
+                    await stream_response(client_id, session_id, user_message, retry_count + 1)
+                    return
             
-            # API key rotation başarısızsa, farklı provider'a geç
+            # API key rotation başarısızsa (veya rate limit değilse), farklı provider'a geç
             switched = model_manager.switch_to_fallback("supervisor")
-
+            
             if switched:
                 new_provider, new_model = model_manager.get_current_provider_info("supervisor")
                 logger.info(f"Switched to fallback: {new_provider}/{new_model}")
@@ -343,7 +459,7 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                 await manager.send_message(client_id, {
                     "type": "status",
                     "status": "switching",
-                    "message": f"Model değiştiriliyor: {new_model}",
+                    "message": f"Provider değiştiriliyor: {new_provider}/{new_model}",
                     "model": f"{new_provider}/{new_model}"
                 })
 
@@ -351,6 +467,7 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                 await stream_response(client_id, session_id, user_message, retry_count + 1)
                 return
             else:
+                logger.error("No more fallbacks available")
                 await manager.send_message(client_id, {
                     "type": "error",
                     "message": "Tüm provider'lar ve API key'ler tükendi."

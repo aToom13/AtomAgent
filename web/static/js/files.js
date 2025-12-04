@@ -122,11 +122,25 @@ export function setupFileTabs() {
             document.querySelectorAll('.file-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             
+            const fileTree = document.getElementById('file-tree');
+            const memoryPanel = document.getElementById('memory-panel');
+            
             state.fileSource = tab.dataset.source;
-            if (state.fileSource === 'docker') {
-                loadDockerFiles();
+            
+            if (state.fileSource === 'memory') {
+                // Hafıza panelini göster, dosya ağacını gizle
+                if (fileTree) fileTree.classList.add('hidden');
+                if (memoryPanel) memoryPanel.classList.remove('hidden');
             } else {
-                loadWorkspaceFiles();
+                // Dosya ağacını göster, hafıza panelini gizle
+                if (fileTree) fileTree.classList.remove('hidden');
+                if (memoryPanel) memoryPanel.classList.add('hidden');
+                
+                if (state.fileSource === 'docker') {
+                    loadDockerFiles();
+                } else {
+                    loadWorkspaceFiles();
+                }
             }
         });
     });
