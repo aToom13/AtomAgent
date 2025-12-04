@@ -14,15 +14,15 @@ from web import state
 
 logger = get_logger()
 
-# Attachment storage directory
-ATTACHMENT_DIR = os.path.join(config.workspace.base_dir, ".attachments")
-os.makedirs(ATTACHMENT_DIR, exist_ok=True)
+# Attachment storage directory - workspace içinde uploads klasörü
+UPLOADS_DIR = os.path.join(config.workspace.base_dir, "uploads")
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 
 async def process_attachments(content: str, attachments: List[dict]) -> str:
     """
     Process attachments and add them to the message content.
-    Files are saved to sandbox shared folder for agent access.
+    Files are saved to workspace/uploads folder for agent access.
     """
     if not attachments:
         return content
@@ -43,30 +43,39 @@ async def process_attachments(content: str, attachments: List[dict]) -> str:
             
             file_data = base64.b64decode(data)
             
-            # Save to shared folder (accessible by sandbox)
-            shared_dir = os.path.join(config.workspace.base_dir, "..", "docker", "shared")
-            os.makedirs(shared_dir, exist_ok=True)
-            
-            file_path = os.path.join(shared_dir, name)
+            # Save to workspace/uploads folder
+            file_path = os.path.join(UPLOADS_DIR, name)
             with open(file_path, "wb") as f:
                 f.write(file_data)
             
+            # Relative path for agent
+            relative_path = f"uploads/{name}"
+            
             # Build attachment info for agent
             if att_type == "image":
-                attachment_info.append(f"[Resim eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
-                attachment_info.append(f"Bu resmi analiz etmek için analyze_image tool'unu kullan: analyze_image('/home/agent/shared/{name}', 'Bu resimde ne var?')")
+                attachment_info.append(f"[Resim eklendi: {name}]")
+                attachment_info.append(f"Dosya yolu: {relative_path}")
+                attachment_info.append(f"Bu resmi analiz etmek için analyze_image('{relative_path}', 'Bu resimde ne var?') kullan.")
             elif att_type == "audio":
-                attachment_info.append(f"[Ses dosyası eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
-                attachment_info.append(f"Bu ses dosyasını transkript etmek için transcribe_audio tool'unu kullan.")
+                attachment_info.append(f"[Ses dosyası eklendi: {name}]")
+                attachment_info.append(f"Dosya yolu: {relative_path}")
+                attachment_info.append(f"Bu ses dosyasını transkript etmek için transcribe_audio('{relative_path}') kullan.")
             elif att_type == "code":
                 # Read code content for inline display
                 try:
-                    code_content = file_data.decode("utf-8")[:2000]
-                    attachment_info.append(f"[Kod dosyası eklendi: {name}]\n```\n{code_content}\n```")
+                    code_content = file_data.decode("utf-8")[:3000]
+                    ext = os.path.splitext(name)[1].lstrip('.')
+                    attachment_info.append(f"[Kod dosyası: {name}]\n```{ext}\n{code_content}\n```")
                 except:
-                    attachment_info.append(f"[Kod dosyası eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
+                    attachment_info.append(f"[Kod dosyası eklendi: {name}] - Dosya yolu: {relative_path}")
             else:
-                attachment_info.append(f"[Dosya eklendi: {name}] - Dosya yolu: /home/agent/shared/{name}")
+                # Try to read text content for documents
+                try:
+                    text_content = file_data.decode("utf-8")[:3000]
+                    attachment_info.append(f"[Dosya: {name}]\nİçerik:\n{text_content}")
+                except:
+                    attachment_info.append(f"[Dosya eklendi: {name}] - Dosya yolu: {relative_path}")
+                    attachment_info.append(f"Bu dosyayı okumak için read_file('{relative_path}') kullan.")
             
             logger.info(f"Attachment saved: {name} -> {file_path}")
             

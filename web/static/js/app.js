@@ -9,7 +9,7 @@ import { loadSessions, loadSession, deleteSession, newChat, renderSessions, conf
 import { sendMessage, stopGeneration, autoResizeTextarea, handleInputKeydown } from './chat.js';
 import { toggleSidebar, switchTab, setupResizeHandle } from './ui.js';
 import { loadSettings, openSettings, closeSettings, switchSettingsTab, switchModelRole, switchFallbackRole, updateModel, addFallback, deleteFallback, loadPrompt, savePrompt } from './settings.js';
-import { loadWorkspaceFiles, loadDockerFiles, openFile, openDockerFile, saveFile, setupFileTabs } from './files.js';
+import { loadWorkspaceFiles, loadDockerFiles, loadUploads, openFile, openDockerFile, saveFile, setupFileTabs } from './files.js';
 import { checkDockerStatus, setupDockerRefresh } from './docker.js';
 import { toggleThinking, toggleThinkingPanel } from './thinking.js';
 import { renderToolsPanel, clearToolHistory } from './tools.js';
@@ -113,6 +113,7 @@ window.AtomAgent = {
     // Files
     loadWorkspaceFiles,
     loadDockerFiles,
+    loadUploads,
     openFile,
     openDockerFile,
     
