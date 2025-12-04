@@ -81,14 +81,14 @@ def _clean_text(text: str, max_length: int = 500) -> str:
 
 
 @tool
-def web_search(query: str, max_results: int = 5) -> str:
+def web_search(query: str, max_results: int = 8) -> str:
     """
     Web'de arama yapar ve özet sonuçlar döndürür.
     Sayfaları ziyaret ETMEZ, sadece arama sonuçlarını listeler.
     
     Args:
         query: Arama sorgusu
-        max_results: Maksimum sonuç sayısı (varsayılan 5)
+        max_results: Maksimum sonuç sayısı (varsayılan 8)
     
     Returns:
         Arama sonuçları özeti
@@ -96,53 +96,80 @@ def web_search(query: str, max_results: int = 5) -> str:
     logger.info(f"Web search: {query}")
     
     try:
+        # DuckDuckGo ile arama - daha fazla sonuç al
         with DDGS() as ddgs:
-            raw_results = list(ddgs.text(query, max_results=max_results + 5))
+            raw_results = list(ddgs.text(
+                query, 
+                max_results=max_results * 3,  # Daha fazla al, sonra filtrele
+                region='wt-wt',  # Worldwide
+                safesearch='moderate'
+            ))
         
         if not raw_results:
-            return "Sonuç bulunamadı. Farklı anahtar kelimeler deneyin."
+            # Alternatif: news araması dene
+            logger.info("Text search empty, trying news...")
+            with DDGS() as ddgs:
+                raw_results = list(ddgs.news(query, max_results=max_results))
+        
+        if not raw_results:
+            return f"'{query}' için sonuç bulunamadı. Farklı anahtar kelimeler deneyin."
         
         # Filter and sort results
         results = []
+        seen_urls = set()
+        
         for r in raw_results:
-            url = r.get('href', '')
+            url = r.get('href', r.get('url', ''))
+            
+            # Skip duplicates
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
             
             # Skip blocked domains
             if _is_blocked(url):
+                continue
+            
+            # Skip empty results
+            title = r.get('title', '')
+            snippet = r.get('body', r.get('description', ''))
+            if not title or not snippet:
                 continue
             
             # Prioritize trusted domains
             is_trusted = _is_trusted(url)
             
             results.append({
-                "title": r.get('title', '')[:100],
+                "title": title[:120],
                 "url": url,
-                "snippet": _clean_text(r.get('body', ''), 200),
+                "snippet": _clean_text(snippet, 250),
                 "trusted": is_trusted
             })
         
-        # Sort: trusted first
-        results.sort(key=lambda x: (not x['trusted'], x['title']))
+        # Sort: trusted first, then by title length (longer = more descriptive)
+        results.sort(key=lambda x: (not x['trusted'], -len(x['snippet'])))
         results = results[:max_results]
         
         if not results:
-            return "Uygun sonuç bulunamadı."
+            return f"'{query}' için uygun sonuç bulunamadı. Sorguyu değiştirmeyi deneyin."
         
-        # Format output - compact
-        output = [f"🔍 '{query}' için {len(results)} sonuç:\n"]
+        # Format output - daha detaylı
+        output = [f"🔍 '{query}' için {len(results)} sonuç bulundu:\n"]
         
         for i, r in enumerate(results, 1):
             trust_icon = "⭐" if r['trusted'] else "•"
             output.append(f"{trust_icon} [{i}] {r['title']}")
-            output.append(f"   {r['url']}")
-            output.append(f"   {r['snippet']}\n")
+            output.append(f"   🔗 {r['url']}")
+            output.append(f"   📝 {r['snippet']}\n")
         
-        logger.info(f"Found {len(results)} results")
+        output.append("\n💡 Detaylı bilgi için visit_webpage(url) kullanın.")
+        
+        logger.info(f"Found {len(results)} results for '{query}'")
         return "\n".join(output)
         
     except Exception as e:
         logger.error(f"Search failed: {e}")
-        return f"Arama hatası: {e}"
+        return f"Arama hatası: {e}. Lütfen tekrar deneyin."
 
 
 @tool
@@ -160,20 +187,38 @@ def quick_answer(question: str) -> str:
     logger.info(f"Quick answer: {question}")
     
     try:
+        # Try instant answers first
         with DDGS() as ddgs:
-            # Try instant answers first
             answers = list(ddgs.answers(question))
             if answers:
                 answer = answers[0]
-                return f"💡 {answer.get('text', 'Cevap bulunamadı')}"
+                text = answer.get('text', '')
+                url = answer.get('url', '')
+                if text:
+                    result = f"💡 {text}"
+                    if url:
+                        result += f"\n🔗 {url}"
+                    return result
         
-        # Fallback to regular search, just return first snippet
+        # Try Wikipedia-style search
+        wiki_query = f"{question} site:wikipedia.org"
         with DDGS() as ddgs:
-            results = list(ddgs.text(question, max_results=1))
+            results = list(ddgs.text(wiki_query, max_results=1))
             if results:
-                return f"📝 {_clean_text(results[0].get('body', ''), 300)}"
+                r = results[0]
+                return f"📚 {r.get('title', '')}\n{_clean_text(r.get('body', ''), 400)}\n🔗 {r.get('href', '')}"
         
-        return "Cevap bulunamadı."
+        # Fallback to regular search
+        with DDGS() as ddgs:
+            results = list(ddgs.text(question, max_results=3))
+            if results:
+                output = []
+                for r in results[:2]:
+                    output.append(f"📝 {r.get('title', '')}")
+                    output.append(f"   {_clean_text(r.get('body', ''), 200)}")
+                return "\n".join(output)
+        
+        return f"'{question}' için cevap bulunamadı. web_search() ile detaylı arama yapabilirsiniz."
         
     except Exception as e:
         logger.error(f"Quick answer failed: {e}")
