@@ -281,41 +281,40 @@ class MobileUI {
     }
     
     setupObservers() {
-        // Watch tools list
-        const toolsList = document.getElementById('tools-list');
-        if (toolsList) {
-            new MutationObserver(() => this.syncToolsList()).observe(toolsList, { childList: true, subtree: true, characterData: true });
-        }
-        
-        // Watch browser content
-        const browserContent = document.getElementById('browser-content');
-        if (browserContent) {
-            new MutationObserver(() => this.syncBrowserContent()).observe(browserContent, { childList: true, subtree: true });
-        }
-        
-        // Watch docker output
-        const dockerOutput = document.getElementById('docker-output');
-        if (dockerOutput) {
-            new MutationObserver(() => this.syncDockerOutput()).observe(dockerOutput, { childList: true, subtree: true });
-        }
-        
-        // Watch file tree
-        const fileTree = document.getElementById('file-tree');
-        if (fileTree) {
-            new MutationObserver(() => this.syncFileTree()).observe(fileTree, { childList: true, subtree: true });
-        }
-        
-        // Watch canvas status
-        const canvasStatus = document.getElementById('canvas-status');
-        if (canvasStatus) {
-            new MutationObserver(() => this.syncCanvasStatus()).observe(canvasStatus, { childList: true, subtree: true, characterData: true });
-        }
+        // Use polling for more reliable sync (MutationObserver can miss some updates)
+        setInterval(() => {
+            if (this.rightPanelOpen) {
+                this.syncAllPanels();
+            }
+        }, 1000);
         
         // Watch sessions list for changes
         const sessionsList = document.getElementById('sessions-list');
         if (sessionsList) {
-            new MutationObserver(() => this.updateSessionsList()).observe(sessionsList, { childList: true, subtree: true });
+            new MutationObserver(() => {
+                if (this.leftPanelOpen) {
+                    this.updateSessionsList();
+                }
+            }).observe(sessionsList, { childList: true, subtree: true });
         }
+        
+        // Hook into WebSocket messages for real-time updates
+        this.hookWebSocketMessages();
+    }
+    
+    hookWebSocketMessages() {
+        // Listen for custom events that we'll dispatch from websocket handler
+        window.addEventListener('atomagent:tool_update', () => {
+            this.syncToolsList();
+        });
+        
+        window.addEventListener('atomagent:browser_update', () => {
+            this.syncBrowserContent();
+        });
+        
+        window.addEventListener('atomagent:docker_update', () => {
+            this.syncDockerOutput();
+        });
     }
     
     setupSwipeGestures() {

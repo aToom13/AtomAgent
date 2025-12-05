@@ -65,11 +65,15 @@ function handleWebSocketMessage(event) {
         case 'tool_start':
             addToolActivity(data.tool, data.input, 'start');
             addToolStart(data.tool, data.input);
+            // Notify mobile UI
+            window.dispatchEvent(new CustomEvent('atomagent:tool_update'));
             break;
             
         case 'tool_end':
             addToolActivity(data.tool, data.output, 'end');
             addToolEnd(data.tool, data.output);
+            // Notify mobile UI
+            window.dispatchEvent(new CustomEvent('atomagent:tool_update'));
             
             // Todo tool'larını tasks paneline gönder
             const todoTools = ['update_todo_list', 'mark_todo_done', 'get_current_todo', 'add_todo_item', 'get_next_todo_step'];
@@ -90,10 +94,14 @@ function handleWebSocketMessage(event) {
             
         case 'browser_start':
             addBrowserStart(data.tool, data.url);
+            // Notify mobile UI
+            window.dispatchEvent(new CustomEvent('atomagent:browser_update'));
             break;
             
         case 'browser_result':
             addBrowserResult(data.tool, data.content);
+            // Notify mobile UI
+            window.dispatchEvent(new CustomEvent('atomagent:browser_update'));
             break;
             
         case 'stream_end':
@@ -132,10 +140,14 @@ function handleWebSocketMessage(event) {
             
         case 'docker_command':
             addDockerCommand(data.command, data.status);
+            // Notify mobile UI
+            window.dispatchEvent(new CustomEvent('atomagent:docker_update'));
             break;
             
         case 'docker_output':
             addDockerOutput(data.output, data.status);
+            // Notify mobile UI
+            window.dispatchEvent(new CustomEvent('atomagent:docker_update'));
             break;
             
         // Canvas - Live Preview
