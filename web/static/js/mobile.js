@@ -1,14 +1,14 @@
 /**
  * Mobile UI Manager - AtomAgent
- * Touch-friendly interface with bottom sheet drawers
+ * Minimal hamburger menu design
  */
 
 class MobileUI {
     constructor() {
         this.isMobile = window.innerWidth <= 768;
-        this.activeDrawer = null;
-        this.touchStartY = 0;
-        this.drawerStartY = 0;
+        this.leftPanelOpen = false;
+        this.rightPanelOpen = false;
+        this.initialized = false;
         
         if (this.isMobile) {
             this.init();
@@ -28,283 +28,343 @@ class MobileUI {
     }
     
     init() {
+        if (this.initialized) return;
         console.log('[Mobile] Initializing mobile UI');
-        this.createMobileNav();
-        this.createDrawers();
-        this.createFAB();
-        this.setupTouchHandlers();
-        document.body.classList.add('mobile-nav-visible');
+        
+        this.createMobileHeader();
+        this.createPanels();
+        this.createBackdrop();
+        this.setupEventListeners();
+        
+        this.initialized = true;
     }
     
     cleanup() {
         console.log('[Mobile] Cleaning up mobile UI');
-        document.querySelectorAll('.mobile-nav, .mobile-drawer, .drawer-backdrop, .mobile-fab').forEach(el => el.remove());
-        document.body.classList.remove('mobile-nav-visible');
+        document.querySelectorAll('.mobile-header, .mobile-panel, .mobile-panel-backdrop').forEach(el => el.remove());
+        this.initialized = false;
     }
     
-    createMobileNav() {
-        // Remove existing nav if any
-        document.querySelector('.mobile-nav')?.remove();
+    createMobileHeader() {
+        // Remove existing
+        document.querySelector('.mobile-header')?.remove();
         
-        const nav = document.createElement('nav');
-        nav.className = 'mobile-nav';
-        nav.innerHTML = `
-            <button class="mobile-nav-btn active" data-action="chat">
+        const header = document.createElement('div');
+        header.className = 'mobile-header';
+        header.innerHTML = `
+            <button class="mobile-header-btn" id="mobile-left-menu-btn" title="Sohbetler">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
                 </svg>
-                <span>Chat</span>
             </button>
-            <button class="mobile-nav-btn" data-action="sessions">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    <path d="M8 9h8M8 13h6"/>
+            
+            <div class="mobile-agent-selector" id="mobile-agent-selector">
+                <span class="agent-icon">🎯</span>
+                <span class="agent-name">Supervisor</span>
+                <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
                 </svg>
-                <span>Geçmiş</span>
-            </button>
-            <button class="mobile-nav-btn" data-action="tools">
+            </div>
+            
+            <button class="mobile-header-btn" id="mobile-right-menu-btn" title="Araçlar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    <circle cx="12" cy="12" r="1"/>
+                    <circle cx="12" cy="5" r="1"/>
+                    <circle cx="12" cy="19" r="1"/>
                 </svg>
-                <span>Araçlar</span>
-            </button>
-            <button class="mobile-nav-btn" data-action="settings">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-                <span>Ayarlar</span>
             </button>
         `;
         
-        document.body.appendChild(nav);
-        
-        // Event listeners
-        nav.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.handleNavClick(btn));
-        });
+        // Insert at the beginning of chat-area
+        const chatArea = document.getElementById('chat-area');
+        if (chatArea) {
+            chatArea.insertBefore(header, chatArea.firstChild);
+        }
     }
     
-    createDrawers() {
-        // Backdrop
-        const backdrop = document.createElement('div');
-        backdrop.className = 'drawer-backdrop';
-        backdrop.addEventListener('click', () => this.closeDrawer());
-        document.body.appendChild(backdrop);
+    createPanels() {
+        // Left Panel - Sessions
+        this.createLeftPanel();
         
-        // Sessions Drawer
-        this.createDrawer('sessions', 'Sohbetler', this.getSessionsContent());
-        
-        // Tools Drawer
-        this.createDrawer('tools', 'Araçlar', this.getToolsContent());
-        
-        // Settings Drawer
-        this.createDrawer('settings', 'Ayarlar', this.getSettingsContent());
+        // Right Panel - Tools & Settings
+        this.createRightPanel();
     }
     
-    createDrawer(id, title, content) {
-        const drawer = document.createElement('div');
-        drawer.id = `${id}-drawer`;
-        drawer.className = 'mobile-drawer';
-        drawer.innerHTML = `
-            <div class="drawer-handle"></div>
-            <div class="drawer-header">
-                <h3>${title}</h3>
-                <button class="drawer-close">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    createLeftPanel() {
+        document.getElementById('mobile-sessions-panel')?.remove();
+        
+        const panel = document.createElement('div');
+        panel.id = 'mobile-sessions-panel';
+        panel.className = 'mobile-panel left';
+        panel.innerHTML = `
+            <div class="mobile-panel-header">
+                <h3>💬 Sohbetler</h3>
+                <button class="mobile-panel-close" onclick="window.mobileUI.closeLeftPanel()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 6L6 18M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="drawer-content">${content}</div>
+            <div class="mobile-panel-content">
+                <button class="mobile-new-chat-btn" onclick="window.mobileUI.newChat()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Yeni Sohbet
+                </button>
+                <div id="mobile-sessions-list"></div>
+            </div>
         `;
         
-        document.body.appendChild(drawer);
-        
-        // Close button
-        drawer.querySelector('.drawer-close').addEventListener('click', () => this.closeDrawer());
-        
-        // Swipe to close
-        this.setupDrawerSwipe(drawer);
+        document.body.appendChild(panel);
     }
     
-    createFAB() {
-        const fab = document.createElement('button');
-        fab.className = 'mobile-fab';
-        fab.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 5v14M5 12h14"/>
-            </svg>
+    createRightPanel() {
+        document.getElementById('mobile-tools-panel')?.remove();
+        
+        const panel = document.createElement('div');
+        panel.id = 'mobile-tools-panel';
+        panel.className = 'mobile-panel right';
+        panel.innerHTML = `
+            <div class="mobile-panel-header">
+                <h3>⚡ Panel</h3>
+                <button class="mobile-panel-close" onclick="window.mobileUI.closeRightPanel()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-panel-tabs">
+                <button class="mobile-panel-tab active" data-tab="tools" onclick="window.mobileUI.switchTab('tools')">🔧 Araçlar</button>
+                <button class="mobile-panel-tab" data-tab="files" onclick="window.mobileUI.switchTab('files')">📁 Dosyalar</button>
+                <button class="mobile-panel-tab" data-tab="settings" onclick="window.mobileUI.switchTab('settings')">⚙️ Ayarlar</button>
+            </div>
+            <div class="mobile-panel-content">
+                <div id="mobile-tab-tools" class="mobile-panel-tab-content active">
+                    <div class="mobile-tools-empty">
+                        <div class="mobile-tools-empty-icon">🔧</div>
+                        <p>Henüz araç kullanılmadı</p>
+                    </div>
+                </div>
+                <div id="mobile-tab-files" class="mobile-panel-tab-content">
+                    <div class="mobile-tools-empty">
+                        <div class="mobile-tools-empty-icon">📁</div>
+                        <p>Dosya yönetimi</p>
+                    </div>
+                </div>
+                <div id="mobile-tab-settings" class="mobile-panel-tab-content">
+                    ${this.getSettingsContent()}
+                </div>
+            </div>
         `;
-        fab.addEventListener('click', () => this.newChat());
-        document.body.appendChild(fab);
+        
+        document.body.appendChild(panel);
     }
     
-    handleNavClick(btn) {
-        const action = btn.dataset.action;
+    createBackdrop() {
+        document.querySelector('.mobile-panel-backdrop')?.remove();
         
-        // Update active state
-        document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-        
-        if (action === 'chat') {
-            btn.classList.add('active');
-            this.closeDrawer();
-        } else {
-            this.openDrawer(action);
-        }
+        const backdrop = document.createElement('div');
+        backdrop.className = 'mobile-panel-backdrop';
+        backdrop.addEventListener('click', () => this.closeAllPanels());
+        document.body.appendChild(backdrop);
     }
     
-    openDrawer(type) {
-        const drawer = document.getElementById(`${type}-drawer`);
-        const backdrop = document.querySelector('.drawer-backdrop');
-        
-        if (!drawer) return;
-        
-        // Update content before opening
-        if (type === 'sessions') {
-            drawer.querySelector('.drawer-content').innerHTML = this.getSessionsContent();
-            this.bindSessionEvents(drawer);
-        } else if (type === 'tools') {
-            drawer.querySelector('.drawer-content').innerHTML = this.getToolsContent();
-        }
-        
-        this.activeDrawer = drawer;
-        backdrop.classList.add('visible');
-        
-        requestAnimationFrame(() => {
-            drawer.classList.add('open');
+    setupEventListeners() {
+        // Left menu button
+        document.getElementById('mobile-left-menu-btn')?.addEventListener('click', () => {
+            this.openLeftPanel();
         });
+        
+        // Right menu button
+        document.getElementById('mobile-right-menu-btn')?.addEventListener('click', () => {
+            this.openRightPanel();
+        });
+        
+        // Agent selector
+        document.getElementById('mobile-agent-selector')?.addEventListener('click', () => {
+            this.toggleAgentDropdown();
+        });
+        
+        // Swipe gestures
+        this.setupSwipeGestures();
     }
     
-    closeDrawer() {
-        if (!this.activeDrawer) return;
+    setupSwipeGestures() {
+        let touchStartX = 0;
+        let touchStartY = 0;
         
-        const backdrop = document.querySelector('.drawer-backdrop');
-        this.activeDrawer.classList.remove('open');
-        backdrop.classList.remove('visible');
-        
-        // Reset nav active state
-        document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector('.mobile-nav-btn[data-action="chat"]')?.classList.add('active');
-        
-        this.activeDrawer = null;
-    }
-    
-    setupDrawerSwipe(drawer) {
-        const handle = drawer.querySelector('.drawer-handle');
-        
-        handle.addEventListener('touchstart', (e) => {
-            this.touchStartY = e.touches[0].clientY;
-            this.drawerStartY = drawer.getBoundingClientRect().top;
-            drawer.style.transition = 'none';
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
         }, { passive: true });
         
-        handle.addEventListener('touchmove', (e) => {
-            const deltaY = e.touches[0].clientY - this.touchStartY;
-            if (deltaY > 0) {
-                drawer.style.transform = `translateY(${deltaY}px)`;
-            }
-        }, { passive: true });
-        
-        handle.addEventListener('touchend', (e) => {
-            drawer.style.transition = '';
-            const deltaY = e.changedTouches[0].clientY - this.touchStartY;
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
             
-            if (deltaY > 100) {
-                this.closeDrawer();
-            } else {
-                drawer.style.transform = '';
+            // Only horizontal swipes
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (deltaX > 0 && touchStartX < 30) {
+                    // Swipe right from left edge
+                    this.openLeftPanel();
+                } else if (deltaX < 0 && touchStartX > window.innerWidth - 30) {
+                    // Swipe left from right edge
+                    this.openRightPanel();
+                } else if (deltaX < 0 && this.leftPanelOpen) {
+                    // Swipe left to close left panel
+                    this.closeLeftPanel();
+                } else if (deltaX > 0 && this.rightPanelOpen) {
+                    // Swipe right to close right panel
+                    this.closeRightPanel();
+                }
             }
+        }, { passive: true });
+    }
+    
+    openLeftPanel() {
+        this.closeRightPanel();
+        this.updateSessionsList();
+        
+        const panel = document.getElementById('mobile-sessions-panel');
+        const backdrop = document.querySelector('.mobile-panel-backdrop');
+        
+        panel?.classList.add('open');
+        backdrop?.classList.add('visible');
+        this.leftPanelOpen = true;
+    }
+    
+    closeLeftPanel() {
+        const panel = document.getElementById('mobile-sessions-panel');
+        const backdrop = document.querySelector('.mobile-panel-backdrop');
+        
+        panel?.classList.remove('open');
+        if (!this.rightPanelOpen) {
+            backdrop?.classList.remove('visible');
+        }
+        this.leftPanelOpen = false;
+    }
+    
+    openRightPanel() {
+        this.closeLeftPanel();
+        this.updateToolsList();
+        
+        const panel = document.getElementById('mobile-tools-panel');
+        const backdrop = document.querySelector('.mobile-panel-backdrop');
+        
+        panel?.classList.add('open');
+        backdrop?.classList.add('visible');
+        this.rightPanelOpen = true;
+    }
+    
+    closeRightPanel() {
+        const panel = document.getElementById('mobile-tools-panel');
+        const backdrop = document.querySelector('.mobile-panel-backdrop');
+        
+        panel?.classList.remove('open');
+        if (!this.leftPanelOpen) {
+            backdrop?.classList.remove('visible');
+        }
+        this.rightPanelOpen = false;
+    }
+    
+    closeAllPanels() {
+        this.closeLeftPanel();
+        this.closeRightPanel();
+    }
+    
+    toggleAgentDropdown() {
+        const selector = document.getElementById('mobile-agent-selector');
+        const dropdown = document.getElementById('agent-dropdown');
+        
+        if (dropdown) {
+            dropdown.classList.toggle('hidden');
+            selector?.classList.toggle('open');
+        }
+        
+        // Use existing agent dropdown if available
+        if (window.AtomAgent?.toggleAgentDropdown) {
+            window.AtomAgent.toggleAgentDropdown();
+        }
+    }
+    
+    switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.mobile-panel-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.tab === tabName);
+        });
+        
+        // Update tab content
+        document.querySelectorAll('.mobile-panel-tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === `mobile-tab-${tabName}`);
         });
     }
     
-    setupTouchHandlers() {
-        // Prevent body scroll when drawer is open
-        document.addEventListener('touchmove', (e) => {
-            if (this.activeDrawer && !this.activeDrawer.contains(e.target)) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-    }
-    
-    getSessionsContent() {
+    updateSessionsList() {
+        const container = document.getElementById('mobile-sessions-list');
+        if (!container) return;
+        
         const sessions = window.AtomAgent?.sessions || [];
+        const currentId = window.AtomAgent?.currentSessionId;
         
         if (sessions.length === 0) {
-            return `
-                <div class="empty-state">
-                    <p>Henüz sohbet yok</p>
-                    <button class="small-btn primary" onclick="window.mobileUI.newChat()">Yeni Sohbet</button>
-                </div>
-            `;
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 16px;">Henüz sohbet yok</p>';
+            return;
         }
         
-        return sessions.map(session => `
-            <div class="mobile-session-item ${session.id === window.AtomAgent?.currentSessionId ? 'active' : ''}" 
-                 data-session-id="${session.id}">
+        container.innerHTML = sessions.map(session => `
+            <div class="mobile-session-item ${session.id === currentId ? 'active' : ''}" 
+                 data-session-id="${session.id}"
+                 onclick="window.mobileUI.loadSession('${session.id}')">
                 <span class="mobile-session-icon">💬</span>
                 <div class="mobile-session-info">
-                    <div class="mobile-session-title">${session.title || 'Yeni Sohbet'}</div>
+                    <div class="mobile-session-title">${this.escapeHtml(session.title || 'Yeni Sohbet')}</div>
                     <div class="mobile-session-meta">${session.message_count || 0} mesaj</div>
                 </div>
+                <button class="mobile-session-delete" onclick="event.stopPropagation(); window.mobileUI.deleteSession('${session.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                </button>
             </div>
         `).join('');
     }
     
-    bindSessionEvents(drawer) {
-        drawer.querySelectorAll('.mobile-session-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const sessionId = item.dataset.sessionId;
-                if (window.AtomAgent?.loadSession) {
-                    window.AtomAgent.loadSession(sessionId);
-                }
-                this.closeDrawer();
-            });
-        });
-    }
-    
-    getToolsContent() {
-        const toolsList = document.getElementById('tools-list');
-        if (toolsList) {
-            return toolsList.innerHTML;
+    updateToolsList() {
+        const container = document.getElementById('mobile-tab-tools');
+        if (!container) return;
+        
+        // Get tools from desktop tools list
+        const desktopTools = document.getElementById('tools-list');
+        if (desktopTools && !desktopTools.querySelector('.tools-empty')) {
+            container.innerHTML = `<div class="mobile-tools-list">${desktopTools.innerHTML}</div>`;
+        } else {
+            container.innerHTML = `
+                <div class="mobile-tools-empty">
+                    <div class="mobile-tools-empty-icon">🔧</div>
+                    <p>Henüz araç kullanılmadı</p>
+                </div>
+            `;
         }
-        return `
-            <div class="tools-empty">
-                <div class="tools-empty-icon">🔧</div>
-                <p>Henüz araç kullanılmadı</p>
-            </div>
-        `;
     }
     
     getSettingsContent() {
         return `
-            <div class="settings-section">
+            <div class="mobile-settings-section">
                 <h4>Agent</h4>
-                <div class="setting-item">
-                    <label>Aktif Agent</label>
-                    <select id="mobile-agent-select" onchange="window.mobileUI.changeAgent(this.value)">
-                        <option value="supervisor">🎯 Supervisor</option>
-                        <option value="coder">👨‍💻 Coder</option>
-                        <option value="researcher">🔍 Researcher</option>
-                        <option value="devops">🚀 DevOps</option>
-                        <option value="qa">🧪 QA</option>
-                        <option value="security">🔒 Security</option>
-                    </select>
+                <div class="mobile-setting-item" onclick="window.mobileUI.toggleAgentDropdown()">
+                    <span class="mobile-setting-label">Aktif Agent</span>
+                    <span class="mobile-setting-value" id="mobile-current-agent">Supervisor</span>
                 </div>
             </div>
-            <div class="settings-section">
-                <h4>Görünüm</h4>
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="mobile-dark-mode" checked>
-                        Karanlık Mod
-                    </label>
+            <div class="mobile-settings-section">
+                <h4>Genel</h4>
+                <div class="mobile-setting-item" onclick="document.getElementById('settings-modal')?.classList.remove('hidden'); window.mobileUI.closeRightPanel();">
+                    <span class="mobile-setting-label">Tüm Ayarlar</span>
+                    <span class="mobile-setting-value">→</span>
                 </div>
-            </div>
-            <div class="settings-section">
-                <button class="small-btn" onclick="document.getElementById('settings-modal').classList.remove('hidden')">
-                    Tüm Ayarlar
-                </button>
             </div>
         `;
     }
@@ -313,21 +373,39 @@ class MobileUI {
         if (window.AtomAgent?.newSession) {
             window.AtomAgent.newSession();
         }
-        this.closeDrawer();
+        this.closeLeftPanel();
     }
     
-    changeAgent(agent) {
-        if (window.AtomAgent?.setAgent) {
-            window.AtomAgent.setAgent(agent);
+    loadSession(sessionId) {
+        if (window.AtomAgent?.loadSession) {
+            window.AtomAgent.loadSession(sessionId);
+        }
+        this.closeLeftPanel();
+    }
+    
+    deleteSession(sessionId) {
+        if (window.AtomAgent?.deleteSession) {
+            window.AtomAgent.deleteSession(sessionId);
         }
     }
     
-    // Update tools drawer when tools are used
-    updateTools() {
-        const drawer = document.getElementById('tools-drawer');
-        if (drawer && drawer.classList.contains('open')) {
-            drawer.querySelector('.drawer-content').innerHTML = this.getToolsContent();
+    updateAgentDisplay(agentName, agentIcon) {
+        const selector = document.getElementById('mobile-agent-selector');
+        if (selector) {
+            selector.querySelector('.agent-icon').textContent = agentIcon || '🎯';
+            selector.querySelector('.agent-name').textContent = agentName || 'Supervisor';
         }
+        
+        const settingValue = document.getElementById('mobile-current-agent');
+        if (settingValue) {
+            settingValue.textContent = agentName || 'Supervisor';
+        }
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 }
 

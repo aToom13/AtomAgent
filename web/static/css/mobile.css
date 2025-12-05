@@ -1,7 +1,7 @@
 /* Mobile UI - AtomAgent */
-/* Chat-focused mobile interface with bottom sheet drawers */
+/* Minimal hamburger menu design */
 
-/* Mobile Detection */
+/* ===== Mobile Detection ===== */
 @media (max-width: 768px) {
     /* Hide desktop elements */
     #sidebar,
@@ -11,12 +11,13 @@
         display: none !important;
     }
 
-    /* Full width chat */
+    /* Full screen app */
     #app {
         display: flex;
         flex-direction: column;
         height: 100vh;
-        height: 100dvh; /* Dynamic viewport height for mobile */
+        height: 100dvh;
+        overflow: hidden;
     }
 
     #chat-area {
@@ -25,72 +26,116 @@
         display: flex;
         flex-direction: column;
         border-radius: 0;
+        overflow: hidden;
     }
 
-    /* Mobile Header */
+    /* ===== Mobile Header ===== */
     .chat-header {
-        padding: 8px 12px;
-        gap: 8px;
+        display: none !important; /* Hide default header */
+    }
+
+    .mobile-header {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border-color);
+        gap: 12px;
         position: sticky;
         top: 0;
         z-index: 100;
-        background: var(--bg-primary);
-        border-bottom: 1px solid var(--border-color);
     }
 
-    .chat-header .chat-title h1 {
-        font-size: 1rem;
+    .mobile-header-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s;
     }
 
-    .chat-header .chat-title svg {
+    .mobile-header-btn:active {
+        transform: scale(0.95);
+        background: var(--bg-tertiary);
+    }
+
+    .mobile-header-btn svg {
         width: 20px;
         height: 20px;
     }
 
-    /* Mobile Agent Indicator */
-    .active-agent-indicator {
-        padding: 4px 8px;
-        font-size: 0.75rem;
+    /* Agent Selector - Center */
+    .mobile-agent-selector {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
     }
 
-    .active-agent-indicator .agent-name {
-        max-width: 60px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .mobile-agent-selector:active {
+        background: var(--bg-tertiary);
     }
 
-    .auto-badge {
-        font-size: 0.6rem;
-        padding: 1px 4px;
+    .mobile-agent-selector .agent-icon {
+        font-size: 1rem;
     }
 
-    /* Messages Area */
+    .mobile-agent-selector .agent-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .mobile-agent-selector .dropdown-arrow {
+        color: var(--text-muted);
+        transition: transform 0.2s;
+    }
+
+    .mobile-agent-selector.open .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+
+    /* ===== Messages Area ===== */
     .messages {
         flex: 1;
         padding: 12px;
-        padding-bottom: 80px; /* Space for input */
+        padding-bottom: 8px;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
 
     .message {
-        max-width: 85%;
+        max-width: 88%;
         padding: 10px 14px;
         font-size: 0.9rem;
         line-height: 1.5;
+        margin-bottom: 8px;
     }
 
     .message.user {
         margin-left: auto;
     }
 
-    /* Welcome Message */
     .welcome-message {
-        padding: 20px;
+        padding: 24px 16px;
     }
 
     .welcome-message h2 {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .welcome-message p {
@@ -101,157 +146,208 @@
         font-size: 2.5rem;
     }
 
-    /* Input Area - Fixed at bottom */
-    .input-area {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--bg-primary);
-        border-top: 1px solid var(--border-color);
+    /* ===== Status Bar ===== */
+    .agent-status-bar {
         padding: 8px 12px;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom));
-        z-index: 1000;
+        font-size: 0.8rem;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
     }
 
-    .input-container {
+    .agent-status-bar .status-indicator {
         gap: 8px;
     }
 
+    .agent-status-bar .status-model {
+        font-size: 0.7rem;
+    }
+
+    /* ===== Input Area ===== */
+    .input-area {
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        padding: 12px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .input-container {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 8px;
+    }
+
+    .attach-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .attach-btn:active {
+        background: var(--bg-tertiary);
+    }
+
+    .attach-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
     #message-input {
-        font-size: 16px; /* Prevents zoom on iOS */
-        padding: 10px 12px;
-        min-height: 44px;
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 16px; /* Prevents iOS zoom */
+        padding: 8px 4px;
+        min-height: 24px;
         max-height: 120px;
+        resize: none;
+        outline: none;
+    }
+
+    #message-input::placeholder {
+        color: var(--text-muted);
     }
 
     .send-btn,
     .stop-btn {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-    }
-
-    .attach-btn {
-        width: 44px;
-        height: 44px;
-    }
-
-    /* Agent Status Bar */
-    .agent-status-bar {
-        padding: 6px 12px;
-        font-size: 0.8rem;
-    }
-
-    /* Mobile Navigation Bar */
-    .mobile-nav {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
         display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-        padding: 8px 0;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom));
-        z-index: 999;
-        justify-content: space-around;
-    }
-
-    .mobile-nav-btn {
-        display: flex;
-        flex-direction: column;
         align-items: center;
-        gap: 4px;
-        padding: 8px 16px;
-        background: none;
+        justify-content: center;
+        background: var(--accent-color);
         border: none;
-        color: var(--text-secondary);
-        font-size: 0.7rem;
+        border-radius: 8px;
+        color: white;
         cursor: pointer;
-        transition: color 0.2s;
+        transition: all 0.2s;
     }
 
-    .mobile-nav-btn svg {
-        width: 24px;
-        height: 24px;
-    }
-
-    .mobile-nav-btn.active {
-        color: var(--accent-color);
-    }
-
-    .mobile-nav-btn:active {
+    .send-btn:active {
         transform: scale(0.95);
+    }
+
+    .send-btn:disabled {
+        opacity: 0.5;
+    }
+
+    .send-btn svg,
+    .stop-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .stop-btn {
+        background: var(--error-color);
+    }
+
+    /* Attachment Preview */
+    .attachment-preview {
+        margin-bottom: 8px;
+        padding: 8px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
     }
 }
 
-/* Bottom Sheet Drawer */
-.mobile-drawer {
+/* ===== Slide Panels (Hamburger Menus) ===== */
+.mobile-panel {
     display: none;
     position: fixed;
+    top: 0;
     bottom: 0;
-    left: 0;
-    right: 0;
+    width: 85%;
+    max-width: 320px;
     background: var(--bg-primary);
-    border-radius: 16px 16px 0 0;
     z-index: 2000;
-    transform: translateY(100%);
+    transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 85vh;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 @media (max-width: 768px) {
-    .mobile-drawer {
-        display: block;
+    .mobile-panel {
+        display: flex;
     }
 }
 
-.mobile-drawer.open {
-    transform: translateY(0);
+.mobile-panel.left {
+    left: 0;
+    transform: translateX(-100%);
+    border-right: 1px solid var(--border-color);
 }
 
-.drawer-handle {
-    width: 40px;
-    height: 4px;
-    background: var(--text-muted);
-    border-radius: 2px;
-    margin: 12px auto;
-    cursor: grab;
+.mobile-panel.right {
+    right: 0;
+    left: auto;
+    transform: translateX(100%);
+    border-left: 1px solid var(--border-color);
 }
 
-.drawer-header {
+.mobile-panel.open {
+    transform: translateX(0);
+}
+
+/* Panel Header */
+.mobile-panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px 12px;
+    padding: 16px;
     border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
 }
 
-.drawer-header h3 {
+.mobile-panel-header h3 {
     font-size: 1rem;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
 }
 
-.drawer-close {
+.mobile-panel-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     color: var(--text-secondary);
-    padding: 8px;
     cursor: pointer;
+    border-radius: 6px;
 }
 
-.drawer-content {
-    padding: 16px;
+.mobile-panel-close:active {
+    background: var(--bg-tertiary);
+}
+
+/* Panel Content */
+.mobile-panel-content {
+    flex: 1;
     overflow-y: auto;
-    max-height: calc(85vh - 80px);
     -webkit-overflow-scrolling: touch;
 }
 
-/* Drawer Backdrop */
-.drawer-backdrop {
+/* Panel Backdrop */
+.mobile-panel-backdrop {
     display: none;
     position: fixed;
     top: 0;
@@ -264,14 +360,37 @@
     transition: opacity 0.3s;
 }
 
-.drawer-backdrop.visible {
+.mobile-panel-backdrop.visible {
     display: block;
     opacity: 1;
 }
 
-/* Sessions Drawer */
-#sessions-drawer .drawer-content {
+/* ===== Left Panel - Sessions ===== */
+#mobile-sessions-panel .mobile-panel-content {
     padding: 8px;
+}
+
+.mobile-new-chat-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: var(--accent-color);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mobile-new-chat-btn:active {
+    transform: scale(0.98);
+    opacity: 0.9;
 }
 
 .mobile-session-item {
@@ -281,9 +400,10 @@
     padding: 12px;
     background: var(--bg-secondary);
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
+    border: 1px solid transparent;
 }
 
 .mobile-session-item:active {
@@ -291,8 +411,8 @@
 }
 
 .mobile-session-item.active {
-    background: var(--accent-color);
-    color: white;
+    border-color: var(--accent-color);
+    background: var(--accent-color)10;
 }
 
 .mobile-session-icon {
@@ -305,7 +425,9 @@
 }
 
 .mobile-session-title {
+    font-size: 0.9rem;
     font-weight: 500;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -314,81 +436,177 @@
 .mobile-session-meta {
     font-size: 0.75rem;
     color: var(--text-muted);
+    margin-top: 2px;
 }
 
-/* Tools Drawer */
-#tools-drawer .tool-item {
+.mobile-session-delete {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    opacity: 0.6;
+}
+
+.mobile-session-delete:active {
+    background: var(--error-color)20;
+    color: var(--error-color);
+}
+
+/* ===== Right Panel - Tools & Settings ===== */
+#mobile-tools-panel .mobile-panel-content {
+    padding: 0;
+}
+
+.mobile-panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.mobile-panel-tab {
+    flex: 1;
+    padding: 12px 8px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.mobile-panel-tab.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+}
+
+.mobile-panel-tab-content {
+    display: none;
+    padding: 12px;
+}
+
+.mobile-panel-tab-content.active {
+    display: block;
+}
+
+/* Tools List */
+.mobile-tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mobile-tool-item {
     padding: 12px;
     background: var(--bg-secondary);
     border-radius: 8px;
+    border-left: 3px solid var(--accent-color);
+}
+
+.mobile-tool-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.mobile-tool-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.mobile-tools-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+}
+
+.mobile-tools-empty-icon {
+    font-size: 2rem;
     margin-bottom: 8px;
 }
 
-/* Settings Drawer */
-#settings-drawer .settings-section {
-    margin-bottom: 20px;
+/* Settings Section */
+.mobile-settings-section {
+    margin-bottom: 16px;
 }
 
-#settings-drawer .setting-item {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-color);
+.mobile-settings-section h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding: 0 4px;
 }
 
-/* New Chat FAB */
-.mobile-fab {
-    display: none;
-    position: fixed;
-    bottom: 80px;
-    right: 16px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    z-index: 998;
+.mobile-setting-item {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    justify-content: space-between;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 6px;
 }
 
+.mobile-setting-label {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.mobile-setting-value {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* ===== Agent Dropdown (Mobile) ===== */
 @media (max-width: 768px) {
-    .mobile-fab {
-        display: flex;
+    .agent-dropdown {
+        position: fixed;
+        top: 60px;
+        left: 16px;
+        right: 16px;
+        bottom: auto;
+        max-height: 60vh;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 2001;
+    }
+
+    .agent-dropdown-item {
+        padding: 14px 16px;
     }
 }
 
-.mobile-fab:active {
-    transform: scale(0.95);
-}
-
-.mobile-fab svg {
-    width: 24px;
-    height: 24px;
-}
-
-/* Adjust input area when nav is visible */
+/* ===== Attach Menu (Mobile) ===== */
 @media (max-width: 768px) {
-    body.mobile-nav-visible .input-area {
-        bottom: 60px;
+    .attach-menu {
+        position: fixed;
+        bottom: calc(80px + env(safe-area-inset-bottom));
+        left: 12px;
+        right: 12px;
+        border-radius: 12px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
     }
 
-    body.mobile-nav-visible .messages {
-        padding-bottom: 140px;
-    }
-
-    body.mobile-nav-visible .mobile-fab {
-        bottom: 140px;
+    .attach-option {
+        padding: 14px 16px;
     }
 }
 
-/* Touch-friendly code blocks */
+/* ===== Code Blocks ===== */
 @media (max-width: 768px) {
     .message pre {
         font-size: 0.8rem;
         padding: 12px;
+        border-radius: 8px;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
@@ -397,46 +615,13 @@
         font-size: 0.85rem;
     }
 
-    /* Copy button larger for touch */
     .code-copy-btn {
-        padding: 8px 12px;
-        font-size: 0.8rem;
+        padding: 6px 10px;
+        font-size: 0.75rem;
     }
 }
 
-/* Agent Dropdown Mobile */
-@media (max-width: 768px) {
-    .agent-dropdown {
-        position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        max-height: 60vh;
-        border-radius: 16px 16px 0 0;
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .agent-dropdown-item {
-        padding: 14px 16px;
-    }
-}
-
-/* Attachment Menu Mobile */
-@media (max-width: 768px) {
-    .attach-menu {
-        bottom: 100%;
-        left: 0;
-        right: auto;
-        min-width: 160px;
-    }
-
-    .attach-option {
-        padding: 12px 16px;
-    }
-}
-
-/* Modal Mobile */
+/* ===== Modal (Mobile) ===== */
 @media (max-width: 768px) {
     .modal-content {
         width: 100%;
@@ -464,24 +649,27 @@
     }
 }
 
-/* Landscape Mode */
+/* ===== Landscape Mode ===== */
 @media (max-width: 768px) and (orientation: landscape) {
-    .mobile-drawer {
-        max-height: 70vh;
+    .mobile-panel {
+        width: 50%;
+        max-width: 280px;
     }
 
     .messages {
-        padding-bottom: 70px;
+        padding-bottom: 4px;
+    }
+
+    .input-area {
+        padding: 8px 12px;
     }
 }
 
-/* Dark mode adjustments for mobile */
-@media (max-width: 768px) and (prefers-color-scheme: dark) {
-    .mobile-drawer {
-        background: var(--bg-primary);
-    }
-
-    .drawer-handle {
-        background: var(--text-muted);
+/* ===== Hide Mobile Elements on Desktop ===== */
+@media (min-width: 769px) {
+    .mobile-header,
+    .mobile-panel,
+    .mobile-panel-backdrop {
+        display: none !important;
     }
 }

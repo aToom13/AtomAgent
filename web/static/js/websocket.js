@@ -17,8 +17,11 @@ import { handleCanvasMessage, handleServerStart, handleHtmlCreated, handleGuiApp
 
 export function connectWebSocket() {
     const clientId = 'client_' + Date.now();
-    const wsUrl = `ws://${window.location.host}/ws/chat/${clientId}`;
+    // Use wss:// for HTTPS (ngrok, production), ws:// for HTTP (localhost)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/chat/${clientId}`;
     
+    console.log('[WS] Connecting to:', wsUrl);
     state.ws = new WebSocket(wsUrl);
     
     state.ws.onopen = () => {
