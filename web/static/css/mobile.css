@@ -739,6 +739,93 @@
     font-size: 0.9rem;
 }
 
+/* ===== Canvas Tab ===== */
+.mobile-canvas-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.mobile-canvas-url-bar {
+    flex: 1;
+    display: flex;
+    gap: 4px;
+}
+
+.mobile-canvas-url-bar input {
+    flex: 1;
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.mobile-canvas-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.mobile-small-btn {
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.mobile-small-btn:active {
+    background: var(--bg-tertiary);
+}
+
+.mobile-canvas-status {
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.mobile-canvas-frame {
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 300px;
+}
+
+.mobile-canvas-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ===== Panel Body ===== */
+.mobile-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-panel-tab-content {
+    display: none;
+    padding: 12px;
+}
+
+.mobile-panel-tab-content.active {
+    display: block;
+}
+
+/* ===== Sessions List ===== */
+.mobile-sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 /* ===== Agent Dropdown (Mobile) ===== */
 .mobile-agent-dropdown {
     display: none;
