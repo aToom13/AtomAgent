@@ -130,6 +130,8 @@ async def handle_chat(websocket: WebSocket, client_id: str):
     try:
         while True:
             data = await websocket.receive_json()
+            logger.info(f"[WS] Received data: {data.get('type')}")
+            print(f"[WS DEBUG] Received: {data}")
 
             if data.get("type") == "message":
                 content = data.get("content", "")
@@ -221,6 +223,9 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
     from langchain_core.messages import HumanMessage
     import asyncio
 
+    print(f"[STREAM DEBUG] Starting stream_response for {client_id}")
+    logger.info(f"[STREAM] Starting for {client_id}, message: {user_message[:50]}...")
+
     # Toplam API key sayısı + fallback provider sayısı kadar retry hakkı
     MAX_RETRIES = 20
 
@@ -231,6 +236,7 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
             return
         # Aktif model bilgisini gönder - sadece status bar
         current_provider, current_model = model_manager.get_current_provider_info("supervisor")
+        print(f"[STREAM DEBUG] Using model: {current_provider}/{current_model}")
         await manager.send_message(client_id, {
             "type": "status",
             "status": "thinking",
@@ -260,146 +266,146 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
 
                 kind = event.get("event")
 
-            if kind == "on_chat_model_stream":
-                chunk = event.get("data", {}).get("chunk")
-                if chunk and hasattr(chunk, "content") and chunk.content:
-                    token = chunk.content
-                    full_response += token
-                    await manager.send_message(client_id, {"type": "token", "content": token})
+                if kind == "on_chat_model_stream":
+                    chunk = event.get("data", {}).get("chunk")
+                    if chunk and hasattr(chunk, "content") and chunk.content:
+                        token = chunk.content
+                        full_response += token
+                        await manager.send_message(client_id, {"type": "token", "content": token})
 
-            elif kind == "on_tool_start":
-                tool_name = event.get("name", "unknown")
-                tool_input = event.get("data", {}).get("input", {})
-                tool_input_str = str(tool_input)
-
-                # Status bar güncelle
-                await manager.send_message(client_id, {
-                    "type": "status",
-                    "status": "tool",
-                    "message": f"🔧 {tool_name} çalıştırılıyor..."
-                })
-
-                # Tools paneline gönder
-                await manager.send_message(client_id, {
-                    "type": "tool_start",
-                    "tool": tool_name,
-                    "input": tool_input_str[:500]
-                })
-
-                # Sandbox/Docker komutlarını Docker sekmesine gönder
-                sandbox_tools = ["sandbox_shell", "sandbox_start", "sandbox_stop", "sandbox_upload", "sandbox_download"]
-                if tool_name in sandbox_tools:
-                    cmd = tool_input.get("command", tool_input_str) if isinstance(tool_input, dict) else tool_input_str
-                    await manager.send_message(client_id, {
-                        "type": "docker_command",
-                        "tool": tool_name,
-                        "command": str(cmd)[:500],
-                        "status": "running"
-                    })
-
-                # Web araçlarını browser sekmesine gönder
-                web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
-                if tool_name in web_tools:
-                    url = tool_input.get("url", tool_input.get("query", "")) if isinstance(tool_input, dict) else ""
-                    await manager.send_message(client_id, {
-                        "type": "browser_start",
-                        "tool": tool_name,
-                        "url": str(url)[:500],
-                        "status": "loading"
-                    })
-
-            elif kind == "on_tool_end":
-                tool_name = event.get("name", "unknown")
-                tool_output = str(event.get("data", {}).get("output", ""))
-
-                # Status bar güncelle
-                await manager.send_message(client_id, {
-                    "type": "status",
-                    "status": "thinking",
-                    "message": "💭 Yanıt hazırlanıyor..."
-                })
-
-                # Tools paneline gönder
-                await manager.send_message(client_id, {
-                    "type": "tool_end",
-                    "tool": tool_name,
-                    "output": tool_output[:500]
-                })
-
-                # Sandbox/Docker komut çıktısını Docker sekmesine gönder
-                sandbox_tools = ["sandbox_shell", "sandbox_start", "sandbox_stop", "sandbox_upload", "sandbox_download"]
-                if tool_name in sandbox_tools:
-                    await manager.send_message(client_id, {
-                        "type": "docker_output",
-                        "tool": tool_name,
-                        "output": tool_output[:2000],
-                        "status": "completed"
-                    })
-                    
-                    # Sunucu başlatma komutlarını algıla ve Canvas'a bildir
-                    server_patterns = [
-                        ("python", ["flask run", "uvicorn", "python -m http.server", "streamlit run", "gradio", "manage.py runserver"]),
-                        ("node", ["npm start", "npm run dev", "yarn start", "yarn dev", "node server", "npx serve"]),
-                    ]
-                    
+                elif kind == "on_tool_start":
+                    tool_name = event.get("name", "unknown")
                     tool_input = event.get("data", {}).get("input", {})
-                    cmd = tool_input.get("command", "") if isinstance(tool_input, dict) else str(tool_input)
-                    cmd_lower = cmd.lower()
-                    
-                    for server_type, patterns in server_patterns:
-                        for pattern in patterns:
-                            if pattern in cmd_lower:
-                                # Port'u bulmaya çalış
-                                import re
-                                port_match = re.search(r':(\d{4,5})|--port[= ](\d+)|-p[= ]?(\d+)', cmd)
-                                port = 8000  # default
-                                if port_match:
-                                    port = int(port_match.group(1) or port_match.group(2) or port_match.group(3))
-                                elif "5000" in cmd:
-                                    port = 5000
-                                elif "3000" in cmd:
-                                    port = 3000
-                                elif "8080" in cmd:
-                                    port = 8080
-                                elif "8501" in cmd:  # streamlit default
-                                    port = 8501
-                                
-                                await manager.send_message(client_id, {
-                                    "type": "server_started",
-                                    "port": port,
-                                    "server_type": server_type,
-                                    "command": cmd[:200]
-                                })
-                                break
+                    tool_input_str = str(tool_input)
 
-                    # GUI uygulama başlatma algıla (pygame, tkinter, etc.)
-                    gui_patterns = ["pygame", "tkinter", "pyqt", "pyside", "kivy", "wxpython"]
-                    if any(pattern in cmd_lower for pattern in gui_patterns):
+                    # Status bar güncelle
+                    await manager.send_message(client_id, {
+                        "type": "status",
+                        "status": "tool",
+                        "message": f"🔧 {tool_name} çalıştırılıyor..."
+                    })
+
+                    # Tools paneline gönder
+                    await manager.send_message(client_id, {
+                        "type": "tool_start",
+                        "tool": tool_name,
+                        "input": tool_input_str[:500]
+                    })
+
+                    # Sandbox/Docker komutlarını Docker sekmesine gönder
+                    sandbox_tools = ["sandbox_shell", "sandbox_start", "sandbox_stop", "sandbox_upload", "sandbox_download"]
+                    if tool_name in sandbox_tools:
+                        cmd = tool_input.get("command", tool_input_str) if isinstance(tool_input, dict) else tool_input_str
                         await manager.send_message(client_id, {
-                            "type": "gui_started",
-                            "command": cmd[:200]
-                        })
-                
-                # write_file ile HTML dosyası oluşturulduğunu algıla
-                if tool_name == "write_file":
-                    tool_input = event.get("data", {}).get("input", {})
-                    file_path = tool_input.get("path", "") if isinstance(tool_input, dict) else ""
-                    if file_path.endswith('.html') or file_path.endswith('.htm'):
-                        await manager.send_message(client_id, {
-                            "type": "html_created",
-                            "path": file_path
+                            "type": "docker_command",
+                            "tool": tool_name,
+                            "command": str(cmd)[:500],
+                            "status": "running"
                         })
 
-                # Web araçları çıktısını browser sekmesine gönder
-                web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
-                if tool_name in web_tools:
+                    # Web araçlarını browser sekmesine gönder
+                    web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
+                    if tool_name in web_tools:
+                        url = tool_input.get("url", tool_input.get("query", "")) if isinstance(tool_input, dict) else ""
+                        await manager.send_message(client_id, {
+                            "type": "browser_start",
+                            "tool": tool_name,
+                            "url": str(url)[:500],
+                            "status": "loading"
+                        })
+
+                elif kind == "on_tool_end":
+                    tool_name = event.get("name", "unknown")
+                    tool_output = str(event.get("data", {}).get("output", ""))
+
+                    # Status bar güncelle
                     await manager.send_message(client_id, {
-                        "type": "browser_result",
-                        "tool": tool_name,
-                        "content": tool_output[:3000],
-                        "status": "loaded"
+                        "type": "status",
+                        "status": "thinking",
+                        "message": "💭 Yanıt hazırlanıyor..."
                     })
+
+                    # Tools paneline gönder
+                    await manager.send_message(client_id, {
+                        "type": "tool_end",
+                        "tool": tool_name,
+                        "output": tool_output[:500]
+                    })
+
+                    # Sandbox/Docker komut çıktısını Docker sekmesine gönder
+                    sandbox_tools = ["sandbox_shell", "sandbox_start", "sandbox_stop", "sandbox_upload", "sandbox_download"]
+                    if tool_name in sandbox_tools:
+                        await manager.send_message(client_id, {
+                            "type": "docker_output",
+                            "tool": tool_name,
+                            "output": tool_output[:2000],
+                            "status": "completed"
+                        })
+                        
+                        # Sunucu başlatma komutlarını algıla ve Canvas'a bildir
+                        server_patterns = [
+                            ("python", ["flask run", "uvicorn", "python -m http.server", "streamlit run", "gradio", "manage.py runserver"]),
+                            ("node", ["npm start", "npm run dev", "yarn start", "yarn dev", "node server", "npx serve"]),
+                        ]
+                        
+                        tool_input = event.get("data", {}).get("input", {})
+                        cmd = tool_input.get("command", "") if isinstance(tool_input, dict) else str(tool_input)
+                        cmd_lower = cmd.lower()
+                        
+                        for server_type, patterns in server_patterns:
+                            for pattern in patterns:
+                                if pattern in cmd_lower:
+                                    # Port'u bulmaya çalış
+                                    import re
+                                    port_match = re.search(r':(\d{4,5})|--port[= ](\d+)|-p[= ]?(\d+)', cmd)
+                                    port = 8000  # default
+                                    if port_match:
+                                        port = int(port_match.group(1) or port_match.group(2) or port_match.group(3))
+                                    elif "5000" in cmd:
+                                        port = 5000
+                                    elif "3000" in cmd:
+                                        port = 3000
+                                    elif "8080" in cmd:
+                                        port = 8080
+                                    elif "8501" in cmd:  # streamlit default
+                                        port = 8501
+                                    
+                                    await manager.send_message(client_id, {
+                                        "type": "server_started",
+                                        "port": port,
+                                        "server_type": server_type,
+                                        "command": cmd[:200]
+                                    })
+                                    break
+
+                        # GUI uygulama başlatma algıla (pygame, tkinter, etc.)
+                        gui_patterns = ["pygame", "tkinter", "pyqt", "pyside", "kivy", "wxpython"]
+                        if any(pattern in cmd_lower for pattern in gui_patterns):
+                            await manager.send_message(client_id, {
+                                "type": "gui_started",
+                                "command": cmd[:200]
+                            })
                     
+                    # write_file ile HTML dosyası oluşturulduğunu algıla
+                    if tool_name == "write_file":
+                        tool_input = event.get("data", {}).get("input", {})
+                        file_path = tool_input.get("path", "") if isinstance(tool_input, dict) else ""
+                        if file_path.endswith('.html') or file_path.endswith('.htm'):
+                            await manager.send_message(client_id, {
+                                "type": "html_created",
+                                "path": file_path
+                            })
+
+                    # Web araçları çıktısını browser sekmesine gönder
+                    web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
+                    if tool_name in web_tools:
+                        await manager.send_message(client_id, {
+                            "type": "browser_result",
+                            "tool": tool_name,
+                            "content": tool_output[:3000],
+                            "status": "loaded"
+                        })
+                        
         except asyncio.CancelledError:
             logger.info(f"Stream cancelled for {client_id}")
             return  # Task cancelled, just return
