@@ -1,0 +1,487 @@
+/* Mobile UI - AtomAgent */
+/* Chat-focused mobile interface with bottom sheet drawers */
+
+/* Mobile Detection */
+@media (max-width: 768px) {
+    /* Hide desktop elements */
+    #sidebar,
+    #sidebar-collapsed,
+    #right-panel,
+    #resize-handle {
+        display: none !important;
+    }
+
+    /* Full width chat */
+    #app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile */
+    }
+
+    #chat-area {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 0;
+    }
+
+    /* Mobile Header */
+    .chat-header {
+        padding: 8px 12px;
+        gap: 8px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chat-header .chat-title h1 {
+        font-size: 1rem;
+    }
+
+    .chat-header .chat-title svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Mobile Agent Indicator */
+    .active-agent-indicator {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+
+    .active-agent-indicator .agent-name {
+        max-width: 60px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .auto-badge {
+        font-size: 0.6rem;
+        padding: 1px 4px;
+    }
+
+    /* Messages Area */
+    .messages {
+        flex: 1;
+        padding: 12px;
+        padding-bottom: 80px; /* Space for input */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .message {
+        max-width: 85%;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .message.user {
+        margin-left: auto;
+    }
+
+    /* Welcome Message */
+    .welcome-message {
+        padding: 20px;
+    }
+
+    .welcome-message h2 {
+        font-size: 1.2rem;
+    }
+
+    .welcome-message p {
+        font-size: 0.85rem;
+    }
+
+    .welcome-icon {
+        font-size: 2.5rem;
+    }
+
+    /* Input Area - Fixed at bottom */
+    .input-area {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        padding: 8px 12px;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 1000;
+    }
+
+    .input-container {
+        gap: 8px;
+    }
+
+    #message-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 10px 12px;
+        min-height: 44px;
+        max-height: 120px;
+    }
+
+    .send-btn,
+    .stop-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+    }
+
+    .attach-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    /* Agent Status Bar */
+    .agent-status-bar {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    /* Mobile Navigation Bar */
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-color);
+        padding: 8px 0;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 999;
+        justify-content: space-around;
+    }
+
+    .mobile-nav-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .mobile-nav-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .mobile-nav-btn.active {
+        color: var(--accent-color);
+    }
+
+    .mobile-nav-btn:active {
+        transform: scale(0.95);
+    }
+}
+
+/* Bottom Sheet Drawer */
+.mobile-drawer {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-primary);
+    border-radius: 16px 16px 0 0;
+    z-index: 2000;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 85vh;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+    .mobile-drawer {
+        display: block;
+    }
+}
+
+.mobile-drawer.open {
+    transform: translateY(0);
+}
+
+.drawer-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--text-muted);
+    border-radius: 2px;
+    margin: 12px auto;
+    cursor: grab;
+}
+
+.drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.drawer-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.drawer-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px;
+    cursor: pointer;
+}
+
+.drawer-content {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: calc(85vh - 80px);
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Drawer Backdrop */
+.drawer-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1999;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.drawer-backdrop.visible {
+    display: block;
+    opacity: 1;
+}
+
+/* Sessions Drawer */
+#sessions-drawer .drawer-content {
+    padding: 8px;
+}
+
+.mobile-session-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.mobile-session-item:active {
+    background: var(--bg-tertiary);
+}
+
+.mobile-session-item.active {
+    background: var(--accent-color);
+    color: white;
+}
+
+.mobile-session-icon {
+    font-size: 1.2rem;
+}
+
+.mobile-session-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-session-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-session-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Tools Drawer */
+#tools-drawer .tool-item {
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+/* Settings Drawer */
+#settings-drawer .settings-section {
+    margin-bottom: 20px;
+}
+
+#settings-drawer .setting-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* New Chat FAB */
+.mobile-fab {
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    z-index: 998;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+@media (max-width: 768px) {
+    .mobile-fab {
+        display: flex;
+    }
+}
+
+.mobile-fab:active {
+    transform: scale(0.95);
+}
+
+.mobile-fab svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Adjust input area when nav is visible */
+@media (max-width: 768px) {
+    body.mobile-nav-visible .input-area {
+        bottom: 60px;
+    }
+
+    body.mobile-nav-visible .messages {
+        padding-bottom: 140px;
+    }
+
+    body.mobile-nav-visible .mobile-fab {
+        bottom: 140px;
+    }
+}
+
+/* Touch-friendly code blocks */
+@media (max-width: 768px) {
+    .message pre {
+        font-size: 0.8rem;
+        padding: 12px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .message code {
+        font-size: 0.85rem;
+    }
+
+    /* Copy button larger for touch */
+    .code-copy-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Agent Dropdown Mobile */
+@media (max-width: 768px) {
+    .agent-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 60vh;
+        border-radius: 16px 16px 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .agent-dropdown-item {
+        padding: 14px 16px;
+    }
+}
+
+/* Attachment Menu Mobile */
+@media (max-width: 768px) {
+    .attach-menu {
+        bottom: 100%;
+        left: 0;
+        right: auto;
+        min-width: 160px;
+    }
+
+    .attach-option {
+        padding: 12px 16px;
+    }
+}
+
+/* Modal Mobile */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .settings-modal {
+        padding: 16px;
+    }
+
+    .settings-tabs {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .settings-tab {
+        flex: 1;
+        min-width: calc(33% - 4px);
+        padding: 8px 4px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Landscape Mode */
+@media (max-width: 768px) and (orientation: landscape) {
+    .mobile-drawer {
+        max-height: 70vh;
+    }
+
+    .messages {
+        padding-bottom: 70px;
+    }
+}
+
+/* Dark mode adjustments for mobile */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+    .mobile-drawer {
+        background: var(--bg-primary);
+    }
+
+    .drawer-handle {
+        background: var(--text-muted);
+    }
+}
