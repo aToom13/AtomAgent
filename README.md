@@ -64,7 +64,7 @@ v3.0 ile sıfırdan tasarlanmış modern web arayüzü:
 
 ### 💾 Session Management
 - SQLite veritabanına otomatik kayıt
-- Geçmiş konuşmalara geri dönebilme
+- Geçmiş konuşmalara geri dönme
 
 ### 🛠️ Modüler JavaScript Mimarisi
 Web UI tamamen modüler yapıya geçirildi (20+ JS modülü)
