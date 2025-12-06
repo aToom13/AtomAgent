@@ -69,6 +69,15 @@ v3.0 ile sıfırdan tasarlanmış modern web arayüzü:
 ### 🛠️ Modüler JavaScript Mimarisi
 Web UI tamamen modüler yapıya geçirildi (20+ JS modülü)
 
+### 📱 Mobile UI & PWA Desteği
+- **Progressive Web App**: Mobil cihazlarda uygulama gibi kurulabilir
+- **Responsive Mobile UI**: Mobil cihazlar için optimize edilmiş arayüz
+- **WebSocket wss:// Desteği**: Güvenli bağlantı desteği
+- **Event-based Sync**: Tools ve Browser panelleri için gerçek zamanlı senkronizasyon
+- **Offline Capable**: Service Worker ile çevrimdışı çalışabilme
+
+> **Not**: Mobil PWA arayüzü ileride yeniden yapılandırılabilir veya doğrudan APK paketine geçilebilir.
+
 ## Web UI Özellikleri
 
 - 🌙 Modern karanlık tema (Bento style)
@@ -92,6 +101,10 @@ AtomAgent/
 │   ├── websocket.py        # WebSocket handler
 │   ├── routes/             # API routes
 │   └── static/             # Web UI (HTML, CSS, JS)
+│       ├── css/mobile.css  # Mobile UI stilleri
+│       ├── js/mobile.js    # Mobile UI JavaScript
+│       ├── manifest.json   # PWA manifest
+│       └── sw.js           # Service Worker
 ├── docker/                 # VNC destekli container
 └── utils/                  # Yardımcı modüller
 ```
