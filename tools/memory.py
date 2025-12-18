@@ -650,6 +650,10 @@ def suggest_solution(error_msg: str) -> str:
     return "Bu hata için geçmiş çözüm kaydı yok"
 
 
+def get_learning_memory_content() -> str:
+    """Internal function to get learning summary"""
+    return _learning.get_learning_summary()
+
 @tool
 def get_learning_summary() -> str:
     """
@@ -658,7 +662,7 @@ def get_learning_summary() -> str:
     Returns:
         Öğrenme özeti
     """
-    return _learning.get_learning_summary()
+    return get_learning_memory_content()
 
 
 # ============================================

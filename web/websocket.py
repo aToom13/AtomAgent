@@ -10,7 +10,9 @@ from core.session_manager import session_manager
 from core.providers import model_manager, is_fallback_needed
 from utils.logger import get_logger
 from config import config
+
 from web import state
+from core.scheduler import set_reminder_callback
 
 logger = get_logger()
 
@@ -175,12 +177,12 @@ async def handle_chat(websocket: WebSocket, client_id: str):
                 task = asyncio.create_task(stream_response(client_id, session_id, processed_content))
                 active_tasks[client_id] = task
                 
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    logger.info(f"Task cancelled for {client_id}")
-                finally:
-                    active_tasks.pop(client_id, None)
+                # Cleanup when done
+                def cleanup_task(t):
+                    if client_id in active_tasks and active_tasks[client_id] == t:
+                        active_tasks.pop(client_id, None)
+                
+                task.add_done_callback(cleanup_task)
 
             elif data.get("type") == "stop":
                 state.set_stop_flag(client_id, True)
@@ -206,6 +208,22 @@ async def handle_chat(websocket: WebSocket, client_id: str):
                     "status": "ready",
                     "message": "Hazır"
                 })
+
+            elif data.get("type") == "docker_command":
+                command = data.get("command")
+                if command:
+                    from tools.sandbox import sandbox_shell
+                    # Run in thread to avoid blocking event loop
+                    output = await asyncio.to_thread(sandbox_shell, command)
+                    # output is sent via _add_to_history -> callback -> websocket,
+                    # but sandbox_shell also returns it.
+                    # The terminal on client side listens to 'terminal_output' or 'docker_output'.
+                    # Let's send it explicitly just in case.
+                    await manager.send_message(client_id, {
+                        "type": "docker_output",
+                        "output": output,
+                        "command": command
+                    })
 
     except WebSocketDisconnect:
         manager.disconnect(client_id)
@@ -270,6 +288,26 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                     chunk = event.get("data", {}).get("chunk")
                     if chunk and hasattr(chunk, "content") and chunk.content:
                         token = chunk.content
+                        # Handle structured content (multimodal/thinking output)
+                        if isinstance(token, list):
+                            new_token = ""
+                            for item in token:
+                                if isinstance(item, str):
+                                    new_token += item
+                                elif isinstance(item, dict):
+                                    # Handle {"type": "text", "text": "..."}
+                                    if item.get("type") == "text":
+                                        new_token += item.get("text", "")
+                            token = new_token
+                        elif isinstance(token, dict):
+                             # Handle {"type": "text", "text": "..."} direct dict
+                             if token.get("type") == "text":
+                                 token = token.get("text", "")
+                             else:
+                                 token = str(token)
+                        elif not isinstance(token, str):
+                            token = str(token)
+                        
                         full_response += token
                         await manager.send_message(client_id, {"type": "token", "content": token})
 
@@ -303,16 +341,18 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                             "status": "running"
                         })
 
-                    # Web araçlarını browser sekmesine gönder
-                    web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
-                    if tool_name in web_tools:
-                        url = tool_input.get("url", tool_input.get("query", "")) if isinstance(tool_input, dict) else ""
-                        await manager.send_message(client_id, {
-                            "type": "browser_start",
-                            "tool": tool_name,
-                            "url": str(url)[:500],
-                            "status": "loading"
-                        })
+
+                    # Web araçlarını browser sekmesine gönder (sadece URL'li araçlar)
+                    browse_tools = ["browse_url", "scrape_page", "web_browse", "browse_site"]
+                    if tool_name in browse_tools:
+                        url = tool_input.get("url", "") if isinstance(tool_input, dict) else ""
+                        if url and url.startswith(('http://', 'https://')):
+                            await manager.send_message(client_id, {
+                                "type": "browser_start",
+                                "tool": tool_name,
+                                "url": str(url)[:500],
+                                "status": "loading"
+                            })
 
                 elif kind == "on_tool_end":
                     tool_name = event.get("name", "unknown")
@@ -380,11 +420,20 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
 
                         # GUI uygulama başlatma algıla (pygame, tkinter, etc.)
                         gui_patterns = ["pygame", "tkinter", "pyqt", "pyside", "kivy", "wxpython"]
-                        if any(pattern in cmd_lower for pattern in gui_patterns):
+                        if any(pattern in cmd_lower for pattern in gui_patterns) or tool_name == "start_vnc_session":
                             await manager.send_message(client_id, {
                                 "type": "gui_started",
                                 "command": cmd[:200]
                             })
+                    
+                    # browse_site veya start_vnc_session tool'u VNC view'ı tetikler
+                    if (tool_name == "browse_site" and "VNC" in tool_output) or \
+                       (tool_name == "start_vnc_session" and ("VNC" in tool_output or "Started" in tool_output)):
+                        await manager.send_message(client_id, {
+                            "type": "gui_started",
+                            "app": "browser",
+                            "port": 16080
+                        })
                     
                     # write_file ile HTML dosyası oluşturulduğunu algıla
                     if tool_name == "write_file":
@@ -397,7 +446,7 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                             })
 
                     # Web araçları çıktısını browser sekmesine gönder
-                    web_tools = ["web_search", "browse_url", "scrape_page", "web_browse"]
+                    web_tools = ["web_search", "browse_url", "scrape_page", "web_browse", "browse_site"]
                     if tool_name in web_tools:
                         await manager.send_message(client_id, {
                             "type": "browser_result",
@@ -480,3 +529,103 @@ async def stream_response(client_id: str, session_id: str, user_message: str, re
                 })
         else:
             await manager.send_message(client_id, {"type": "error", "message": error_str})
+async def broadcast_reminder(reminder):
+    """
+    Broadcast reminder triggered event to all connected clients.
+    If it's an automated task, execute it AND update the message.
+    """
+    logger.info(f"Broadcasting reminder: {reminder.title} (Action: {reminder.action})")
+    
+    clients = list(manager.active_connections.items())
+    active_client_id = None
+    if clients:
+        active_client_id = clients[0][0]
+    
+    # automated "ask_agent"
+    if reminder.action == "ask_agent" and reminder.action_data and active_client_id:
+        logger.info(f"Executing automated task: {reminder.action_data}")
+        
+        try:
+            # 1. Bildirim: "İşleniyor..."
+            processing_msg = {
+                "type": "reminder_triggered",
+                "reminder": {
+                    **reminder.to_dict(),
+                    "message": f"⏳ İşleniyor: {reminder.message}..."
+                }
+            }
+            for client_id, websocket in clients:
+                try:
+                    await websocket.send_json(processing_msg)
+                except:
+                    pass
+
+            # 2. Agent'ı çalıştır (Headless/Silent Mode)
+            # Streaming yerine invoke kullanıyoruz ki sonucu alalım
+            from core.agent import get_agent_executor
+            from langchain_core.messages import HumanMessage, SystemMessage
+            
+            orchestrator, _, _ = get_agent_executor()
+            
+            sys_msg = f"OTOMATİK GÖREV: {reminder.action_data}\nLütfen bu görevi yap. SADECE SONUCU VE CEVABI YAZ. Sohbet etme."
+            
+            # config
+            config = get_thread_config(thread_id="auto_task_" + reminder.id)
+            
+            # Invoke
+            logger.info("Auto task invoke started...")
+            result = await orchestrator.ainvoke(
+                {"messages": [HumanMessage(content=sys_msg)]},
+                config=config
+            )
+            
+            final_response = result["messages"][-1].content
+            
+            # Handle content that might be a list of content blocks (Gemini/Claude format)
+            if isinstance(final_response, list):
+                # Extract text from content blocks
+                text_parts = []
+                for block in final_response:
+                    if isinstance(block, dict) and 'text' in block:
+                        text_parts.append(block['text'])
+                    elif isinstance(block, str):
+                        text_parts.append(block)
+                final_response = ' '.join(text_parts)
+            elif not isinstance(final_response, str):
+                final_response = str(final_response)
+            
+            logger.info(f"Auto task finished. Result length: {len(final_response)}")
+            logger.info(f"Final Response Preview: {final_response[:100]}...")
+            
+            # 3. Reminder mesajını güncelle
+            reminder.message = f"✅ {final_response}"
+            reminder.action = "notify" # Artık notify'a dönüştü
+            
+            # Veritabanında güncellemeye gerek yok (zaten tetiklendi ve bitti)
+            
+        except Exception as e:
+            logger.error(f"Auto task failed: {e}", exc_info=True)
+            reminder.message = f"❌ Hata: {str(e)}"
+
+    # Send Notification (Original or Updated Result)
+    # Ensure we send the UPDATED message
+    final_payload = reminder.to_dict()
+    final_payload["message"] = reminder.message  # Force update just in case
+    
+    # Log the payload we are about to send
+    logger.info(f"Sending reminder payload to client: {final_payload['message'][:100]}...")
+    
+    message = {
+        "type": "reminder_triggered",
+        "reminder": final_payload
+    }
+    
+    for client_id, websocket in clients:
+        try:
+            await websocket.send_json(message)
+            logger.info(f"Sent reminder to {client_id}")
+        except Exception as e:
+            logger.error(f"Failed to send reminder to {client_id}: {e}")
+
+# Register callback - THIS IS CRITICAL
+set_reminder_callback(broadcast_reminder)

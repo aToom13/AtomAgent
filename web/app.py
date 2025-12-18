@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import get_logger
 from web import state
 from web.websocket import handle_chat
-from web.routes import sessions_router, settings_router, prompts_router, workspace_router, docker_router, canvas_router
+from web.routes import sessions_router, settings_router, prompts_router, workspace_router, docker_router, canvas_router, reminders_router
+from core.scheduler import start_scheduler, stop_scheduler
 
 logger = get_logger()
 
@@ -24,8 +25,10 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 async def lifespan(app: FastAPI):
     """Application lifespan - startup/shutdown"""
     state.init_agent()
+    start_scheduler()  # Start the reminders scheduler
     logger.info("Web API started")
     yield
+    stop_scheduler()  # Stop the scheduler
     logger.info("Web API stopped")
 
 
@@ -56,6 +59,7 @@ app.include_router(prompts_router)
 app.include_router(workspace_router)
 app.include_router(docker_router)
 app.include_router(canvas_router)
+app.include_router(reminders_router)
 
 
 # === ROOT ROUTES ===

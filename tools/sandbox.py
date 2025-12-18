@@ -167,7 +167,7 @@ def sandbox_stop() -> str:
 
 
 @tool
-def sandbox_shell(command: str, workdir: str = "/home/agent/shared") -> str:
+def sandbox_shell(command: str, workdir: str = "/home/agent/shared", background: bool = False) -> str:
     """
     Sandbox içinde shell komutu çalıştırır.
     Tam terminal erişimi - istediğin komutu çalıştır.
@@ -178,18 +178,37 @@ def sandbox_shell(command: str, workdir: str = "/home/agent/shared") -> str:
     Args:
         command: Çalıştırılacak komut (örn: "ls -la", "python3 script.py", "sudo apt install vim")
         workdir: Çalışma dizini (varsayılan: /home/agent/shared)
+        background: True ise komut arka planda çalışır ve agent diğer işlere devam edebilir
     
     Returns:
-        Komut çıktısı
+        Komut çıktısı veya arka plan için process bilgisi
     """
     if not _is_container_running():
         return "❌ Sandbox çalışmıyor. Önce sandbox_start() çalıştır."
     
     # Komutu history'e ekle
     _add_to_history("command", f"[{workdir}]$ {command}")
-    logger.info(f"Sandbox shell: {command}")
+    logger.info(f"Sandbox shell: {command} (background={background})")
     
-    # Komutu çalıştır (workdir'de)
+    # Background mode - run with nohup and return immediately
+    if background:
+        bg_command = f"cd {workdir} && nohup {command} > /tmp/bg_output_$$.log 2>&1 & echo $!"
+        try:
+            result = subprocess.run(
+                ["docker", "exec", "-i", CONTAINER_NAME, "bash", "-c", bg_command],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=DOCKER_DIR
+            )
+            pid = result.stdout.strip()
+            _add_to_history("output", f"✓ Arka planda başlatıldı (PID: {pid})", exit_code=0)
+            return f"✓ Komut arka planda çalışıyor (PID: {pid}). Agent diğer görevlere devam edebilir."
+        except Exception as e:
+            _add_to_history("error", str(e))
+            return f"❌ Arka plan başlatma hatası: {e}"
+    
+    # Normal (blocking) mode
     full_command = f"cd {workdir} && {command}"
     try:
         result = subprocess.run(
@@ -297,6 +316,7 @@ def sandbox_download(remote_path: str, local_path: str = None) -> str:
         import shutil
         shutil.move(shared_file, full_target)
         _add_to_history("system", f"📥 Download: {remote_path} → {target}")
+        return f"✓ İndirildi: {target}"
         return f"✓ İndirildi: {target}"
     except Exception as e:
         return f"❌ Hata: {e}"

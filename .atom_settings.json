@@ -1,23 +1,23 @@
 {
   "models": {
     "supervisor": {
-      "provider": "ollama",
-      "model": "glm-4.6:cloud",
+      "provider": "google",
+      "model": "gemini-3-flash-preview",
       "temperature": 0.1
     },
     "coder": {
-      "provider": "ollama",
-      "model": "kimi-k2-thinking:cloud",
+      "provider": "google",
+      "model": "gemini-3-flash-preview",
       "temperature": 0.0
     },
     "researcher": {
-      "provider": "ollama",
-      "model": "deepseek-v3.1:671b-cloud",
+      "provider": "google",
+      "model": "gemini-3-flash-preview",
       "temperature": 0.0
     },
     "vision": {
-      "provider": "openrouter",
-      "model": "amazon/nova-2-lite-v1:free",
+      "provider": "google",
+      "model": "gemini-3-flash-preview",
       "temperature": 0.2
     },
     "video": {

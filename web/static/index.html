@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AtomAgent - AI Development Assistant</title>
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,29 +16,32 @@
     <meta name="application-name" content="AtomAgent">
     <meta name="msapplication-TileColor" content="#3b82f6">
     <meta name="msapplication-tap-highlight" content="no">
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
-    
+
     <!-- Icons -->
     <link rel="icon" type="image/png" href="/static/icons/logo-square.png">
     <link rel="apple-touch-icon" href="/static/icons/logo-square.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/static/icons/logo-square.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/logo-square.png">
     <link rel="apple-touch-icon" sizes="167x167" href="/static/icons/logo-square.png">
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
     <!-- Syntax Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-    
+
     <!-- Modular CSS -->
-    <link rel="stylesheet" href="/static/css/main.css">
-    <link rel="stylesheet" href="/static/css/mobile.css">
+    <link rel="stylesheet" href="/static/css/main.css?v=5">
+    <link rel="stylesheet" href="/static/css/mobile.css?v=4">
 </head>
+
 <body>
     <div id="app">
         <!-- Left Sidebar - Sessions -->
@@ -44,13 +49,13 @@
             <div class="sidebar-header">
                 <button id="toggle-sidebar" class="icon-btn" title="Paneli Daralt">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7"/>
+                        <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
                     </svg>
                 </button>
                 <span class="sidebar-title">Sohbetler</span>
                 <button id="new-chat-btn" class="icon-btn primary" title="Yeni Sohbet">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 5v14M5 12h14"/>
+                        <path d="M12 5v14M5 12h14" />
                     </svg>
                 </button>
             </div>
@@ -58,8 +63,9 @@
             <div class="sidebar-footer">
                 <button id="settings-btn" class="settings-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
                     <span>Ayarlar</span>
                 </button>
@@ -70,19 +76,20 @@
         <aside id="sidebar-collapsed" class="sidebar-collapsed hidden">
             <button id="expand-sidebar" class="icon-btn" title="Paneli Genişlet">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M13 5l7 7-7 7M6 5l7 7-7 7"/>
+                    <path d="M13 5l7 7-7 7M6 5l7 7-7 7" />
                 </svg>
             </button>
             <button id="new-chat-collapsed" class="icon-btn" title="Yeni Sohbet">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14"/>
+                    <path d="M12 5v14M5 12h14" />
                 </svg>
             </button>
             <div class="collapsed-spacer"></div>
             <button id="settings-collapsed" class="icon-btn" title="Ayarlar">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
             </button>
         </aside>
@@ -94,25 +101,27 @@
                     <img src="/static/icons/logo-square.png" alt="AtomAgent" class="header-logo" width="28" height="28">
                     <h1>AtomAgent</h1>
                 </div>
-                
+
                 <!-- Active Agent Indicator with Dropdown -->
-                <div id="active-agent-indicator" class="active-agent-indicator" onclick="window.AtomAgent.toggleAgentDropdown()">
+                <div id="active-agent-indicator" class="active-agent-indicator"
+                    onclick="window.AtomAgent.toggleAgentDropdown()">
                     <span class="agent-icon" style="background: #3b82f620; color: #3b82f6">🎯</span>
                     <span class="agent-name">Supervisor</span>
                     <span class="auto-badge">AUTO</span>
-                    <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"/>
+                    <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9" />
                     </svg>
                 </div>
                 <!-- Agent Dropdown Menu -->
                 <div id="agent-dropdown" class="agent-dropdown hidden"></div>
-                
+
                 <div class="chat-status" id="chat-status">
                     <span class="status-dot"></span>
                     <span>Hazır</span>
                 </div>
             </div>
-            
+
             <div id="messages" class="messages">
                 <div class="welcome-message">
                     <div class="welcome-icon">🤖</div>
@@ -120,7 +129,7 @@
                     <p>AI destekli geliştirme asistanınız hazır. Bir soru sorun veya görev verin.</p>
                 </div>
             </div>
-            
+
             <!-- Agent Status Bar -->
             <div id="agent-status-bar" class="agent-status-bar hidden">
                 <div class="status-indicator" id="status-indicator" onclick="window.AtomAgent.toggleThinkingPanel()">
@@ -130,64 +139,83 @@
                 </div>
                 <div id="status-model" class="status-model"></div>
             </div>
-            
+
             <div class="input-area">
                 <!-- Attachment Preview -->
                 <div id="attachment-preview" class="attachment-preview hidden"></div>
-                
+
                 <div class="input-container">
                     <!-- Attach Button -->
                     <div class="attach-wrapper">
                         <button id="attach-btn" class="attach-btn" title="Dosya Ekle">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                             </svg>
                         </button>
                         <!-- Attach Menu -->
                         <div id="attach-menu" class="attach-menu hidden">
                             <button class="attach-option" data-type="image">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <path d="M21 15l-5-5L5 21" />
                                 </svg>
                                 <span>Resim</span>
                             </button>
                             <button class="attach-option" data-type="audio">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                    <line x1="12" y1="19" x2="12" y2="23" />
+                                    <line x1="8" y1="23" x2="16" y2="23" />
                                 </svg>
                                 <span>Ses Kaydı</span>
                             </button>
                             <button class="attach-option" data-type="file">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
                                 </svg>
                                 <span>Dosya</span>
                             </button>
                             <button class="attach-option" data-type="code">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="16 18 22 12 16 6" />
+                                    <polyline points="8 6 2 12 8 18" />
                                 </svg>
                                 <span>Kod Dosyası</span>
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Hidden File Inputs -->
                     <input type="file" id="image-input" accept="image/*" class="hidden-input">
                     <input type="file" id="audio-input" accept="audio/*" class="hidden-input">
                     <input type="file" id="file-input" class="hidden-input">
-                    <input type="file" id="code-input" accept=".py,.js,.ts,.jsx,.tsx,.html,.css,.json,.yaml,.yml,.md,.txt,.sh,.sql,.java,.cpp,.c,.h,.go,.rs,.rb,.php" class="hidden-input">
-                    
-                    <textarea id="message-input" placeholder="Mesajınızı yazın... (Enter gönderir, Shift+Enter yeni satır)" rows="1"></textarea>
-                    
+                    <input type="file" id="code-input"
+                        accept=".py,.js,.ts,.jsx,.tsx,.html,.css,.json,.yaml,.yml,.md,.txt,.sh,.sql,.java,.cpp,.c,.h,.go,.rs,.rb,.php"
+                        class="hidden-input">
+
+                    <textarea id="message-input"
+                        placeholder="Mesajınızı yazın... (Enter gönderir, Shift+Enter yeni satır)" rows="1"></textarea>
+
                     <button id="send-btn" class="send-btn" title="Gönder">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                         </svg>
                     </button>
                     <button id="stop-btn" class="stop-btn hidden" title="Durdur">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="6" y="6" width="12" height="12" rx="2"/>
+                            <rect x="6" y="6" width="12" height="12" rx="2" />
                         </svg>
                     </button>
                 </div>
@@ -200,201 +228,177 @@
         <!-- Right Panel -->
         <aside id="right-panel" class="right-panel">
             <div class="panel-tabs">
-                <button class="tab-btn active" data-tab="tools">
+                <button class="tab-btn active" data-tab="preview">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
                     </svg>
-                    <span>Araçlar</span>
+                    <span>Önizleme</span>
                 </button>
-                <button class="tab-btn" data-tab="browser">
+                <button class="tab-btn" data-tab="console">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        <polyline points="4 17 10 11 4 5"></polyline>
+                        <line x1="12" y1="19" x2="20" y2="19"></line>
                     </svg>
-                    <span>Browser</span>
+                    <span>Konsol</span>
                 </button>
-                <button class="tab-btn" data-tab="canvas">
+                <button class="tab-btn" data-tab="project">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    <span>Canvas</span>
-                </button>
-                <button class="tab-btn" data-tab="docker">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="7" width="20" height="14" rx="2"/>
-                        <path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/>
-                    </svg>
-                    <span>Docker</span>
-                </button>
-                <button class="tab-btn" data-tab="files">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    <span>Dosyalar</span>
-                </button>
-                <button class="tab-btn" data-tab="todos">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                    </svg>
-                    <span>Görevler</span>
+                    <span>Proje</span>
                 </button>
             </div>
-            
+
             <div class="panel-content">
-                <!-- Files Tab (with integrated editor) -->
-                <div id="tab-files" class="tab-content">
-                    <div class="files-container">
-                        <div class="files-sidebar">
-                            <div class="file-tabs">
-                                <button class="file-tab active" data-source="workspace">📁 Workspace</button>
-                                <button class="file-tab" data-source="docker">🐳 Docker</button>
-                                <button class="file-tab" data-source="memory">🧠 Hafıza</button>
+                <!-- Tab 1: PREVIEW (Önizleme) -->
+                <div id="tab-preview" class="tab-content active">
+                    <div class="preview-container">
+                        <!-- Browser Toolbar -->
+                        <div class="browser-toolbar">
+                            <div class="browser-controls">
+                                <button class="browser-btn" id="browser-back" title="Geri">←</button>
+                                <button class="browser-btn" id="browser-forward" title="İleri">→</button>
+                                <button class="browser-btn" id="browser-refresh" title="Yenile">↻</button>
                             </div>
-                            <div class="file-tree" id="file-tree"></div>
-                            <div id="memory-panel" class="memory-panel hidden"></div>
-                        </div>
-                        <div class="files-editor">
-                            <div class="editor-header">
-                                <span id="editor-filename">Dosya seçilmedi</span>
-                                <button id="save-file-btn" class="small-btn" disabled>Kaydet</button>
+                            <div class="url-bar">
+                                <span class="lock-icon">🔒</span>
+                                <input type="text" id="browser-url" value="http://localhost:8000" readonly>
                             </div>
-                            <textarea id="code-editor" class="code-editor" placeholder="Dosya seçin veya tıklayın..."></textarea>
+                            <div class="browser-actions">
+                                <button class="browser-btn" id="preview-external" title="Yeni Sekmede Aç">↗</button>
+                            </div>
+                        </div>
+
+                        <!-- Content Area -->
+                        <div class="preview-content-area">
+                            <!-- Window Controls Overlay (for active app) -->
+                            <div id="preview-window-controls" class="window-controls hidden">
+                                <button class="window-btn close" title="Kapat" data-action="close">●</button>
+                                <button class="window-btn minimize" title="Küçült" data-action="minimize">●</button>
+                                <button class="window-btn maximize" title="Tam Ekran" data-action="maximize">●</button>
+                                <span class="window-title"></span>
+                            </div>
+
+                            <div id="preview-placeholder" class="preview-empty">
+                                <div class="preview-icon">👁️</div>
+                                <h3>Bekleniyor...</h3>
+                                <p>Agent bir içerik ürettiğinde burada görünecek.</p>
+                            </div>
+                            <iframe id="preview-frame" class="preview-frame hidden"></iframe>
+                            <img id="preview-image" class="preview-image hidden" alt="Agent Image">
+                            <div id="preview-vnc" class="preview-vnc hidden"></div>
+
+                            <!-- Live Terminal Output Overlay -->
+                            <div id="preview-terminal-overlay" class="terminal-overlay">
+                                <div class="terminal-overlay-header">
+                                    <span class="terminal-status">▶ Çalışıyor...</span>
+                                    <div class="terminal-controls">
+                                        <button id="terminal-overlay-toggle" class="terminal-toggle-btn"
+                                            title="Küçült/Büyüt">−</button>
+                                        <button id="terminal-overlay-close" class="terminal-close-btn"
+                                            title="Kapat (tekrar açılmaz)">×</button>
+                                    </div>
+                                </div>
+                                <div id="terminal-overlay-output" class="terminal-overlay-output"></div>
+                            </div>
+                        </div>
+
+                        <!-- App Taskbar -->
+                        <div id="preview-taskbar" class="app-taskbar">
+                            <div class="taskbar-apps" id="taskbar-apps">
+                                <!-- App buttons added dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Status Bar -->
+                        <div class="preview-statusbar">
+                            <span id="preview-status" class="status-text">Hazır</span>
+                            <div class="device-toggles">
+                                <button class="device-btn active" data-device="desktop" title="Masaüstü">💻</button>
+                                <button class="device-btn" data-device="tablet" title="Tablet">📱</button>
+                                <button class="device-btn" data-device="mobile" title="Mobil">📲</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Tools Tab -->
-                <div id="tab-tools" class="tab-content active">
-                    <div id="tools-list" class="tools-list">
-                        <div class="tools-empty">
-                            <div class="tools-empty-icon">🔧</div>
-                            <p>Henüz araç kullanılmadı</p>
-                            <p class="tools-hint">Agent çalışmaya başladığında kullanılan araçlar burada görünecek</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Todos Tab (v2.0) -->
-                <div id="tab-todos" class="tab-content">
-                    <div id="todos-panel" class="todos-panel"></div>
-                </div>
-                
-                <!-- Browser Tab -->
-                <div id="tab-browser" class="tab-content">
-                    <div id="browser-content" class="browser-content">
-                        <div class="browser-empty">
-                            <div class="browser-empty-icon">🌐</div>
-                            <p>Web aktivitesi yok</p>
-                            <p class="browser-hint">Agent web araması yaptığında sonuçlar burada görünecek</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Docker Tab -->
-                <div id="tab-docker" class="tab-content">
-                    <div class="docker-status" id="docker-status">
-                        <div class="docker-header">
-                            <span class="docker-indicator" id="docker-indicator">●</span>
-                            <span id="docker-status-text">Bağlantı kontrol ediliyor...</span>
-                            <button id="docker-refresh" class="icon-btn small" title="Yenile">↻</button>
-                        </div>
-                    </div>
-                    <div class="docker-output" id="docker-output">
-                        <div class="docker-line">
-                            <span class="docker-time">[--:--:--]</span>
-                            <span>Docker komutları burada görünecek...</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Canvas Tab - Live Preview -->
-                <div id="tab-canvas" class="tab-content">
-                    <div class="canvas-toolbar">
-                        <div class="canvas-mode-tabs">
-                            <button class="canvas-mode-btn active" data-mode="web" title="Web Sunucu">🌐 Web</button>
-                            <button class="canvas-mode-btn" data-mode="html" title="HTML Dosyası">📄 HTML</button>
-                            <button class="canvas-mode-btn" data-mode="vnc" title="GUI Uygulaması">🖥️ GUI</button>
-                        </div>
-                        <div class="canvas-controls">
-                            <button id="canvas-refresh" class="icon-btn small" title="Yenile">↻</button>
-                            <button id="canvas-open-external" class="icon-btn small" title="Yeni Sekmede Aç">↗</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Web Mode Controls -->
-                    <div id="canvas-web-controls" class="canvas-mode-controls">
-                        <div class="canvas-url-bar">
-                            <span class="canvas-protocol">http://</span>
-                            <input type="text" id="canvas-url" placeholder="localhost:8000" value="localhost:8000">
-                            <button id="canvas-go" class="icon-btn small" title="Git">→</button>
-                        </div>
-                        <select id="canvas-port-select" title="Port Seç">
-                            <option value="">Port...</option>
-                            <option value="13000">3000→13000</option>
-                            <option value="15000">5000→15000</option>
-                            <option value="18000">8000→18000</option>
-                            <option value="18080">8080→18080</option>
-                            <option value="18501">8501→18501</option>
-                        </select>
-                    </div>
-                    
-                    <!-- HTML Mode Controls -->
-                    <div id="canvas-html-controls" class="canvas-mode-controls hidden">
-                        <select id="canvas-html-select">
-                            <option value="">HTML dosyası seç...</option>
-                        </select>
-                        <button id="canvas-load-html" class="small-btn">Yükle</button>
-                    </div>
-                    
-                    <!-- VNC Mode Controls -->
-                    <div id="canvas-vnc-controls" class="canvas-mode-controls hidden">
-                        <span class="vnc-status" id="vnc-status">● VNC Bağlantısı</span>
-                        <button id="canvas-vnc-connect" class="small-btn">Bağlan</button>
-                        <button id="canvas-vnc-fullscreen" class="icon-btn small" title="Tam Ekran">⛶</button>
-                    </div>
-                    
-                    <div class="canvas-status" id="canvas-status">
-                        <span class="canvas-status-icon">○</span>
-                        <span id="canvas-status-text">Bağlantı bekleniyor...</span>
-                    </div>
-                    
-                    <div class="canvas-main">
-                        <div class="canvas-container" id="canvas-container">
-                            <div class="canvas-empty" id="canvas-empty">
-                                <div class="canvas-empty-icon">🖥️</div>
-                                <h3>Canlı Önizleme</h3>
-                                <p>Agent bir uygulama oluşturduğunda burada görünecek</p>
-                                <div class="canvas-hints">
-                                    <p>💡 Desteklenen modlar:</p>
-                                    <ul>
-                                        <li><strong>🌐 Web:</strong> Flask, FastAPI, React, Streamlit...</li>
-                                        <li><strong>📄 HTML:</strong> Statik HTML/CSS/JS dosyaları</li>
-                                        <li><strong>🖥️ GUI:</strong> Pygame, Tkinter, PyQt (VNC)</li>
-                                    </ul>
+
+                <!-- Tab 2: CONSOLE (Konsol) -->
+                <div id="tab-console" class="tab-content">
+                    <div class="console-split-view">
+                        <!-- Top: Agent Thoughts -->
+                        <div class="console-pane top">
+                            <div class="pane-header">
+                                <div class="pane-title-group">
+                                    <span>🧠 Agent Zihni</span>
+                                    <span class="pane-badge">Canlı</span>
+                                </div>
+                                <div class="filter-group">
+                                    <button class="filter-btn active" data-filter="all">Tümü</button>
+                                    <button class="filter-btn" data-filter="agent">Agent</button>
+                                    <button class="filter-btn" data-filter="tool">Araçlar</button>
                                 </div>
                             </div>
-                            <iframe id="canvas-iframe" class="canvas-iframe hidden"></iframe>
+                            <div id="agent-thoughts" class="console-output thoughts-output">
+                                <div class="console-line system">Agent başlatıldı...</div>
+                            </div>
                         </div>
-                        
-                        <!-- Interactive Terminal -->
-                        <div class="canvas-terminal-resize" id="canvas-terminal-resize"></div>
-                        <div class="canvas-terminal" id="canvas-terminal">
-                            <div class="canvas-terminal-header">
-                                <span>📟 Terminal</span>
-                                <div class="canvas-terminal-controls">
-                                    <button id="canvas-terminal-clear" class="icon-btn small" title="Temizle">🗑️</button>
-                                    <button id="canvas-terminal-toggle" class="icon-btn small" title="Gizle/Göster">▼</button>
+
+                        <!-- Resizer -->
+                        <div class="console-resizer" id="console-resizer"></div>
+
+                        <!-- Bottom: System Terminal -->
+                        <div class="console-pane bottom">
+                            <div class="pane-header">
+                                <div class="pane-title-group">
+                                    <span>💻 Sistem Terminali</span>
+                                </div>
+                                <div class="filter-group">
+                                    <button class="filter-btn active" data-filter="all">Tümü</button>
+                                    <button class="filter-btn" data-filter="terminal">Terminal</button>
+                                    <button class="filter-btn" data-filter="docker">Docker</button>
+                                </div>
+                                <div class="pane-actions">
+                                    <button id="terminal-clear" class="icon-btn small" title="Temizle">🗑️</button>
                                 </div>
                             </div>
-                            <div class="canvas-terminal-output" id="canvas-terminal-output">
-                                <div class="terminal-line system">Docker sandbox terminali hazır. Komut yazın...</div>
+                            <div id="terminal-output" class="console-output terminal-output"></div>
+                            <div class="terminal-input-wrapper">
+                                <span class="prompt-icon">$</span>
+                                <input type="text" id="terminal-input" placeholder="Komut çalıştır..."
+                                    autocomplete="off">
                             </div>
-                            <div class="canvas-terminal-input-area">
-                                <span class="terminal-prompt">$</span>
-                                <input type="text" id="canvas-terminal-input" placeholder="Komut yazın... (Enter ile çalıştır)" autocomplete="off">
-                                <button id="canvas-terminal-run" class="small-btn">Çalıştır</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: PROJECT (Proje) -->
+                <div id="tab-project" class="tab-content">
+                    <div class="project-split-view">
+                        <!-- Top: Reminders & Tasks -->
+                        <div class="project-header-accordion" id="accordion-plan">
+                            <span class="chevron">▼</span>
+                            <span>Hatırlatıcılar & Görevler</span>
+                            <div class="pane-actions" style="margin-left:auto;">
+                                <button id="add-reminder-btn" class="icon-btn small" title="Hatırlatıcı Ekle"
+                                    style="color:inherit;">+</button>
                             </div>
+                        </div>
+                        <div class="project-pane top" id="pane-plan-content">
+                            <div id="reminders-panel" class="reminders-panel"></div>
+                        </div>
+
+                        <!-- Bottom: File Tree -->
+                        <div class="project-header-accordion" id="accordion-files">
+                            <span class="chevron">▼</span>
+                            <span>Dosyalar</span>
+                            <div class="pane-actions" style="margin-left:auto;">
+                                <button id="refresh-files" class="icon-btn small" title="Yenile"
+                                    style="color:inherit;">↻</button>
+                            </div>
+                        </div>
+                        <div class="project-pane bottom" id="pane-files-content" style="flex:1;">
+                            <div id="file-tree" class="file-tree"></div>
                         </div>
                     </div>
                 </div>
@@ -410,7 +414,7 @@
                 <h2>⚙️ Ayarlar</h2>
                 <button id="close-settings" class="icon-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
+                        <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -422,13 +426,13 @@
                     <button class="settings-tab" data-settings="prompts">Promptlar</button>
                     <button class="settings-tab" data-settings="api">API Keys</button>
                 </div>
-                
+
                 <!-- Agents Settings -->
                 <div id="settings-agents" class="settings-content active">
                     <div class="settings-section">
                         <h3>Agent Ayarları</h3>
                         <p class="settings-note">Otomatik agent routing ve varsayılan agent ayarları.</p>
-                        
+
                         <div class="setting-item">
                             <label class="setting-label">
                                 <input type="checkbox" id="settings-auto-routing" checked>
@@ -436,7 +440,7 @@
                             </label>
                             <p class="setting-desc">Mesaj içeriğine göre otomatik olarak uygun agent'a yönlendir.</p>
                         </div>
-                        
+
                         <div class="setting-item">
                             <label class="setting-label">Varsayılan Agent</label>
                             <select id="settings-default-agent">
@@ -451,12 +455,12 @@
                                 <option value="api">🔌 API</option>
                             </select>
                         </div>
-                        
+
                         <h4>Agent Listesi</h4>
                         <div id="agent-list" class="agent-list"></div>
                     </div>
                 </div>
-                
+
                 <!-- Models Settings -->
                 <div id="settings-models" class="settings-content">
                     <div class="settings-section">
@@ -473,7 +477,7 @@
                         <div class="model-config" id="model-configs"></div>
                     </div>
                 </div>
-                
+
                 <!-- Fallback Settings -->
                 <div id="settings-fallbacks" class="settings-content">
                     <div class="settings-section">
@@ -498,7 +502,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Prompts Settings -->
                 <div id="settings-prompts" class="settings-content">
                     <div class="settings-section">
@@ -515,7 +519,7 @@
                         <button id="save-prompt-btn" class="primary-btn">Promptu Kaydet</button>
                     </div>
                 </div>
-                
+
                 <!-- API Keys Settings -->
                 <div id="settings-api" class="settings-content">
                     <div class="settings-section">
@@ -546,13 +550,14 @@
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <!-- Modular JavaScript (ES6 Modules) -->
-    <script type="module" src="/static/js/app.js?v=5"></script>
-    
+
+    <!-- Modular JavaScript    <!-- Core Logic -->
+    <script type="module" src="/static/js/reminders.js"></script>
+    <script type="module" src="/static/js/app.js?v=10"></script>
+
     <!-- Mobile UI -->
     <script src="/static/js/mobile.js"></script>
-    
+
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
@@ -564,4 +569,5 @@
         }
     </script>
 </body>
+
 </html>

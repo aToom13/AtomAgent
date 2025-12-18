@@ -361,8 +361,55 @@ def get_page_title(url: str) -> str:
         if _is_blocked(url):
             return f"⚠️ Bu site ({url}) engellendi."
             
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-        return soup.title.string if soup.title else "No title"
     except Exception as e:
         return f"❌ Hata: {str(e)}"
+
+
+@tool
+def browse_site(url: str) -> str:
+    """
+    Opens a URL in a browser inside the Docker sandbox.
+    The browser runs inside VNC so you can see and interact with it.
+    
+    Args:
+        url: URL to visit
+        
+    Returns:
+        Status message
+    """
+    import subprocess
+    from tools.sandbox import _is_container_running, DOCKER_DIR
+    
+    logger.info(f"Browsing in VNC: {url}")
+    
+    if not url.startswith('http'):
+        url = 'https://' + url
+    
+    # Check if container is running
+    if not _is_container_running():
+        return "❌ Sandbox is not running. Use sandbox_start first."
+    
+    try:
+        # Start VNC if not already running
+        subprocess.run(
+            ["docker", "exec", "atomagent-sandbox", "bash", "-c", 
+             "pgrep -x Xvfb || /home/agent/start-vnc.sh"],
+            capture_output=True, text=True, timeout=15, cwd=DOCKER_DIR
+        )
+        
+        # Open URL in Chromium inside Docker - fullscreen mode
+        # Kill existing browser first, then open new one in fullscreen
+        subprocess.run(
+            ["docker", "exec", "atomagent-sandbox", "bash", "-c", 
+             f'pkill -f chromium || true; sleep 0.5; DISPLAY=:99 chromium-browser --no-sandbox --disable-gpu --disable-software-rasterizer --start-fullscreen --start-maximized "{url}" &'],
+            capture_output=True, text=True, timeout=10, cwd=DOCKER_DIR
+        )
+        
+        return f"🌐 Browser opened at {url} in VNC. (View in Preview tab - VNC mode will activate)"
+        
+    except subprocess.TimeoutExpired:
+        return f"⚠️ Timeout starting browser, but VNC may still work. URL: {url}"
+    except Exception as e:
+        logger.error(f"browse_site error: {e}")
+        return f"❌ Error: {str(e)}"
+

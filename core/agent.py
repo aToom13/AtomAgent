@@ -27,7 +27,7 @@ from tools.memory import (
     save_context, get_context_info, get_memory_stats, clear_memory, get_persistent_context,
     # Learning Memory
     learn_user_preference, recall_preference, learn_from_task, get_past_approaches,
-    learn_from_error, suggest_solution, get_learning_summary,
+    learn_from_error, suggest_solution, get_learning_memory_content, get_learning_summary,
     # Performance Tracking
     record_task_result, get_performance_report, get_improvement_tips
 )
@@ -49,6 +49,12 @@ from tools.multimodal import (
     extract_text_from_image, analyze_diagram,
     transcribe_audio, text_to_speech
 )
+from tools.web import browse_site, visit_webpage, web_search, search_docs, quick_answer, get_page_title
+from tools.computer import (
+    computer_screenshot, computer_click, computer_type, start_vnc_session
+)
+from tools.reminders import create_reminder, list_reminders, cancel_reminder_tool, dismiss_reminder
+from tools.weather import get_weather
 
 logger = get_logger()
 
@@ -138,6 +144,20 @@ _tools = [
     # Yardımcı
     get_current_time,
     run_neofetch,
+    run_neofetch,
+    # Browser & Computer Use
+    browse_site,
+    computer_screenshot,
+    computer_click,
+    computer_type,
+    start_vnc_session,
+    # Reminders
+    create_reminder,
+    list_reminders,
+    cancel_reminder_tool,
+    dismiss_reminder,
+    # Weather
+    get_weather,
 ]
 
 def get_agent_executor():
@@ -167,7 +187,7 @@ def get_agent_executor():
         
         # Öğrenme özetini ekle
         try:
-            learning_summary = get_learning_summary()
+            learning_summary = get_learning_memory_content()
             if learning_summary and "yok" not in learning_summary.lower():
                 supervisor_prompt = supervisor_prompt + "\n\n[Öğrenme Hafızası]\n" + learning_summary[:500]
         except:

@@ -152,6 +152,8 @@ if __name__ == "__main__":
         logger.info(f"Sandbox tool created: {name}")
         return tool_instance
         
+        return tool_instance
+        
     except Exception as e:
         logger.error(f"Sandbox tool creation failed: {e}")
         return None

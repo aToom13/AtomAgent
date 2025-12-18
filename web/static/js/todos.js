@@ -24,7 +24,7 @@ export function addTodo(todo) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
-    
+
     if (newTodo.parentId) {
         // Alt görev olarak ekle
         const parent = findTodo(newTodo.parentId);
@@ -34,7 +34,7 @@ export function addTodo(todo) {
     } else {
         state.todos.push(newTodo);
     }
-    
+
     updateTodoStats();
     renderTodosPanel();
     return newTodo;
@@ -49,7 +49,7 @@ export function updateTodo(todoId, updates) {
         Object.assign(todo, updates, { updatedAt: new Date().toISOString() });
         updateTodoStats();
         renderTodosPanel();
-        
+
         // Animasyon için
         if (updates.status === 'completed') {
             animateTodoComplete(todoId);
@@ -83,7 +83,7 @@ export function deleteTodo(todoId) {
             }
         }
     }
-    
+
     updateTodoStats();
     renderTodosPanel();
 }
@@ -107,7 +107,7 @@ function findTodo(todoId, todos = state.todos) {
  */
 function updateTodoStats() {
     const stats = { total: 0, completed: 0, inProgress: 0, pending: 0 };
-    
+
     function countTodos(todos) {
         for (const todo of todos) {
             stats.total++;
@@ -117,7 +117,7 @@ function updateTodoStats() {
             }
         }
     }
-    
+
     countTodos(state.todos);
     state.todoStats = stats;
 }
@@ -128,10 +128,10 @@ function updateTodoStats() {
 export function renderTodosPanel() {
     const container = document.getElementById('todos-panel');
     if (!container) return;
-    
+
     const { total, completed, inProgress, pending } = state.todoStats;
     const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
+
     let html = `
         <div class="todos-header">
             <div class="todos-title">
@@ -161,7 +161,7 @@ export function renderTodosPanel() {
         
         <div class="todos-list">
     `;
-    
+
     if (state.todos.length === 0) {
         html += `
             <div class="todos-empty">
@@ -173,7 +173,7 @@ export function renderTodosPanel() {
     } else {
         html += renderTodoItems(state.todos);
     }
-    
+
     html += '</div>';
     container.innerHTML = html;
 }
@@ -181,43 +181,44 @@ export function renderTodosPanel() {
 /**
  * Todo item'larını render et (recursive)
  */
+// Render Todo Items (V3 Style)
 function renderTodoItems(todos, level = 0) {
     let html = '';
-    
+
     for (const todo of todos) {
-        const statusIcon = getStatusIcon(todo.status);
+        const isCompleted = todo.status === 'completed';
+        const isDoneClass = isCompleted ? 'done' : '';
         const priorityClass = `priority-${todo.priority}`;
         const hasChildren = todo.children.length > 0;
-        
+
+        // Indent based on level
+        const indentStyle = `padding-left: ${12 + (level * 16)}px`;
+
         html += `
-            <div class="todo-item ${todo.status} ${priorityClass}" 
-                 data-id="${todo.id}" 
-                 style="--level: ${level}">
-                <div class="todo-main">
-                    <button class="todo-status-btn" onclick="window.AtomAgent.cycleTodoStatus('${todo.id}')">
-                        ${statusIcon}
-                    </button>
-                    <div class="todo-content">
-                        <span class="todo-title">${escapeHtml(todo.title)}</span>
-                        ${todo.description ? `<span class="todo-desc">${escapeHtml(todo.description)}</span>` : ''}
-                    </div>
-                    ${hasChildren ? `
-                        <button class="todo-expand-btn" onclick="window.AtomAgent.toggleTodoChildren('${todo.id}')">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
-                        </button>
-                    ` : ''}
+            <div class="todo-item ${priorityClass}" style="${indentStyle}">
+                <input type="checkbox" class="todo-checkbox" 
+                       ${isCompleted ? 'checked' : ''} 
+                       onclick="window.AtomAgent.toggleTodoStatus('${todo.id}', this.checked)">
+                
+                <div class="todo-content">
+                    <span class="todo-text ${isDoneClass}">${escapeHtml(todo.title)}</span>
+                    ${todo.description ? `<div style="font-size:11px; opacity:0.7;">${escapeHtml(todo.description)}</div>` : ''}
                 </div>
+
                 ${hasChildren ? `
-                    <div class="todo-children" id="children-${todo.id}">
-                        ${renderTodoItems(todo.children, level + 1)}
-                    </div>
+                    <button class="todo-expand-btn" onclick="window.AtomAgent.toggleTodoChildren('${todo.id}')" style="background:none; border:none; color:#888; cursor:pointer;">
+                        ⬇
+                    </button>
                 ` : ''}
             </div>
+            ${hasChildren ? `
+                <div class="todo-children" id="children-${todo.id}">
+                    ${renderTodoItems(todo.children, level + 1)}
+                </div>
+            ` : ''}
         `;
     }
-    
+
     return html;
 }
 
@@ -236,16 +237,24 @@ function getStatusIcon(status) {
 }
 
 /**
+ * Toggle Todo Status (Checkbox)
+ */
+export function toggleTodoStatus(todoId, isChecked) {
+    const status = isChecked ? 'completed' : 'pending';
+    setTodoStatus(todoId, status);
+}
+
+/**
  * Durum döngüsü
  */
 export function cycleTodoStatus(todoId) {
     const todo = findTodo(todoId);
     if (!todo) return;
-    
+
     const statusOrder = ['pending', 'in_progress', 'completed'];
     const currentIndex = statusOrder.indexOf(todo.status);
     const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
-    
+
     setTodoStatus(todoId, nextStatus);
 }
 
@@ -327,6 +336,7 @@ function escapeHtml(text) {
 // Export for window
 window.AtomAgent = window.AtomAgent || {};
 Object.assign(window.AtomAgent, {
+    toggleTodoStatus,
     cycleTodoStatus,
     toggleTodoChildren,
     clearCompletedTodos,

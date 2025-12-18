@@ -32,20 +32,20 @@ function setupModeSwitch() {
 
 function switchMode(mode) {
     currentMode = mode;
-    
+
     // Update tab buttons
     document.querySelectorAll('.canvas-mode-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.mode === mode);
     });
-    
+
     // Show/hide controls
     document.getElementById('canvas-web-controls')?.classList.toggle('hidden', mode !== 'web');
     document.getElementById('canvas-html-controls')?.classList.toggle('hidden', mode !== 'html');
     document.getElementById('canvas-vnc-controls')?.classList.toggle('hidden', mode !== 'vnc');
-    
+
     // Reset canvas
     resetCanvas();
-    
+
     // Mode-specific init
     if (mode === 'html') {
         loadHtmlFiles();
@@ -57,7 +57,7 @@ function switchMode(mode) {
 function resetCanvas() {
     const iframe = document.getElementById('canvas-iframe');
     const emptyState = document.getElementById('canvas-empty');
-    
+
     if (iframe) {
         iframe.src = 'about:blank';
         iframe.classList.add('hidden');
@@ -65,7 +65,7 @@ function resetCanvas() {
     if (emptyState) {
         emptyState.classList.remove('hidden');
     }
-    
+
     setCanvasStatus('idle', 'Bağlantı bekleniyor...');
 }
 
@@ -77,14 +77,14 @@ function setupWebControls() {
     const refreshBtn = document.getElementById('canvas-refresh');
     const openExternalBtn = document.getElementById('canvas-open-external');
     const portSelect = document.getElementById('canvas-port-select');
-    
+
     goBtn?.addEventListener('click', () => loadWebUrl());
     urlInput?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') loadWebUrl();
     });
     refreshBtn?.addEventListener('click', () => refreshCanvas());
     openExternalBtn?.addEventListener('click', () => openExternal());
-    
+
     portSelect?.addEventListener('change', () => {
         const port = portSelect.value;
         if (port && urlInput) {
@@ -96,19 +96,19 @@ function setupWebControls() {
 
 export function loadWebUrl(url = null) {
     if (currentMode !== 'web') switchMode('web');
-    
+
     const urlInput = document.getElementById('canvas-url');
     const targetUrl = url || urlInput?.value?.trim();
     if (!targetUrl) return;
-    
+
     let fullUrl = targetUrl;
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
         fullUrl = `http://${targetUrl}`;
     }
-    
+
     currentUrl = fullUrl;
     if (urlInput) urlInput.value = targetUrl;
-    
+
     loadInIframe(fullUrl);
 }
 
@@ -121,12 +121,12 @@ export function loadUrl(url) {
 function setupHtmlControls() {
     const loadBtn = document.getElementById('canvas-load-html');
     const select = document.getElementById('canvas-html-select');
-    
+
     loadBtn?.addEventListener('click', () => {
         const file = select?.value;
         if (file) loadHtmlFile(file);
     });
-    
+
     select?.addEventListener('change', () => {
         const file = select.value;
         if (file) loadHtmlFile(file);
@@ -136,15 +136,15 @@ function setupHtmlControls() {
 async function loadHtmlFiles() {
     const select = document.getElementById('canvas-html-select');
     if (!select) return;
-    
+
     try {
         // Workspace'den HTML dosyalarını al
         const response = await fetch('/api/workspace/files?path=.');
         const data = await response.json();
-        
+
         // HTML dosyalarını filtrele (recursive)
         const htmlFiles = findHtmlFiles(data.items || [], '');
-        
+
         select.innerHTML = '<option value="">HTML dosyası seç...</option>';
         htmlFiles.forEach(file => {
             const option = document.createElement('option');
@@ -152,13 +152,13 @@ async function loadHtmlFiles() {
             option.textContent = file;
             select.appendChild(option);
         });
-        
+
         // Docker'dan da HTML dosyalarını al
         try {
             const dockerResponse = await fetch('/api/docker/files?path=/home/agent/shared');
             const dockerData = await dockerResponse.json();
             const dockerHtmlFiles = findHtmlFilesSimple(dockerData.items || [], '/home/agent/shared');
-            
+
             if (dockerHtmlFiles.length > 0) {
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = '🐳 Docker';
@@ -197,12 +197,12 @@ function findHtmlFilesSimple(items, prefix) {
 
 async function loadHtmlFile(filePath) {
     if (currentMode !== 'html') switchMode('html');
-    
+
     setCanvasStatus('loading', 'HTML yükleniyor...');
-    
+
     try {
         let content;
-        
+
         if (filePath.startsWith('docker:')) {
             // Docker'dan oku
             const dockerPath = filePath.replace('docker:', '');
@@ -215,10 +215,10 @@ async function loadHtmlFile(filePath) {
             const data = await response.json();
             content = data.content;
         }
-        
+
         // HTML'i iframe'de göster
         displayHtmlContent(content, filePath);
-        
+
     } catch (e) {
         console.error('Failed to load HTML file:', e);
         setCanvasStatus('error', 'Dosya yüklenemedi');
@@ -228,13 +228,13 @@ async function loadHtmlFile(filePath) {
 function displayHtmlContent(htmlContent, filename) {
     const iframe = document.getElementById('canvas-iframe');
     const emptyState = document.getElementById('canvas-empty');
-    
+
     if (!iframe) return;
-    
+
     // Base tag ekle (relative path'ler için)
     const baseDir = filename.includes('/') ? filename.substring(0, filename.lastIndexOf('/') + 1) : '';
     const baseTag = `<base href="/api/workspace/raw/${baseDir}">`;
-    
+
     // HTML'i düzenle
     let modifiedHtml = htmlContent;
     if (!htmlContent.includes('<base')) {
@@ -244,21 +244,21 @@ function displayHtmlContent(htmlContent, filename) {
             modifiedHtml = htmlContent.replace('<html>', `<html><head>${baseTag}</head>`);
         }
     }
-    
+
     // Blob URL oluştur
     const blob = new Blob([modifiedHtml], { type: 'text/html' });
     const blobUrl = URL.createObjectURL(blob);
-    
+
     currentUrl = blobUrl;
-    
+
     if (emptyState) emptyState.classList.add('hidden');
     iframe.classList.remove('hidden');
     iframe.src = blobUrl;
-    
+
     iframe.onload = () => {
         setCanvasStatus('connected', `Yüklendi: ${filename}`);
     };
-    
+
     highlightCanvasTab();
 }
 
@@ -267,18 +267,19 @@ function displayHtmlContent(htmlContent, filename) {
 function setupVncControls() {
     const connectBtn = document.getElementById('canvas-vnc-connect');
     const fullscreenBtn = document.getElementById('canvas-vnc-fullscreen');
-    
+
     connectBtn?.addEventListener('click', () => connectVnc());
     fullscreenBtn?.addEventListener('click', () => toggleVncFullscreen());
 }
 
 async function checkVncStatus() {
     const statusEl = document.getElementById('vnc-status');
-    
+    if (!statusEl) return; // Guard clause if element doesn't exist
+
     try {
         const response = await fetch('/api/canvas/vnc-status');
         const data = await response.json();
-        
+
         if (data.running) {
             statusEl.textContent = '● VNC Hazır';
             statusEl.className = 'vnc-status connected';
@@ -294,45 +295,45 @@ async function checkVncStatus() {
 
 async function connectVnc() {
     if (currentMode !== 'vnc') switchMode('vnc');
-    
+
     setCanvasStatus('loading', 'VNC başlatılıyor...');
-    
+
     try {
         // Önce VNC durumunu kontrol et
         const statusResponse = await fetch('/api/canvas/vnc-status');
         const statusData = await statusResponse.json();
-        
+
         // VNC çalışmıyorsa başlat
         if (!statusData.running || !statusData.novnc) {
             setCanvasStatus('loading', 'VNC sunucusu başlatılıyor...');
-            
+
             const startResponse = await fetch('/api/canvas/start-vnc', { method: 'POST' });
             const startData = await startResponse.json();
-            
+
             if (!startData.success) {
                 setCanvasStatus('error', 'VNC başlatılamadı');
                 showVncError('VNC sunucusu başlatılamadı. Docker container çalışıyor mu?');
                 return;
             }
-            
+
             // VNC'nin başlaması için bekle
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
-        
+
         // noVNC iframe ile bağlan (host port: 16080 -> container port: 6080)
         const vncPort = 16080;
         const vncUrl = `http://localhost:${vncPort}/vnc.html?autoconnect=true&resize=scale&reconnect=true`;
-        
+
         setCanvasStatus('loading', 'noVNC bağlanıyor...');
         loadInIframe(vncUrl);
-        
+
         // Status güncelle
         const statusEl = document.getElementById('vnc-status');
         if (statusEl) {
             statusEl.textContent = '● VNC Bağlı';
             statusEl.className = 'vnc-status connected';
         }
-        
+
     } catch (e) {
         console.error('VNC connection error:', e);
         setCanvasStatus('error', 'VNC bağlantı hatası');
@@ -343,7 +344,7 @@ async function connectVnc() {
 function showVncError(message) {
     const emptyState = document.getElementById('canvas-empty');
     const iframe = document.getElementById('canvas-iframe');
-    
+
     if (iframe) iframe.classList.add('hidden');
     if (emptyState) {
         emptyState.classList.remove('hidden');
@@ -381,28 +382,28 @@ function loadInIframe(url) {
     const iframe = document.getElementById('canvas-iframe');
     const emptyState = document.getElementById('canvas-empty');
     const container = document.getElementById('canvas-container');
-    
+
     if (!iframe) return;
-    
+
     currentUrl = url;
     setCanvasStatus('loading', 'Yükleniyor...');
-    
+
     if (emptyState) emptyState.classList.add('hidden');
     iframe.classList.remove('hidden');
-    
+
     showLoading(container);
     iframe.src = url;
-    
+
     iframe.onload = () => {
         hideLoading(container);
         setCanvasStatus('connected', 'Bağlandı');
     };
-    
+
     iframe.onerror = () => {
         hideLoading(container);
         setCanvasStatus('error', 'Bağlantı hatası');
     };
-    
+
     // Timeout
     setTimeout(() => {
         hideLoading(container);
@@ -410,7 +411,7 @@ function loadInIframe(url) {
             setCanvasStatus('connected', 'Yüklendi');
         }
     }, 10000);
-    
+
     highlightCanvasTab();
 }
 
@@ -437,10 +438,10 @@ function setCanvasStatus(status, text) {
     const statusEl = document.getElementById('canvas-status');
     const statusText = document.getElementById('canvas-status-text');
     const statusIcon = statusEl?.querySelector('.canvas-status-icon');
-    
+
     if (statusEl) statusEl.className = `canvas-status ${status}`;
     if (statusText) statusText.textContent = text;
-    
+
     if (statusIcon) {
         const icons = { connected: '●', loading: '◐', error: '○', idle: '○' };
         statusIcon.textContent = icons[status] || '○';
@@ -472,11 +473,11 @@ export function highlightCanvasTab() {
 export function handleServerStart(port, type = 'web') {
     const urlInput = document.getElementById('canvas-url');
     if (urlInput) urlInput.value = `localhost:${port}`;
-    
+
     setTimeout(() => {
         switchMode('web');
         loadWebUrl(`localhost:${port}`);
-        
+
         // Canvas tab'ına geç
         document.querySelector('[data-tab="canvas"]')?.click();
     }, 2000);
@@ -534,7 +535,7 @@ function setupTerminal() {
     const toggleBtn = document.getElementById('canvas-terminal-toggle');
     const header = document.querySelector('.canvas-terminal-header');
     const resizeHandle = document.getElementById('canvas-terminal-resize');
-    
+
     // Enter ile komut çalıştır
     input?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -548,38 +549,38 @@ function setupTerminal() {
             navigateHistory(1);
         }
     });
-    
+
     runBtn?.addEventListener('click', runTerminalCommand);
     clearBtn?.addEventListener('click', clearTerminal);
     toggleBtn?.addEventListener('click', toggleTerminal);
     header?.addEventListener('dblclick', toggleTerminal);
-    
+
     // Resize handle
     setupTerminalResize(resizeHandle);
 }
 
 function setupTerminalResize(handle) {
     if (!handle) return;
-    
+
     let startY, startHeight;
     const terminal = document.getElementById('canvas-terminal');
-    
+
     handle.addEventListener('mousedown', (e) => {
         startY = e.clientY;
         startHeight = terminal.offsetHeight;
-        
+
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
         document.body.style.cursor = 'ns-resize';
         document.body.style.userSelect = 'none';
     });
-    
+
     function onMouseMove(e) {
         const delta = startY - e.clientY;
         const newHeight = Math.max(100, Math.min(startHeight + delta, window.innerHeight * 0.7));
         terminal.style.height = newHeight + 'px';
     }
-    
+
     function onMouseUp() {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
@@ -591,19 +592,19 @@ function setupTerminalResize(handle) {
 async function runTerminalCommand() {
     const input = document.getElementById('canvas-terminal-input');
     const command = input?.value?.trim();
-    
+
     if (!command) return;
-    
+
     // Komutu history'e ekle
     commandHistory.push(command);
     historyIndex = commandHistory.length;
-    
+
     // Input'u temizle
     input.value = '';
-    
+
     // Komutu terminale yaz
     addTerminalLine(command, 'command');
-    
+
     try {
         // Docker'da komutu çalıştır
         const response = await fetch('/api/docker/exec', {
@@ -611,9 +612,9 @@ async function runTerminalCommand() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ command, timeout: 30 })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             // stdout ve stderr'i göster
             if (data.stdout && data.stdout.trim()) {
@@ -634,7 +635,7 @@ async function runTerminalCommand() {
     } catch (e) {
         addTerminalLine(`Hata: ${e.message}`, 'error');
     }
-    
+
     // Scroll to bottom
     scrollTerminalToBottom();
 }
@@ -642,7 +643,7 @@ async function runTerminalCommand() {
 function addTerminalLine(text, type = 'output') {
     const output = document.getElementById('canvas-terminal-output');
     if (!output) return;
-    
+
     const lines = text.split('\n');
     lines.forEach(line => {
         if (line.trim() || type === 'command') {
@@ -652,7 +653,7 @@ function addTerminalLine(text, type = 'output') {
             output.appendChild(div);
         }
     });
-    
+
     scrollTerminalToBottom();
 }
 
@@ -673,7 +674,7 @@ function clearTerminal() {
 function toggleTerminal() {
     const terminal = document.getElementById('canvas-terminal');
     const toggleBtn = document.getElementById('canvas-terminal-toggle');
-    
+
     if (terminal) {
         terminal.classList.toggle('collapsed');
         if (toggleBtn) {
@@ -685,9 +686,9 @@ function toggleTerminal() {
 function navigateHistory(direction) {
     const input = document.getElementById('canvas-terminal-input');
     if (!input || commandHistory.length === 0) return;
-    
+
     historyIndex += direction;
-    
+
     if (historyIndex < 0) {
         historyIndex = 0;
     } else if (historyIndex >= commandHistory.length) {
@@ -695,7 +696,7 @@ function navigateHistory(direction) {
         input.value = '';
         return;
     }
-    
+
     input.value = commandHistory[historyIndex] || '';
 }
 
